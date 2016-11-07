@@ -140,3 +140,7 @@ body {
     -ms-user-select: none !important;
     user-select: none !important;
 }
+
+.dragging {
+    cursor: hand !important;
+}

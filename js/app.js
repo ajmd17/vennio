@@ -1,6 +1,5 @@
 var sidebarVisible = false;
-
-var dragging = false;
+var panning = false;
 
 const MIN_ZOOM = -10;
 const MAX_ZOOM =  20;
@@ -19,18 +18,27 @@ function randRange(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function Project(elt) {
+    this.circle = {
+        x: 0, // the X position of circle (only changes on drag)
+        y: 0,
+        size: 200,
+        color: "#000",
+        element: elt
+    };
+}
+var projects = [];
+
 function zoomCircle(circle, sign, zooming) {
     var diff = {
-        x: (zoomData.mousePosition.x - $(circle).position().left - ($(circle).width()/2)) * 0.05,
-        y: (zoomData.mousePosition.y - $(circle).position().top - ($(circle).height()/2)) * 0.05
+        x: (zoomData.mousePosition.x - $(circle).position().left) * 0.05,
+        y: (zoomData.mousePosition.y - $(circle).position().top) * 0.05
     };
 
-    if (zooming) {
-        $(circle).css({
-            "width": "+=" + (sign * 10).toString(),
-            "height": "+=" + (sign * 10).toString()
-        });
-    }
+    $(circle).css({
+        "width": "+=" + (sign * 10).toString(),
+        "height": "+=" + (sign * 10).toString()
+    });
 
     $(circle).css({
         "left": "-=" + (diff.x * sign).toString(),
@@ -43,8 +51,7 @@ function addProjectCircle(x, y) {
     var sizeZoomed = size + (zoomData.zoom * 10);
     var color = randomColor({luminosity: "light"});
 
-    $("#main-content")
-        .append($("<div>").addClass("project-circle")
+    var circleElement = $("<div>").addClass("project-circle")
             .css({"position": "absolute",
                   "background-color": color,
                   "left": x,
@@ -63,7 +70,6 @@ function addProjectCircle(x, y) {
                 .addClass("project-circle-text")
                 .append($("<input type=\"text\">")
                             .addClass("project-circle-text-edit")
-                            .val("Text here")
                             .css({"width" : "100%",
                                   "height": "100%"})))
 
@@ -74,49 +80,93 @@ function addProjectCircle(x, y) {
             })
             .focusout(function() {
                 var input = $(this).find("input");
-            })
-        );
+
+                if (input.val() == "") {
+                    if (this.valueBefore == undefined) {
+                        // remove object
+                        var x = $(this).position().left;
+                        var y = $(this).position().top;
+                        var size = $(this).width();
+                        $(this).animate({
+                            "left": x + (size / 2),
+                            "top":  y + (size / 2),
+                            width: 0,
+                            height: 0
+                        }, 200, "linear", function() {
+                            $(this).remove();
+                        })
+                    } else {
+                        // error, must enter a name
+                    }
+                } else {
+                    this.valueBefore = input.val();
+                }
+            });
+
+    $("#main-content").append(circleElement);
+
+    var project = new Project(circleElement);
+    project.circle.x = x;
+    project.circle.y = y;
+    project.circle.size = size;
+    project.circle.color = color;
+    projects.push(project);
 }
 
 $(document).ready(function() {
+    window.addEventListener('mousewheel', function(e) {
+      if (e.ctrlKey) {
+        e.preventDefault();
+      }
+    });
     $("#main-container").css({"padding-top": $(".titlebar").height().toString() + "px"});
     $('#main-content').bind('wheel mousewheel', function(e) {
-        var delta;
+        if (e.ctrlKey) {
+            var delta;
 
-        if (e.originalEvent.wheelDelta !== undefined) {
-            delta = e.originalEvent.wheelDelta;
-        } else {
-            delta = e.originalEvent.deltaY * -1;
-        }
+            if (e.originalEvent.wheelDelta !== undefined) {
+                delta = e.originalEvent.wheelDelta;
+            } else {
+                delta = e.originalEvent.deltaY * -1;
+            }
 
-        var deltaSign = Math.sign(delta);
-        var nextZoom = zoomData.zoom + deltaSign;
+            var deltaSign = Math.sign(delta);
+            var nextZoom = zoomData.zoom + deltaSign;
 
-        zoomData.mousePosition = {
-            x: e.pageX,
-            y: e.pageY
-        };
+            zoomData.mousePosition = {
+                x: e.pageX,
+                y: e.pageY
+            };
 
-        if (nextZoom > MIN_ZOOM && nextZoom < MAX_ZOOM) {
-            zoomData.zoom = nextZoom;
-            $(".project-circle").each(function() {
-                zoomCircle(this, deltaSign, true);
-            });
+            if (nextZoom > MIN_ZOOM && nextZoom < MAX_ZOOM) {
+                zoomData.zoom = nextZoom;
+                $(".project-circle").each(function() {
+                    zoomCircle(this, deltaSign, true);
+                });
+            }
         }
     }).dblclick(function(event) {
         if (event.target == this) {
             // add project item
             addProjectCircle(event.pageX - $(this).offset().left, event.pageY - $(this).offset().top);
         }
-    }).mousedown(function() {
-        dragging = true;
+    }).mousedown(function(e) {
+        var target = $(e.target);
+        if (target.is("#main-content")) {
+            if (!panning) {
+                $("#main-content").css("cursor", "-webkit-grab");
+            }
+            panning = true;
+        } else if (target.is(".project-circle")){
+            console.log("mousedown on circle");
+        }
     }).mousemove(function(e) {
         var newPos = {
             x: e.pageX,
             y: e.pageY
         };
 
-        if (dragging) {
+        if (panning) {
             var diff = {
                 x: (newPos.x - (zoomData.mousePosition.x)) * 0.5,
                 y: (newPos.y - (zoomData.mousePosition.y)) * 0.5
@@ -152,6 +202,10 @@ $(document).ready(function() {
     });
 });
 
-$(document).mouseup(function() {
-    dragging = false;
+$(window).mouseup(function() {
+    if (panning) {
+        $("#main-content").css("cursor", "auto");
+    }
+    panning = false;
+
 });
