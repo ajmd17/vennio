@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!--Let browser know website is optimized for mobile-->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <meta charset="UTF-8">
+        <title>Vixen Project Manager</title>
+        <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
+        <link rel="stylesheet" href="css/font-awesome.min.css">
+        <link rel="stylesheet" href="css/styles.css">
+    </head>
+    <body>
+        <div class="titlebar">
+            <ul>
+                <li>
+                    <a id="menu-btn" href="#" class="fa fa-bars"></a>
+                </li>
+                <li><div class="titlebar-text">Projects</div></li>
+                <li style="float:right;">
+                    <a id="settings-btn" class="fa fa-cog" href="#" aria-hidden="true"></a>
+
+                    <ul id="settings-menu" class="dropdown-content">
+                        <li>Account Settings</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        <div id="main-container">
+            <div id="main-sidebar" class="sidebar" style="display: none; width: 0;">
+                <div class="sidebar-title">
+                    Sidebar Title
+                </div>
+            </div>
+            <div id="main-content">
+            </div>
+        </div>
+
+        <script>window.$ = window.jQuery = require('./js/jquery.min.js');</script>
+        <script
+              src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+              integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+              crossorigin="anonymous"></script>
+        <script src="https://www.gstatic.com/firebasejs/3.5.3/firebase.js"></script>
+        <script>
+            // Initialize Firebase
+            var config = {
+            apiKey: "AIzaSyCf8zuhDihw-N4GEQdY-JvDilqj8iOkds0",
+            authDomain: "vixen-a6ff1.firebaseapp.com",
+            databaseURL: "https://vixen-a6ff1.firebaseio.com",
+            storageBucket: "",
+            messagingSenderId: "277084801664"
+            };
+            firebase.initializeApp(config);
+        </script>
+        <script src="js/jquery.zoomooz.min.js"></script>
+        <script src="js/randomColor.js"></script>
+        <script src="js/app.js"></script>
+
+
+    </body>
+</html>
