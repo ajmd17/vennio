@@ -30,20 +30,19 @@ var BackgroundType = {
     VIDEO: 1
 };
 
-function Theme(backgroundUrl, backgroundType, colorOptions, blurAmt) {
+function Theme(backgroundUrl, backgroundType, blurAmt) {
     this.backgroundUrl = backgroundUrl;
     this.backgroundType = backgroundType;
-    this.colorOptions = colorOptions;
     this.blurAmt = blurAmt;
 }
 
 var themes = {
-    "leaves": new Theme("videos/leaves.mp4", BackgroundType.VIDEO, {}, 18),
-    "stars":  new Theme("videos/stars.mp4", BackgroundType.VIDEO, {}, 8),
-    "woods":  new Theme("videos/woods.mp4", BackgroundType.VIDEO, {}, 8),
-    "poly":   new Theme("img/poly.png", BackgroundType.IMAGE, {luminosity: "light"}, 0),
-    "hex":    new Theme("img/hex.png", BackgroundType.IMAGE, {hue: "blue"}, 0),
-    "milky-way": new Theme("img/milky-way.jpg", BackgroundType.IMAGE, {luminosity: "dark"}, 5)
+    "leaves": new Theme("videos/leaves.mp4", BackgroundType.VIDEO, 18),
+    "stars":  new Theme("videos/stars.mp4", BackgroundType.VIDEO, 8),
+    "woods":  new Theme("videos/woods.mp4", BackgroundType.VIDEO, 8),
+    "poly":   new Theme("img/poly.png", BackgroundType.IMAGE, 0),
+    "hex":    new Theme("img/hex.png", BackgroundType.IMAGE, 0),
+    "milky-way": new Theme("img/milky-way.jpg", BackgroundType.IMAGE, 5)
 };
 var currentTheme = null;
 
@@ -94,9 +93,51 @@ function zoomCircle(circle, sign, zooming) {
 function addProjectCircle(x, y) {
     var size = 200;//randRange(160, 300);
     var sizeZoomed = size + (zoomData.zoom * 10);
-    var rgb = randomColor(mergeProperties({format: "rgb"}, currentTheme.colorOptions));
+    var rgb = randomColor({luminosity: "light", format: "rgb"});
     var values = rgb.substring(rgb.indexOf('(') + 1, rgb.lastIndexOf(')')).split(/,\s*/);
-    var color = "rgba(" + values[0] + ", " + values[1] + ", " + values[2] + ", 0.6)";
+    var color = "rgba(" + values[0] + ", " + values[1] + ", " + values[2] + ", 1.0)";
+
+    var leaveFocus = function(circle, edit, txt) {
+        if ($(edit).val() == "") {
+            if (circle.valueBefore == undefined) {
+                // remove object if you don't enter a value the first time
+                var x = $(circle).position().left;
+                var y = $(circle).position().top;
+                var size = $(circle).width();
+                $(circle).animate({
+                    "left": x + (size / 2),
+                    "top":  y + (size / 2),
+                    width: 0,
+                    height: 0
+                }, 200, "linear", function() {
+                    $(circle).remove();
+                })
+            } else {
+                // error, must enter a name
+                $("#dialog").dialogBox({
+                    title: "Project Name Empty",
+                    content: "Please enter a name for the project.",
+                    effect: "sign",
+                    hasBtn: true,
+                    confirmValue: "OK",
+                    confirm: function() {
+                        $(edit).select();
+                    },
+                    callback: function() {
+                    }
+                });
+            }
+        } else {
+            var value = $(edit).val();
+            circle.valueBefore = value;
+            // now recreate div
+            var replacementDiv = $("<div>")
+                .append(value);
+
+            $(txt).append(replacementDiv);
+            $(edit).remove();
+        }
+    };
 
     var circleElement = $("<div>").addClass("project-circle")
             .css({"position": "absolute",
@@ -113,55 +154,31 @@ function addProjectCircle(x, y) {
                        $(this).find("input").select();
                    })
             .append($("<div>")
-                .addClass("project-circle-inner")
-                .css("background-color", color))
+                .addClass("project-circle-inner"))
             .append($("<div>")
                 .addClass("project-circle-text")
                 .append($("<input type=\"text\">")
-                            .addClass("project-circle-text-edit")
-                            .css({"width" : "100%",
-                                  "height": "100%"})))
+                            .addClass("project-circle-text-edit")))
 
+            // single-clicking a circle opens the project page
+            .click(function() {
+                // TODO
+            })
             // double-clicking a circle allows you to edit the title
             .dblclick(function() {
-                var input = $(this).find("input");
-                input.select();
+                var circle = this;
+                var txt = $(this).find(".project-circle-text");
+                txt.empty();
+
+                var edit = $("<input type=\"text\">")
+                    .addClass("project-circle-text-edit")
+                txt.append(edit);
+                edit.select();
             })
             .focusout(function() {
-                var input = $(this).find("input");
-
-                if (input.val() == "") {
-                    if (this.valueBefore == undefined) {
-                        // remove object
-                        var x = $(this).position().left;
-                        var y = $(this).position().top;
-                        var size = $(this).width();
-                        $(this).animate({
-                            "left": x + (size / 2),
-                            "top":  y + (size / 2),
-                            width: 0,
-                            height: 0
-                        }, 200, "linear", function() {
-                            $(this).remove();
-                        })
-                    } else {
-                        // error, must enter a name
-                        $("#dialog").dialogBox({
-                            title: "Project Name Empty",
-                            content: "Please enter a name for the project.",
-        					effect: "sign",
-        					hasBtn: true,
-                            confirmValue: "OK",
-        					confirm: function() {
-                                input.select();
-        					},
-        					callback: function() {
-        					}
-        				});
-                    }
-                } else {
-                    this.valueBefore = input.val();
-                }
+                var txt = $(this).find(".project-circle-text");
+                var edit = txt.find("input");
+                leaveFocus(this, edit, txt);
             });
 
     $("#main-content").append(circleElement);
@@ -174,8 +191,13 @@ function addProjectCircle(x, y) {
     projects.push(project);
 }
 
-$(document).ready(function() {
-    setTheme("poly");
+function afterLogin() {
+    if (loggedUser.currentThemeName == undefined ||
+        loggedUser.currentThemeName == null) {
+        loggedUser.currentThemeName = "poly";
+    }
+
+    setTheme(loggedUser.currentThemeName);
 
     $(window).bind('mousewheel', function(e) {
       if (e.ctrlKey) {
@@ -246,7 +268,9 @@ $(document).ready(function() {
 
         zoomData.mousePosition = newPos;
     });
+}
 
+$(document).ready(function() {
     $("#menu-btn").click(function() {
         sidebarVisible = !sidebarVisible;
         $("#menu-btn").toggleClass("active");

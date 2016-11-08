@@ -99,33 +99,35 @@ body {
 	width: 200px;
 	height: 200px;
     overflow: hidden;
-    z-index: 5;
-    box-shadow: 0px 0px 16px -3px #3E454C;
+    z-index: 7;
+    box-shadow: 0px 0px 16px -1px rgba(30, 30, 30, 0.2);
+    transition: box-shadow 0.3s ease-in-out;
+
 }
 .project-circle-shadow {
 }
-.project-circle-inner {
-    position: absolute;
-    z-index: 2;
-    width: 100%;
-    height: 100%;
-    background: rgba(220, 220, 220, 0.2);
-
-}
 .project-circle:hover {
+    box-shadow: 0px 0px 16px 0px rgba(30, 30, 30, 0.4);
 }
 
 .project-circle-text {
     position: absolute;
     top: 50%;
     left: 50%;
+    font-size: 24px;
     margin-right: -50%;
     transform: translate(-50%, -50%);
     color: #3E454C;
-    z-index: 5;
 }
-
+.project-circle-text div {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+}
 .project-circle-text-edit {
+    width: 100%;
+    height: 100%;
     font-size: 24px;
     color: #3E454C;
     background: transparent;
@@ -172,7 +174,74 @@ body {
     width: auto;
     height: auto;
     transform: translateX(-50%) translateY(-50%);
-    filter: blur(18px);
+}
+
+.login-window {
+    position: absolute;
+    width: 400px;
+    height: 300px;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    background-color: #EDEDED;
+    box-shadow: 1px 2px 6px 1px rgba(0, 0, 0, 0.2);
+    padding: 0 10px;
+}
+.login-window h3 {
+    text-align: center;
+    font-size: 30px;
+    font-weight: lighter;
+    margin: 10px 0;
+}
+
+.social-login {
+    font-size: 22px;
+    padding: 10px 20px 10px 20px;
+    text-decoration: none;
+    -webkit-border-radius: 4;
+    -moz-border-radius: 4;
+    border-radius: 4px;
+    box-shadow: 1px 1px 3px 0px rgba(0, 0, 0, 0.2);
+    margin-bottom: 8px;
+    color: #ffffff;
+    cursor: default;
+}
+.social-login i {
+    width: 24px;
+}
+.social-login div {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.social-login:hover {
+    text-decoration: none;
+}
+.social-login-facebook {
+    background: #3B5998;
+}
+.social-login-facebook:hover {
+    background: #4a71bf;
+}
+.social-login-google {
+  background: #C32F10;
+}
+.social-login-google:hover {
+  background: #de3614;
+}
+.social-login-twitter {
+  background: #55ACEE;
+}
+.social-login-twitter:hover {
+  background: #5bb9f7;
+}
+
+.social-login .vr {
+    border-left: 1px solid rgba(200, 200, 200, 0.2);
+    height: 27px;
+    position: absolute;
+    display: inline;
 }
 
 #video-wrapper {
