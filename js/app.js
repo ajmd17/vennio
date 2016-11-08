@@ -40,8 +40,10 @@ var themes = {
     "leaves": new Theme("videos/leaves.mp4", BackgroundType.VIDEO, 18),
     "stars":  new Theme("videos/stars.mp4", BackgroundType.VIDEO, 8),
     "woods":  new Theme("videos/woods.mp4", BackgroundType.VIDEO, 8),
+    "autumn-leaf":  new Theme("videos/autumn-leaf.mp4", BackgroundType.VIDEO, 8),
     "poly":   new Theme("img/poly.png", BackgroundType.IMAGE, 0),
-    "hex":    new Theme("img/hex.png", BackgroundType.IMAGE, 0),
+    "poly_2":   new Theme("img/poly_2.png", BackgroundType.IMAGE, 0),
+    "hex":    new Theme("img/hex.png", BackgroundType.IMAGE, 6),
     "milky-way": new Theme("img/milky-way.jpg", BackgroundType.IMAGE, 5)
 };
 var currentTheme = null;
@@ -57,6 +59,35 @@ function Project(elt) {
 }
 
 var projects = [];
+
+function replaceSvg() {
+    $("img.svg").each(function() {
+        var $img = $(this);
+        var imgID = $img.attr("id");
+        var imgClass = $img.attr("class");
+        var imgURL = $img.attr("src");
+
+        $.get(imgURL, function(data) {
+            var $svg = $(data).find("svg");
+
+            if (imgID !== undefined) {
+                $svg = $svg.attr("id", imgID);
+            }
+            if (imgClass !== undefined) {
+                $svg = $svg.attr("class", imgClass + " replaced-svg");
+            }
+
+            $svg = $svg.removeAttr("xmlns:a");
+
+            if (!$svg.attr("viewBox") && $svg.attr("height") && $svg.attr("width")) {
+                $svg.attr("viewBox", "0 0 " + $svg.attr("height") + " " + $svg.attr("width"))
+            }
+
+            $img.replaceWith($svg);
+
+        }, "xml");
+    });
+}
 
 function setTheme(themeName) {
     var theme = themes[themeName];
@@ -198,6 +229,52 @@ function afterLogin() {
     }
 
     setTheme(loggedUser.currentThemeName);
+
+    var animTime = 500;
+    var endSize = 10;
+    var hoverColors = [
+        "orange",
+        "lime",
+        "crimson",
+        "royalblue"
+    ];
+
+    replaceSvg();
+
+    $(".circle-container")
+        .animate({
+            width: endSize + "em",
+            height: endSize + "em",
+            opacity: 1,
+        });
+
+    const NUM_SHAPES = 4;
+    const DEG_ACCUM = 360 / NUM_SHAPES;
+    const HALF_SIZE = endSize / 2;
+
+    for (let i = 0; i < NUM_SHAPES; i++) {
+        const DEG = i * DEG_ACCUM;
+
+        let setSvgColor = function(el, color) {
+            var svg = el.find("svg path");
+            svg.css("fill", color);
+        };
+
+        setTimeout(function() {
+            setSvgColor($(".circle-container>:nth-of-type(" + (i+1) + ")"), hoverColors[i]);
+        }, 100);
+
+        $(".circle-container>:nth-of-type(" + (i+1) + ")")
+            .css({
+                opacity: 1,
+                transform: "rotate(" + DEG + "deg) translate(" + HALF_SIZE + "em) rotate(" + (-1 * DEG) + "deg)"
+            })
+            /*.hover(function() {
+                var el = $(this);
+                var svg = el.find("svg path");
+                svg.css("fill", hoverColors[i]);
+            })*/;
+    }
 
     $(window).bind('mousewheel', function(e) {
       if (e.ctrlKey) {
