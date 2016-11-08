@@ -18,6 +18,35 @@ function randRange(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function mergeProperties(dst, src) {
+    for (attr in src) {
+        dst[attr] = src[attr];
+    }
+    return dst;
+}
+
+var BackgroundType = {
+    IMAGE: 0,
+    VIDEO: 1
+};
+
+function Theme(backgroundUrl, backgroundType, colorOptions, blurAmt) {
+    this.backgroundUrl = backgroundUrl;
+    this.backgroundType = backgroundType;
+    this.colorOptions = colorOptions;
+    this.blurAmt = blurAmt;
+}
+
+var themes = {
+    "leaves": new Theme("videos/leaves.mp4", BackgroundType.VIDEO, {}, 18),
+    "stars":  new Theme("videos/stars.mp4", BackgroundType.VIDEO, {}, 8),
+    "woods":  new Theme("videos/woods.mp4", BackgroundType.VIDEO, {}, 8),
+    "poly":   new Theme("img/poly.png", BackgroundType.IMAGE, {luminosity: "light"}, 0),
+    "hex":    new Theme("img/hex.png", BackgroundType.IMAGE, {hue: "blue"}, 0),
+    "milky-way": new Theme("img/milky-way.jpg", BackgroundType.IMAGE, {luminosity: "dark"}, 5)
+};
+var currentTheme = null;
+
 function Project(elt) {
     this.circle = {
         x: 0, // the X position of circle (only changes on drag)
@@ -27,7 +56,23 @@ function Project(elt) {
         element: elt
     };
 }
+
 var projects = [];
+
+function setTheme(themeName) {
+    var theme = themes[themeName];
+    currentTheme = theme;
+    var videoWrapper = $("#video-wrapper");
+    videoWrapper.empty();
+    if (theme.backgroundType == BackgroundType.VIDEO) {
+        videoWrapper.append($("<video playsinline autoplay muted loop class=\"video-bg\">")
+                    .append($("<source src=\"" + theme.backgroundUrl + "\" type=\"video/mp4\">")));
+    } else if (theme.backgroundType == BackgroundType.IMAGE) {
+        videoWrapper.append($("<img class=\"video-bg\" src=\"" + theme.backgroundUrl + "\">"));
+    }
+
+    $(".video-bg").css("filter", "blur(" + theme.blurAmt.toString() + "px)");
+}
 
 function zoomCircle(circle, sign, zooming) {
     var diff = {
@@ -49,7 +94,9 @@ function zoomCircle(circle, sign, zooming) {
 function addProjectCircle(x, y) {
     var size = 200;//randRange(160, 300);
     var sizeZoomed = size + (zoomData.zoom * 10);
-    var color = randomColor({luminosity: "light"});
+    var rgb = randomColor(mergeProperties({format: "rgb"}, currentTheme.colorOptions));
+    var values = rgb.substring(rgb.indexOf('(') + 1, rgb.lastIndexOf(')')).split(/,\s*/);
+    var color = "rgba(" + values[0] + ", " + values[1] + ", " + values[2] + ", 0.6)";
 
     var circleElement = $("<div>").addClass("project-circle")
             .css({"position": "absolute",
@@ -65,7 +112,9 @@ function addProjectCircle(x, y) {
                    400, "easeOutBounce", function() {
                        $(this).find("input").select();
                    })
-
+            .append($("<div>")
+                .addClass("project-circle-inner")
+                .css("background-color", color))
             .append($("<div>")
                 .addClass("project-circle-text")
                 .append($("<input type=\"text\">")
@@ -97,6 +146,18 @@ function addProjectCircle(x, y) {
                         })
                     } else {
                         // error, must enter a name
+                        $("#dialog").dialogBox({
+                            title: "Project Name Empty",
+                            content: "Please enter a name for the project.",
+        					effect: "sign",
+        					hasBtn: true,
+                            confirmValue: "OK",
+        					confirm: function() {
+                                input.select();
+        					},
+        					callback: function() {
+        					}
+        				});
                     }
                 } else {
                     this.valueBefore = input.val();
@@ -114,11 +175,14 @@ function addProjectCircle(x, y) {
 }
 
 $(document).ready(function() {
-    window.addEventListener('mousewheel', function(e) {
+    setTheme("poly");
+
+    $(window).bind('mousewheel', function(e) {
       if (e.ctrlKey) {
         e.preventDefault();
       }
     });
+
     $("#main-container").css({"padding-top": $(".titlebar").height().toString() + "px"});
     $('#main-content').bind('wheel mousewheel', function(e) {
         if (e.ctrlKey) {
