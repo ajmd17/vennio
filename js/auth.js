@@ -47,8 +47,8 @@ function signIn(auth, database, provider) {
                 loggedUser = foundUser;
             }
 
+            $("#login-window").remove();
             $("#after-login").show();
-            $("#login-window").hide();
 
             afterLogin();
         });
