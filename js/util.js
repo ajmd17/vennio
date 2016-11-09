@@ -2,8 +2,8 @@ function randRange(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function replaceSvg() {
-    $("img.svg").each(function() {
+function replaceSvg(elt) {
+    $(elt).each(function() {
         var $img = $(this);
         var imgID = $img.attr("id");
         var imgClass = $img.attr("class");

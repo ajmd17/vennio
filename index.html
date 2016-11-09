@@ -42,10 +42,16 @@
 
         <div id="after-login" style="display: none;">
             <div class="titlebar">
-                <ul>
-                    <li> <a id="menu-btn" href="#" class="fa fa-bars"></a> </li>
-                    <li><div class="titlebar-text">Projects</div></li>
-                    <li style="float: right;">
+
+                <ul class="titlebar-ul">
+                    <li class="titlebar-li"> <a id="menu-btn" href="#" class="fa fa-bars"></a> </li>
+                    <li class="titlebar-li">
+                        <ul id="top-breadcrums" class="breadcrum">
+                            <li><a href="" class="current">Projects</a></li>
+                            <li><a href="">Some project name</a></li>
+                        </ul>
+                    </li>
+                    <li style="float: right;" class="titlebar-li">
                         <a id="settings-btn" class="fa fa-cog" href="#" aria-hidden="true"></a>
 
                         <ul id="settings-menu" class="dropdown-content">
@@ -61,20 +67,7 @@
                         Sidebar Title
                     </div>
                 </div>
-                <div id="page-content">
-                    <!-- default page (root) -->
-                    <div id="projects-page" class="page">
-                        <div class="video-wrapper"></div>
-                    </div>
-
-
-                    <ul class='circle-container'>
-                        <li><img class="svg" src="img/shapes/star.svg"></li>
-                        <li><img class="svg" src="img/shapes/triangle.svg"></li>
-                        <li><img class="svg" src="img/shapes/heart.svg"></li>
-                        <li><img class="svg" src="img/shapes/circle.svg"></li>
-                    </ul>
-                </div>
+                <div id="page-content"></div>
             </div>
         </div>
 

@@ -36,7 +36,44 @@ var themes = {
     "milky-way": new Theme("img/milky-way.jpg", BackgroundType.IMAGE, 5)
 };
 
+// pages are held in a linked list: each page contains a property 'parentPage'
 var currentPage = null;
+
+function updateBreadcrums() {
+    var breadcrumsElement = $("#top-breadcrums");
+    breadcrumsElement.empty();
+
+    var elementsToAdd = [];
+
+    var page = currentPage;
+    while (page !== null && page !== undefined) {
+        let li = $("<li>");
+        let a = $("<a href=\"#\">").append(page.name);
+
+        if (page == currentPage) {
+            a.addClass("current");
+        } else {
+            let thisPage = page;
+            a.click(function() {
+                // navigate to parent page
+                currentPage.unbindEvents();
+                currentPage.clearProjectElements();
+                currentPage = thisPage;
+                currentPage.bindEvents();
+                currentPage.show();
+                updateBreadcrums();
+            });
+        }
+
+        elementsToAdd.push(li.append(a));
+
+        page = page.parentPage;
+    }
+
+    for (var i = elementsToAdd.length - 1; i >= 0; i--) {
+        breadcrumsElement.append(elementsToAdd[i]);
+    }
+}
 
 function zoomCircle(circle, sign, zooming) {
     var diff = {
@@ -45,67 +82,35 @@ function zoomCircle(circle, sign, zooming) {
     };
 
     $(circle).css({
-        "width": "+=" + (sign * 10).toString(),
+        "width" : "+=" + (sign * 10).toString(),
         "height": "+=" + (sign * 10).toString(),
         "left": "-=" + (diff.x * sign).toString(),
-        "top": "-=" + (diff.y * sign).toString()
+        "top" : "-=" + (diff.y * sign).toString()
     });
 }
 
 function afterLogin() {
-    currentPage = new Page($("#projects-page"));
-
     if (loggedUser.currentThemeName == undefined ||
         loggedUser.currentThemeName == null) {
         loggedUser.currentThemeName = "poly";
     }
 
-    currentPage.setTheme(themes[loggedUser.currentThemeName]);
+    // create root projects page
+    currentPage = new Page("Projects", $("<div class=\"page\">")
+        .append("<div class=\"video-wrapper\">"),
+        themes[loggedUser.currentThemeName]);
+    currentPage.parentPage = null;
+    currentPage.bindEvents();
+    currentPage.show();
 
-    var animTime = 500;
-    var endSize = 10;
-    var hoverColors = [
-        "orange",
-        "lime",
-        "crimson",
-        "royalblue"
-    ];
-
-    replaceSvg();
-
-    $(".circle-container")
-        .animate({
-            width: endSize + "em",
-            height: endSize + "em",
-            opacity: 1,
-        });
-
-    const NUM_SHAPES = 4;
-    const DEG_ACCUM = 360 / NUM_SHAPES;
-    const HALF_SIZE = endSize / 2;
-
-    for (let i = 0; i < NUM_SHAPES; i++) {
-        const DEG = i * DEG_ACCUM;
-
-        let item = $(".circle-container>:nth-of-type(" + (i+1) + ")");
-
-        setTimeout(function() {
-            item.find("svg path").css("fill", hoverColors[i]);
-        }, 100);
-
-        item.css({
-            opacity: 1,
-            transform: "rotate(" + DEG + "deg) translate(" + HALF_SIZE + "em) rotate(" + (-1 * DEG) + "deg)"
-        });
-    }
+    updateBreadcrums();
 
     // to prevent scrolling in on the page
     $(window).bind("mousewheel", function(e) {
-      if (e.ctrlKey) {
-        e.preventDefault();
-      }
-    })
-    .mouseup(function() {
+        if (e.ctrlKey) {
+            e.preventDefault();
+        }
+    }).mouseup(function() {
         if (panning) {
             $(currentPage.element).css("cursor", "auto");
         }
@@ -114,7 +119,6 @@ function afterLogin() {
 
 
     $("#main-container").css({"padding-top": $(".titlebar").height().toString() + "px"});
-
 }
 
 $(document).ready(function() {
