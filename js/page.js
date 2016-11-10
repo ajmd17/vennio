@@ -1,13 +1,14 @@
-function Page(name, element, theme) {
+function Page(name, element, theme, pageProject) {
     this.name = name;
     this.element = element;
     this.theme = theme;
     this.projects = [];
+    this.pageProject = pageProject;
 }
 
 Page.prototype.unbindEvents = function() {
     this.element.unbind();
-}
+};
 
 Page.prototype.bindEvents = function() {
     $(this.element)
@@ -65,11 +66,11 @@ Page.prototype.bindEvents = function() {
                         }
 
                         projectToAdd = new Project(name, position, element);
+                        projectToAdd.color = element.css("background-color");
                         me.addProject(projectToAdd);
                     },
                 click:
                     function() {
-                        console.log(projectToAdd);
                         if (projectToAdd !== null) {
                             // open the clicked project page
                             var pageBefore = currentPage;
@@ -78,7 +79,8 @@ Page.prototype.bindEvents = function() {
 
                             currentPage = new Page(projectToAdd.name,
                                 $("<div class=\"page\">")
-                                    .append("<div class=\"video-wrapper\">"));
+                                    .append("<div class=\"video-wrapper\">"),
+                                    null, projectToAdd);
 
                             currentPage.parentPage = pageBefore;
 
@@ -122,7 +124,7 @@ Page.prototype.bindEvents = function() {
         }
         zoomData.mousePosition = newPos;
     });
-}
+};
 
 Page.prototype.setTheme = function(theme) {
     this.theme = theme;
@@ -152,11 +154,28 @@ Page.prototype.loadTheme = function() {
 
         videoWrapper.append(background);
     }
-}
+};
 
 Page.prototype.addProject = function(project) {
+    // add project to DB
+    var projectsRef = null;
+    if (this.pageProject != null && this.pageProject != undefined) {
+        projectsRef = this.pageProject.ref.child("subnodes");
+    } else {
+        projectsRef = database.ref("users")
+            .child(loggedUser.key)
+            .child("projects");
+    }
+
+    var projectObject = {
+        "name": project.name,
+        "position": project.position,
+        "color": project.color
+    };
+
+    project.ref = projectsRef.push(projectObject);
+
     this.projects.push(project);
-    // TODO: add project to DB here?
 };
 
 Page.prototype.show = function() {
@@ -167,7 +186,7 @@ Page.prototype.show = function() {
     if (this.theme != undefined && this.theme != null) {
         this.loadTheme();
     }
-}
+};
 
 Page.prototype.clearProjectElements = function() {
     $(this.element)
@@ -175,7 +194,86 @@ Page.prototype.clearProjectElements = function() {
         .each(function() {
             $(this).remove();
         });
-}
+};
+
+/** Create visual elements for all objects in projects array */
+Page.prototype.loadProjectElements = function() {
+    for (let i = 0; i < this.projects.length; i++) {
+        const size = 200;
+        const SIZE_ZOOMED = size + (zoomData.zoom * 10);
+
+        let project = this.projects[i];
+        let position = project.position;
+        let projectCircleElement = $("<div>")
+            .addClass("project-circle")
+            .css({
+                "position": "absolute",
+                "background-color": project.color,
+                "left": position.x - (SIZE_ZOOMED / 2),
+                "top" : position.y - (SIZE_ZOOMED / 2)
+            })
+            .append($("<div>")
+                .addClass("project-circle-text")
+                .append($("<div>")
+                    .addClass("project-title-div")
+                    .append(project.name)));
+
+        let callbacks = {
+            click: function() {
+                // open the clicked project page
+                var pageBefore = currentPage;
+                pageBefore.unbindEvents();
+                pageBefore.clearProjectElements();
+
+                currentPage = new Page(project.name,
+                    $("<div class=\"page\">")
+                        .append("<div class=\"video-wrapper\">"),
+                        null, project);
+
+                currentPage.loadProjectsFromDatabase();
+                currentPage.parentPage = pageBefore;
+                currentPage.bindEvents();
+                currentPage.show();
+
+                updateBreadcrums();
+            }
+        };
+
+        projectCircleElement.valueBefore = project.name;
+        // bind click, double click, lose focus events
+        bindProjectElementEvents(projectCircleElement, callbacks);
+        $(this.element).append(projectCircleElement);
+    }
+};
+
+/** Load projects from database into the array */
+Page.prototype.loadProjectsFromDatabase = function() {
+    var projectsRef = null;
+    if (this.pageProject != null && this.pageProject != undefined) {
+        projectsRef = this.pageProject.ref.child("subnodes");
+    } else {
+        projectsRef = database.ref("users")
+            .child(loggedUser.key)
+            .child("projects");
+    }
+
+    var me = this;
+
+    projectsRef.once("value", function(snapshot) {
+        var snapshotValue = snapshot.val();
+
+        if (snapshotValue != undefined && snapshotValue != null) {
+            let keys = Object.keys(snapshotValue);
+            for (let i = 0; i < keys.length; i++) {
+                let project = snapshotValue[keys[i]];
+                project.ref = projectsRef.child(keys[i]);
+                me.projects.push(project);
+            }
+        }
+
+        me.loadProjectElements();
+    });
+};
 
 Page.prototype.addCircle = function(position, callbacks) {
     var circleInfo = {
@@ -215,7 +313,8 @@ Page.prototype.addCircle = function(position, callbacks) {
             "position": "absolute",
             "background-color": circleInfo.color,
             "left": position.x,
-            "top" : position.y })
+            "top" : position.y,
+        })
         .animate({
              "left": position.x - (SIZE_ZOOMED / 2),
              "top" : position.y - (SIZE_ZOOMED / 2),
@@ -319,7 +418,7 @@ function elementLoseFocus(element, callbacks) {
             callbacks.success(element);
         }
     }
-}
+};
 
 function bindProjectElementEvents(element, callbacks) {
     $(element).click(function() {
@@ -338,4 +437,4 @@ function bindProjectElementEvents(element, callbacks) {
     }).focusout(function() {
         elementLoseFocus(element, callbacks);
     });
-}
+};

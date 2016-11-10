@@ -64,7 +64,6 @@ function addNewUser(result, ref) {
         name:  result.user.displayName,
         currentThemeName: "poly", /* default theme */
         projects: {
-
         }
     };
 

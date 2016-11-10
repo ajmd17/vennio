@@ -46,7 +46,7 @@ function updateBreadcrums() {
     var elementsToAdd = [];
 
     var page = currentPage;
-    while (page !== null && page !== undefined) {
+    while (page != null && page != undefined) {
         let li = $("<li>");
         let a = $("<a href=\"#\">").append(page.name);
 
@@ -59,8 +59,10 @@ function updateBreadcrums() {
                 currentPage.unbindEvents();
                 currentPage.clearProjectElements();
                 currentPage = thisPage;
+                currentPage.loadProjectElements();
                 currentPage.bindEvents();
                 currentPage.show();
+
                 updateBreadcrums();
             });
         }
@@ -98,7 +100,9 @@ function afterLogin() {
     // create root projects page
     currentPage = new Page("Projects", $("<div class=\"page\">")
         .append("<div class=\"video-wrapper\">"),
-        themes[loggedUser.currentThemeName]);
+        themes[loggedUser.currentThemeName],
+        null);
+    currentPage.loadProjectsFromDatabase();
     currentPage.parentPage = null;
     currentPage.bindEvents();
     currentPage.show();
