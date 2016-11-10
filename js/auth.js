@@ -62,8 +62,13 @@ function addNewUser(result, ref) {
     var user = {
         uid: result.user.uid,
         name:  result.user.displayName,
-        currentThemeName: "poly", /* default theme */
+        theme: themes["poly"] /* default theme */,
         projects: {
+        },
+        viewport: {
+            zoom: 0,
+            viewLeft: 0,
+            viewTop: 0
         }
     };
 

@@ -1,17 +1,15 @@
 var sidebarVisible = false;
 var panning = false;
+var dragTime = 0;
+var mouseHoldId = 0;
+var showRipple = false;
 
 const MIN_ZOOM = -10;
 const MAX_ZOOM =  20;
 
-var zoomData = {
-    zoom: 0,
-    viewLeft: 0,
-    viewTop: 0,
-    mousePosition: {
-        x: 0,
-        y: 0
-    }
+var mousePosition = {
+    x: 0,
+    y: 0
 };
 
 var BackgroundType = {
@@ -77,20 +75,6 @@ function updateBreadcrums() {
     }
 }
 
-function zoomCircle(circle, sign, zooming) {
-    var diff = {
-        x: (zoomData.mousePosition.x - $(circle).position().left) * 0.05,
-        y: (zoomData.mousePosition.y - $(circle).position().top) * 0.05
-    };
-
-    $(circle).css({
-        "width" : "+=" + (sign * 10).toString(),
-        "height": "+=" + (sign * 10).toString(),
-        "left": "-=" + (diff.x * sign).toString(),
-        "top" : "-=" + (diff.y * sign).toString()
-    });
-}
-
 function afterLogin() {
     if (loggedUser.currentThemeName == undefined ||
         loggedUser.currentThemeName == null) {
@@ -100,8 +84,10 @@ function afterLogin() {
     // create root projects page
     currentPage = new Page("Projects", $("<div class=\"page\">")
         .append("<div class=\"video-wrapper\">"),
-        themes[loggedUser.currentThemeName],
-        null);
+        loggedUser.theme,
+        null,
+        loggedUser.viewport);
+
     currentPage.loadProjectsFromDatabase();
     currentPage.parentPage = null;
     currentPage.bindEvents();
@@ -114,11 +100,38 @@ function afterLogin() {
         if (e.ctrlKey) {
             e.preventDefault();
         }
-    }).mouseup(function() {
+    }).mouseup(function(e) {
+
+        clearTimeout(mouseHoldId);
+
+        if (showRipple && dragTime == 0) {
+            const RIPPLE_SIZE = 100;
+            var pageContent = $("#page-content");
+
+            $(".ripple").remove();
+            var posX = pageContent.offset().left,
+                posY = pageContent.offset().top;
+
+            pageContent.prepend("<span class=\"ripple\"></span>");
+
+            var x = e.pageX - posX - RIPPLE_SIZE / 2;
+            var y = e.pageY - posY - RIPPLE_SIZE / 2;
+            
+            $(".ripple").css({
+                width:  RIPPLE_SIZE,
+                height: RIPPLE_SIZE,
+                top:  y + 'px',
+                left: x + 'px'
+            }).addClass("rippleEffect");
+        }
+
+
         if (panning) {
             $(currentPage.element).css("cursor", "auto");
         }
         panning = false;
+        dragTime = 0;
+        showRipple = false;
     });
 
 

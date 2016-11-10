@@ -19,6 +19,12 @@ body {
     transition: margin-left 0.2s;
 }
 
+.right {
+   float: right !important;
+   padding-left: 0 !important;
+   padding-right: 8px !important;
+}
+
 .titlebar {
     position:fixed;
     z-index: 12;
@@ -59,11 +65,12 @@ body {
     color:#3E454C;
     text-decoration: none;
     padding: 8px;
+    border: 1px solid #E5F2FA;
     border-radius: 4px;
-    border-width: 0;
 }
 .titlebar .titlebar-li > a:hover {
     background-color: #D9E0E7;
+    border-color: #D0DCE3;
 }
 .active {
     background-color: #D9E0E7;
@@ -379,4 +386,28 @@ body {
 .breadcrum .current::before,
 .breadcrum .current:hover::before {
     border-color: #C9DCEB #C9DCEB #C9DCEB transparent;
+}
+
+
+
+.ripple {
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(0);
+  position: absolute;
+  opacity: 1;
+  z-index: 20;
+  pointer-events: none;
+}
+.rippleEffect {
+    animation: rippleDrop .6s linear;
+}
+
+@keyframes rippleDrop {
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
 }
