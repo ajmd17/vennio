@@ -66,9 +66,14 @@ function addNewUser(result, ref) {
         projects: {
         },
         viewport: {
-            zoom: 0,
-            viewLeft: 0,
-            viewTop: 0
+            zoom: 1.0,
+            zoomLevel: 0,
+            left: 0,
+            top: 0,
+            zoomVec: {
+                x: 0,
+                y: 0
+            }
         }
     };
 

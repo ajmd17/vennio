@@ -4,8 +4,10 @@ var dragTime = 0;
 var mouseHoldId = 0;
 var showRipple = false;
 
-const MIN_ZOOM = -10;
-const MAX_ZOOM =  20;
+const MIN_ZOOM = 1.0;
+const MAX_ZOOM = 10.0;
+const ZOOM_STEP = 0.1;
+const ZOOM_THETA = 0.1;
 
 var mousePosition = {
     x: 0,
@@ -57,9 +59,9 @@ function updateBreadcrums() {
                 currentPage.unbindEvents();
                 currentPage.clearProjectElements();
                 currentPage = thisPage;
-                currentPage.loadProjectElements();
                 currentPage.bindEvents();
                 currentPage.show();
+                currentPage.loadProjectElements();
 
                 updateBreadcrums();
             });

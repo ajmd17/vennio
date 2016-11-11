@@ -1,5 +1,3 @@
-const ZOOM_THETA = 0.05;
-
 function Page(name, element, theme, pageProject, viewport) {
     this.name = name;
     this.element = element;
@@ -7,6 +5,20 @@ function Page(name, element, theme, pageProject, viewport) {
     this.projects = [];
     this.pageProject = pageProject;
     this.viewport = viewport;
+}
+
+Page.prototype.eltSpaceToZoomSpace = function(vec) {
+    return {
+        x: ((vec.x - ($(this.element).width()  / 2))),
+        y: ((vec.y - ($(this.element).height() / 2)))
+    };
+}
+
+Page.prototype.zoomSpaceToEltSpace = function(vec) {
+    return {
+        x: (vec.x) + ($(this.element).width()  / 2),
+        y: (vec.y) + ($(this.element).height()  / 2)
+    };
 }
 
 Page.prototype.unbindEvents = function() {
@@ -17,7 +29,6 @@ Page.prototype.bindEvents = function() {
     $(this.element)
         .find(".project-circle")
         .each(function() {
-            console.log($(this));
         });
 
     var me = this;
@@ -33,29 +44,36 @@ Page.prototype.bindEvents = function() {
             }
 
             var deltaSign = Math.sign(delta);
-            var nextZoom = me.viewport.zoom + deltaSign;
+            var nextZoom = me.viewport.zoom + (deltaSign * ZOOM_STEP);
 
             mousePosition = {
                 x: e.pageX,
                 y: e.pageY
             };
 
-            if (nextZoom > MIN_ZOOM && nextZoom < MAX_ZOOM) {
-                me.viewport.viewLeft = mousePosition.x;
-                me.viewport.viewTop  = mousePosition.y;
+            if (nextZoom >= MIN_ZOOM && nextZoom <= MAX_ZOOM) {
+                console.log("mousePosition: ", mousePosition);
+
+                let sign = Math.sign(nextZoom - me.viewport.zoom);
+                me.viewport.zoomLevel += sign;
                 me.viewport.zoom = nextZoom;
+                me.viewport.zoomVec = {
+                    x: (e.pageX - ($(this).width()  / 2)),
+                    y: (e.pageY - ($(this).height() / 2))
+                };
+
                 $(".project-circle").each(function() {
                     // zoom in on the element
                     var diff = {
-                        x: (me.viewport.viewLeft - $(this).position().left) * ZOOM_THETA,
-                        y: (me.viewport.viewTop  - $(this).position().top)  * ZOOM_THETA
+                        x: ((e.pageX) - ($(this).position().left /*+ ($(this).width()/2)*/)) * ZOOM_THETA,
+                        y: ((e.pageY) - ($(this).position().top /* + ($(this).height()/2)*/))  * ZOOM_THETA
                     };
 
                     $(this).css({
-                        "width" : "+=" + (deltaSign * 10).toString(),
-                        "height": "+=" + (deltaSign * 10).toString(),
-                        "left": "-=" + (diff.x * deltaSign).toString(),
-                        "top" : "-=" + (diff.y * deltaSign).toString()
+                        "width" : (200 * me.viewport.zoom).toString(),
+                        "height": (200 * me.viewport.zoom).toString(),
+                        "left": "-=" + (diff.x * sign).toString(),
+                        "top" : "-=" + (diff.y * sign).toString()
                     });
                 });
 
@@ -69,6 +87,12 @@ Page.prototype.bindEvents = function() {
                         .child("viewport")
                         .set(me.viewport);
                 }
+
+                // temp
+               // setTimeout(function() {
+                    me.clearProjectElements();
+                    me.loadProjectElements();
+               // }, 500);
             }
         }
     }).dblclick(function(event) {
@@ -95,23 +119,35 @@ Page.prototype.bindEvents = function() {
 
                         projectToAdd = new Project(name, position, element);
 
-                        var diff = {
-                            x: (me.viewport.viewLeft - position.x) * ZOOM_THETA,
-                            y: (me.viewport.viewTop  - position.y) * ZOOM_THETA
+                        const size = 200;
+                        const SIZE_ZOOMED = size * me.viewport.zoom;
+
+                        /*var newPosition = {
+                            x: ((position.x - ($(me.element).width()  / 2))) * me.viewport.zoom - (SIZE_ZOOMED/2),
+                            y: ((position.y - ($(me.element).height() / 2))) * me.viewport.zoom - (SIZE_ZOOMED/2)
                         };
 
-                        var newPosition = {
-                            x: position.x + (diff.x * me.viewport.zoom),
-                            y: position.y + (diff.y * me.viewport.zoom)
-                        };
+                        console.log("(add): " + JSON.stringify({
+                            x: event.pageX,
+                            y: event.pageY
+                        }));
+                        console.log("(add): " + JSON.stringify(newPosition));*/
 
-                        projectToAdd.position = newPosition;
+                        projectToAdd.position = me.eltSpaceToZoomSpace({
+                            x: position.x,
+                            y: position.y
+                        });
 
                         projectToAdd.color = element.css("background-color");
                         projectToAdd.viewport = {
-                            zoom: 0,
-                            viewLeft: 0,
-                            viewTop: 0
+                            zoom: 1.0,
+                            zoomLevel: 0,
+                            left: 0,
+                            top: 0,
+                            zoomVec: {
+                                x: 0,
+                                y: 0
+                            }
                         };
                         projectToAdd.theme = themes["poly_2"]; /* Default theme for a new project */
                         me.addProject(projectToAdd);
@@ -130,9 +166,14 @@ Page.prototype.bindEvents = function() {
                                     projectToAdd.theme, projectToAdd,
                                     // create new viewport object for the newly created page.
                                     {
-                                        zoom: 0,
-                                        viewLeft: 0,
-                                        viewTop: 0
+                                        zoom: 1.0,
+                                        zoomLevel: 0,
+                                        left: 0,
+                                        top: 0,
+                                        zoomVec: {
+                                            x: 0,
+                                            y: 0
+                                        }
                                     });
 
                             currentPage.parentPage = pageBefore;
@@ -168,10 +209,24 @@ Page.prototype.bindEvents = function() {
 
         if (panning) {
             dragTime++;
+
             var diff = {
                 x: newPos.x - mousePosition.x,
                 y: newPos.y - mousePosition.y
             };
+
+            me.viewport.left -= diff.x / me.viewport.zoom;
+            me.viewport.top  -= diff.y / me.viewport.zoom;
+            // update viewport
+            if (me.pageProject != null && me.pageProject != undefined) {
+                me.pageProject.viewport = me.viewport;
+                me.pageProject.ref.child("viewport").set(me.viewport);
+            } else {
+                database.ref("users")
+                    .child(loggedUser.key)
+                    .child("viewport")
+                    .set(me.viewport);
+            }
 
             $(".project-circle").each(function() {
                 $(this).css({
@@ -258,28 +313,35 @@ Page.prototype.clearProjectElements = function() {
 
 /** Create visual elements for all objects in projects array */
 Page.prototype.loadProjectElements = function() {
+    let absVec = this.zoomSpaceToEltSpace(this.viewport.zoomVec);
+    console.log("absVec: ", absVec);
+
     for (let i = 0; i < this.projects.length; i++) {
         const size = 200;
-        const SIZE_ZOOMED = size + (this.viewport.zoom * 10);
+        const SIZE_ZOOMED = size * this.viewport.zoom;
 
         let project = this.projects[i];
         let position = project.position;
-        let absPosition = {
-            x: position.x - (SIZE_ZOOMED / 2),
-            y: position.y - (SIZE_ZOOMED / 2)
-        };
-        let diff = {
-            x: (this.viewport.viewLeft - position.x) * ZOOM_THETA,
-            y: (this.viewport.viewTop  - position.y) * ZOOM_THETA
-        };
+
+        let absPosition = this.zoomSpaceToEltSpace(position);
+
+        for (let j = 0; j < this.viewport.zoomLevel; j++) {
+            // adjust zoom
+            let diff = {
+                x: ((absVec.x) - (absPosition.x)) * ZOOM_THETA,
+                y: ((absVec.y) - (absPosition.y)) * ZOOM_THETA
+            };
+            absPosition.x -= diff.x;
+            absPosition.y -= diff.y;
+        }
 
         let projectCircleElement = $("<div>")
             .addClass("project-circle")
             .css({
                 "position": "absolute",
                 "background-color": project.color,
-                "left": position.x - (diff.x * this.viewport.zoom),
-                "top" : position.y - (diff.y * this.viewport.zoom),
+                "left": (absPosition.x).toString() + "px",
+                "top" : (absPosition.y).toString() + "px",
                 "width" : SIZE_ZOOMED.toString() + "px",
                 "height": SIZE_ZOOMED.toString() + "px",
                 "opacity": 0
@@ -357,7 +419,7 @@ Page.prototype.addCircle = function(position, callbacks) {
         color: randomColor({luminosity: "light", format: "rgb"}),
     };
 
-    const SIZE_ZOOMED = circleInfo.size + (this.viewport.zoom * 10);
+    const SIZE_ZOOMED = circleInfo.size * this.viewport.zoom;
 
     const ANIM_TIME = 200;
     const HOVER_COLORS = [
@@ -372,7 +434,8 @@ Page.prototype.addCircle = function(position, callbacks) {
         .css({
             position: "absolute",
             width: "100%",
-            height: "100%"})
+            height: "100%"
+        })
         .append($("<li>")
             .append($("<img src=\"img/shapes/star.svg\" class=\"svg\">")))
         .append($("<li>")
@@ -381,11 +444,6 @@ Page.prototype.addCircle = function(position, callbacks) {
             .append($("<img src=\"img/shapes/heart.svg\" class=\"svg\">")))
         .append($("<li>")
             .append($("<img src=\"img/shapes/circle.svg\" class=\"svg\">")));
-
-    var absPosition = {
-        x: position.x - (SIZE_ZOOMED / 2),
-        y: position.y - (SIZE_ZOOMED / 2)
-    };
 
     var projectCircleElement = $("<div>")
         .addClass("project-circle")
@@ -396,8 +454,8 @@ Page.prototype.addCircle = function(position, callbacks) {
             "top" : position.y,
         })
         .animate({
-             "left": absPosition.x,
-             "top" : absPosition.y,
+             "left": position.x - (SIZE_ZOOMED / 2),
+             "top" : position.y - (SIZE_ZOOMED / 2),
              "width" : SIZE_ZOOMED.toString() + "px",
              "height": SIZE_ZOOMED.toString() + "px"
             },
@@ -434,7 +492,7 @@ Page.prototype.addCircle = function(position, callbacks) {
 
         setTimeout(function() {
             item.find("svg path").css("fill", HOVER_COLORS[i]);
-        }, 100);
+        }, 250);
 
         item.css({
             opacity: 1,
