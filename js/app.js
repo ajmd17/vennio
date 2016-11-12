@@ -9,6 +9,17 @@ const MAX_ZOOM = 10.0;
 const ZOOM_STEP = 0.1;
 const ZOOM_THETA = 0.1;
 
+const PAN_THETA = 0.5;
+
+const RIPPLE_SIZE = 100;
+
+var focusState = {
+    isFocusedOnObject: false,
+    focusedObject: null,
+    callbacks: {
+    }
+};
+
 var mousePosition = {
     x: 0,
     y: 0
@@ -40,21 +51,22 @@ var themes = {
 var currentPage = null;
 
 function updateBreadcrums() {
-    var breadcrumsElement = $("#top-breadcrums");
-    breadcrumsElement.empty();
+    var $topBreadcrumbs = $("#top-breadcrums");
+    $topBreadcrumbs.empty();
 
     var elementsToAdd = [];
-
     var page = currentPage;
+
     while (page != null && page != undefined) {
-        let li = $("<li>");
-        let a = $("<a href=\"#\">").append(page.name);
+        let $li = $("<li>");
+        let $a = $("<a href=\"#\">").append(page.name);
 
         if (page == currentPage) {
-            a.addClass("current");
+            $a.addClass("current");
         } else {
             let thisPage = page;
-            a.click(function() {
+
+            $a.click(function() {
                 // navigate to parent page
                 currentPage.unbindEvents();
                 currentPage.clearProjectElements();
@@ -67,14 +79,97 @@ function updateBreadcrums() {
             });
         }
 
-        elementsToAdd.push(li.append(a));
+        $li.append($a);
+        elementsToAdd.push($li);
 
         page = page.parentPage;
     }
 
     for (var i = elementsToAdd.length - 1; i >= 0; i--) {
-        breadcrumsElement.append(elementsToAdd[i]);
+        $topBreadcrumbs.append(elementsToAdd[i]);
     }
+}
+
+function handleObjectLoseFocus(element, callbacks) {
+    var $element = $(element);
+    var $txt = $element.find(".project-circle-text");
+    var $edit = $txt.find("input");
+
+    if ($edit.val() == "") {
+        // remove object if you don't enter a value the first time
+        if (element.valueBefore == undefined) {
+            $element.animate({
+                "left": ($element.position().left + ($element.width() / 2)).toString() + "px",
+                "top" : ($element.position().top  + ($element.width() / 2)).toString() + "px",
+                "width" : 0,
+                "height": 0
+            }, 200, "linear", function() {
+                // remove it after the animation
+                $element.remove();
+            });
+        } else {
+            // error, must enter a name
+            $("#dialog").dialogBox({
+                "title": "Project Name Empty",
+                "content": "Please enter a name for the project.",
+                "effect": "sign",
+                "hasBtn": true,
+                "confirmValue": "OK",
+                "confirm": function() {
+                    $(edit).select();
+                },
+                "callback": function() {
+                }
+            });
+        }
+    } else {
+        element.valueBefore = $edit.val();
+
+        // convert text element to div
+        let $replacementDiv = $("<div>")
+            .addClass("project-title-div")
+            .append(element.valueBefore);
+
+        $txt.append($replacementDiv);
+        $edit.remove();
+
+        // remove object type selector after animation
+        $element.find(".circle-container").animate({
+            "opacity": 0
+        }, 150, "linear", function() {
+            $(this).remove();
+        });
+
+        if (callbacks.success != undefined) {
+            callbacks.success(element);
+        }
+    }
+}
+
+function clearObjectFocus() {
+    focusState = {
+        isFocusedOnObject: false,
+        focusedObject: null,
+        callbacks: {
+        }
+    };
+}
+
+function objectLoseFocus() {
+    if (focusState.isFocusedOnObject && focusState.focusedObject != null) {
+        handleObjectLoseFocus(focusState.focusedObject, focusState.callbacks);
+    }
+    clearObjectFocus();
+}
+
+function hasFocusedObject() {
+    return focusState.isFocusedOnObject && focusState.focusedObject != null;
+}
+
+function setFocusedObject(element, callbacks) {
+    focusState.isFocusedOnObject = true;
+    focusState.focusedObject = element;
+    focusState.callbacks = callbacks;
 }
 
 function afterLogin() {
@@ -84,7 +179,7 @@ function afterLogin() {
     }
 
     // create root projects page
-    currentPage = new Page("Projects", $("<div class=\"page\">")
+    currentPage = new Page("Home", $("<div class=\"page\">")
         .append("<div class=\"video-wrapper\">"),
         loggedUser.theme,
         null,
@@ -102,59 +197,71 @@ function afterLogin() {
         if (e.ctrlKey) {
             e.preventDefault();
         }
-    }).mouseup(function(e) {
+    }).click(function(e) {
+        var $target = $(e.target);
 
+        if ($target.is(".project-circle") || $(".project-circle").has($target).length != 0) {
+            // let the click callback for the project handle it
+            console.log("mouse down on project");
+        } else {
+            objectLoseFocus();
+        }
+
+    }).on("mouseup touchend", function(e) {
         clearTimeout(mouseHoldId);
 
         if (showRipple && dragTime == 0) {
-            const RIPPLE_SIZE = 100;
-            var pageContent = $("#page-content");
+            var $pageContent = $("#page-content");
 
             $(".ripple").remove();
-            var posX = pageContent.offset().left,
-                posY = pageContent.offset().top;
 
-            pageContent.prepend("<span class=\"ripple\"></span>");
+            var posX = $pageContent.offset().left;
+            var posY = $pageContent.offset().top;
 
-            var x = e.pageX - posX - RIPPLE_SIZE / 2;
-            var y = e.pageY - posY - RIPPLE_SIZE / 2;
-            
-            $(".ripple").css({
-                width:  RIPPLE_SIZE,
-                height: RIPPLE_SIZE,
-                top:  y + 'px',
-                left: x + 'px'
-            }).addClass("rippleEffect");
+            $pageContent.prepend($("<span class=\"ripple\">")
+                .css({
+                    "width":  RIPPLE_SIZE,
+                    "height": RIPPLE_SIZE,
+                    "left": (e.pageX - posX - (RIPPLE_SIZE / 2)).toString() + "px",
+                    "top":  (e.pageY - posY - (RIPPLE_SIZE / 2)).toString() + "px"
+                }).addClass("rippleEffect")
+            );
         }
-
 
         if (panning) {
             $(currentPage.element).css("cursor", "auto");
         }
+
         panning = false;
         dragTime = 0;
         showRipple = false;
     });
 
-
-    $("#main-container").css({"padding-top": $(".titlebar").height().toString() + "px"});
+    $("#main-container").css({ "padding-top": $(".titlebar").height().toString() + "px" });
 }
 
 $(document).ready(function() {
-    $("#menu-btn").click(function() {
-        sidebarVisible = !sidebarVisible;
-        $("#menu-btn").toggleClass("active");
+    var $menuBtn = $("#menu-btn");
+    var $mainSidebar = $("#main-sidebar");
+    var $pageContent = $("#page-content");
 
+    $menuBtn.click(function() {
+        $menuBtn.toggleClass("active");
+
+        sidebarVisible = !sidebarVisible;
         if (sidebarVisible) {
             var sidebarWidth = "300px";
-            $("#main-sidebar").show();
-            $("#main-sidebar").css({"width": sidebarWidth});
-            $("#page-content").css({"margin-left": sidebarWidth});
+            
+            $mainSidebar.show();
+            $mainSidebar.css({ "width": sidebarWidth });
+            $pageContent.css({ "margin-left": sidebarWidth });
         } else {
-            $("#page-content").css({"margin-left": 0});
-            $("#main-sidebar").css({"width": 0});
+            $pageContent.css({ "margin-left": 0 });
+            $mainSidebar.css({ "width": 0 });
+
+            // hide after transition
             setTimeout(function() {
-                $("#main-sidebar").hide();
+                $mainSidebar.hide();
             }, 100);
         }
     });
