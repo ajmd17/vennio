@@ -1,3 +1,10 @@
+// on click, a timeout is set.
+// if clicked again, it is cleared.
+// else, the user is taken to the clicked project's page.
+var itemClickTimeoutId = 0;
+var itemClickTimeoutOn = false;
+const PROJECT_CLICK_TIMEOUT = 300;
+
 function Page(name, element, theme, pageProject, viewport) {
     this.name = name;
     this.element = element;
@@ -9,15 +16,15 @@ function Page(name, element, theme, pageProject, viewport) {
 
 Page.prototype.eltSpaceToZoomSpace = function(vec) {
     return {
-        x: ((vec.x - ($(this.element).width()  / 2))),
-        y: ((vec.y - ($(this.element).height() / 2)))
+        x: (vec.x - ($(this.element).width()  * 0.5) - $(this.element).offset().left) + this.viewport.left,
+        y: (vec.y - ($(this.element).height() * 0.5) - $(this.element).offset().top)  + this.viewport.top
     };
 }
 
 Page.prototype.zoomSpaceToEltSpace = function(vec) {
     return {
-        x: (vec.x) + ($(this.element).width()  / 2),
-        y: (vec.y) + ($(this.element).height()  / 2)
+        x: ((vec.x - this.viewport.left) + ($(this.element).width()  * 0.5) + $(this.element).offset().left),
+        y: ((vec.y - this.viewport.top)  + ($(this.element).height() * 0.5) + $(this.element).offset().top)
     };
 }
 
@@ -36,7 +43,6 @@ Page.prototype.bindEvents = function() {
         if (e.ctrlKey) {
             // on ctrl + scroll, zoom in on each circle element
             var delta;
-
             if (e.originalEvent.wheelDelta !== undefined) {
                 delta = e.originalEvent.wheelDelta;
             } else {
@@ -45,6 +51,7 @@ Page.prototype.bindEvents = function() {
 
             var deltaSign = Math.sign(delta);
             var nextZoom = me.viewport.zoom + (deltaSign * ZOOM_STEP);
+            var oldZoom  = me.viewport.zoom;
 
             mousePosition = {
                 x: e.pageX,
@@ -52,28 +59,45 @@ Page.prototype.bindEvents = function() {
             };
 
             if (nextZoom >= MIN_ZOOM && nextZoom <= MAX_ZOOM) {
-                console.log("mousePosition: ", mousePosition);
-
                 let sign = Math.sign(nextZoom - me.viewport.zoom);
                 me.viewport.zoomLevel += sign;
+
+                let zoomRatio = nextZoom / me.viewport.zoom;
                 me.viewport.zoom = nextZoom;
+
                 me.viewport.zoomVec = {
-                    x: (e.pageX - ($(this).width()  / 2)),
-                    y: (e.pageY - ($(this).height() / 2))
+                    x: (e.pageX - ($(this).width()  / 2)) / me.viewport.zoom,
+                    y: (e.pageY - ($(this).height() / 2)) / me.viewport.zoom
                 };
 
+                let cursor = {
+                    x: (e.pageX - $(this).offset().left),
+                    y: (e.pageY - $(this).offset().top)
+                };
+
+                let viewportOffset = {
+                    x: (cursor.x * zoomRatio) - cursor.x,
+                    y: (cursor.y * zoomRatio) - cursor.y
+                };
+
+                // modify viewport left and top
+                me.viewport.left += viewportOffset.x;
+                me.viewport.top  += viewportOffset.y;
+
+                // update each project element immediately
                 $(".project-circle").each(function() {
-                    // zoom in on the element
-                    var diff = {
-                        x: ((e.pageX) - ($(this).position().left /*+ ($(this).width()/2)*/)) * ZOOM_THETA,
-                        y: ((e.pageY) - ($(this).position().top /* + ($(this).height()/2)*/))  * ZOOM_THETA
-                    };
+                    var currentLeft = $(this).position().left;
+                    var currentTop = $(this).position().top;
+                    var currentWidth = $(this).width();
+                    var currentHeight = $(this).height();
+                    var newWidth = 200 * me.viewport.zoom;
+                    var newHeight = 200 * me.viewport.zoom;
 
                     $(this).css({
-                        "width" : (200 * me.viewport.zoom).toString(),
-                        "height": (200 * me.viewport.zoom).toString(),
-                        "left": "-=" + (diff.x * sign).toString(),
-                        "top" : "-=" + (diff.y * sign).toString()
+                        "width" : newWidth.toString(),
+                        "height": newHeight.toString(),
+                        "left": (((currentLeft + (currentWidth  / 2)) / oldZoom - viewportOffset.x) * me.viewport.zoom - (newWidth  / 2)).toString() + "px",
+                        "top" : (((currentTop  + (currentWidth / 2)) / oldZoom - viewportOffset.y) * me.viewport.zoom - (newHeight / 2)).toString() + "px"
                     });
                 });
 
@@ -89,10 +113,10 @@ Page.prototype.bindEvents = function() {
                 }
 
                 // temp
-               // setTimeout(function() {
+                /*setTimeout(function() {
                     me.clearProjectElements();
                     me.loadProjectElements();
-               // }, 500);
+                }, 500);*/
             }
         }
     }).dblclick(function(event) {
@@ -134,17 +158,19 @@ Page.prototype.bindEvents = function() {
                         console.log("(add): " + JSON.stringify(newPosition));*/
 
                         projectToAdd.position = me.eltSpaceToZoomSpace({
-                            x: position.x,
-                            y: position.y
+                            "x": position.x,
+                            "y": position.y
                         });
+                        projectToAdd.position.x /= me.viewport.zoom;
+                        projectToAdd.position.y /= me.viewport.zoom;
 
                         projectToAdd.color = element.css("background-color");
                         projectToAdd.viewport = {
-                            zoom: 1.0,
-                            zoomLevel: 0,
-                            left: 0,
-                            top: 0,
-                            zoomVec: {
+                            "zoom": 1.0,
+                            "zoomLevel": 0,
+                            "left": 0,
+                            "top": 0,
+                            "zoomVec": {
                                 x: 0,
                                 y: 0
                             }
@@ -155,32 +181,42 @@ Page.prototype.bindEvents = function() {
                 click:
                     function() {
                         if (projectToAdd !== null) {
-                            // open the clicked project page
-                            var pageBefore = currentPage;
-                            pageBefore.unbindEvents();
-                            pageBefore.clearProjectElements();
+                            if (itemClickTimeoutOn) {
+                                clearTimeout(itemClickTimeoutId);
+                                itemClickTimeoutOn = false;
+                            } else {
+                                itemClickTimeoutOn = true;
+                                itemClickTimeoutId = setTimeout(function() {
+                                    // open the clicked project page
+                                    var pageBefore = currentPage;
+                                    pageBefore.unbindEvents();
+                                    pageBefore.clearProjectElements();
 
-                            currentPage = new Page(projectToAdd.name,
-                                $("<div class=\"page\">")
-                                    .append("<div class=\"video-wrapper\">"),
-                                    projectToAdd.theme, projectToAdd,
-                                    // create new viewport object for the newly created page.
-                                    {
-                                        zoom: 1.0,
-                                        zoomLevel: 0,
-                                        left: 0,
-                                        top: 0,
-                                        zoomVec: {
-                                            x: 0,
-                                            y: 0
-                                        }
-                                    });
+                                    currentPage = new Page(projectToAdd.name,
+                                        $("<div class=\"page\">")
+                                            .append("<div class=\"video-wrapper\">"),
+                                            projectToAdd.theme, projectToAdd,
+                                            // create new viewport object for the newly created page.
+                                            {
+                                                zoom: 1.0,
+                                                zoomLevel: 0,
+                                                left: 0,
+                                                top: 0,
+                                                zoomVec: {
+                                                    x: 0,
+                                                    y: 0
+                                                }
+                                            });
 
-                            currentPage.parentPage = pageBefore;
-                            currentPage.bindEvents();
-                            currentPage.show();
+                                    currentPage.parentPage = pageBefore;
+                                    currentPage.bindEvents();
+                                    currentPage.show();
 
-                            updateBreadcrums();
+                                    updateBreadcrums();
+
+                                    itemClickTimeoutOn = false;
+                                }, PROJECT_CLICK_TIMEOUT);
+                            }
                         }
                     }
                 });
@@ -205,18 +241,19 @@ Page.prototype.bindEvents = function() {
             y: e.pageY
         };
 
-        const PAN_THETA = 0.5;
-
         if (panning) {
             dragTime++;
+
+            const PAN_THETA = 0.5;
 
             var diff = {
                 x: newPos.x - mousePosition.x,
                 y: newPos.y - mousePosition.y
             };
 
-            me.viewport.left -= diff.x / me.viewport.zoom;
-            me.viewport.top  -= diff.y / me.viewport.zoom;
+            me.viewport.left -= diff.x * PAN_THETA / me.viewport.zoom;
+            me.viewport.top  -= diff.y * PAN_THETA / me.viewport.zoom;
+
             // update viewport
             if (me.pageProject != null && me.pageProject != undefined) {
                 me.pageProject.viewport = me.viewport;
@@ -230,8 +267,8 @@ Page.prototype.bindEvents = function() {
 
             $(".project-circle").each(function() {
                 $(this).css({
-                    "left": "+=" + (diff.x * PAN_THETA).toString(),
-                    "top" : "+=" + (diff.y * PAN_THETA).toString()
+                    "left": "+=" + (diff.x * PAN_THETA / me.viewport.zoom).toString(),
+                    "top" : "+=" + (diff.y * PAN_THETA / me.viewport.zoom).toString()
                 });
             });
         }
@@ -313,9 +350,6 @@ Page.prototype.clearProjectElements = function() {
 
 /** Create visual elements for all objects in projects array */
 Page.prototype.loadProjectElements = function() {
-    let absVec = this.zoomSpaceToEltSpace(this.viewport.zoomVec);
-    console.log("absVec: ", absVec);
-
     for (let i = 0; i < this.projects.length; i++) {
         const size = 200;
         const SIZE_ZOOMED = size * this.viewport.zoom;
@@ -325,23 +359,13 @@ Page.prototype.loadProjectElements = function() {
 
         let absPosition = this.zoomSpaceToEltSpace(position);
 
-        for (let j = 0; j < this.viewport.zoomLevel; j++) {
-            // adjust zoom
-            let diff = {
-                x: ((absVec.x) - (absPosition.x)) * ZOOM_THETA,
-                y: ((absVec.y) - (absPosition.y)) * ZOOM_THETA
-            };
-            absPosition.x -= diff.x;
-            absPosition.y -= diff.y;
-        }
-
         let projectCircleElement = $("<div>")
             .addClass("project-circle")
             .css({
                 "position": "absolute",
                 "background-color": project.color,
-                "left": (absPosition.x).toString() + "px",
-                "top" : (absPosition.y).toString() + "px",
+                "left": (absPosition.x * this.viewport.zoom - (SIZE_ZOOMED/2)).toString() + "px",
+                "top" : (absPosition.y * this.viewport.zoom - (SIZE_ZOOMED/2)).toString() + "px",
                 "width" : SIZE_ZOOMED.toString() + "px",
                 "height": SIZE_ZOOMED.toString() + "px",
                 "opacity": 0
@@ -357,23 +381,33 @@ Page.prototype.loadProjectElements = function() {
 
         let callbacks = {
             click: function() {
-                // open the clicked project page
-                var pageBefore = currentPage;
-                pageBefore.unbindEvents();
-                pageBefore.clearProjectElements();
+                if (itemClickTimeoutOn) {
+                    clearTimeout(itemClickTimeoutId);
+                    itemClickTimeoutOn = false;
+                } else {
+                    itemClickTimeoutOn = true;
+                    itemClickTimeoutId = setTimeout(function() {
+                        // open the clicked project page
+                        var pageBefore = currentPage;
+                        pageBefore.unbindEvents();
+                        pageBefore.clearProjectElements();
 
-                currentPage = new Page(project.name,
-                    $("<div class=\"page\">")
-                        .append("<div class=\"video-wrapper\">"),
-                        project.theme,
-                        project, project.viewport);
+                        currentPage = new Page(project.name,
+                            $("<div class=\"page\">")
+                                .append("<div class=\"video-wrapper\">"),
+                                project.theme,
+                                project, project.viewport);
 
-                currentPage.loadProjectsFromDatabase();
-                currentPage.parentPage = pageBefore;
-                currentPage.bindEvents();
-                currentPage.show();
+                        currentPage.loadProjectsFromDatabase();
+                        currentPage.parentPage = pageBefore;
+                        currentPage.bindEvents();
+                        currentPage.show();
 
-                updateBreadcrums();
+                        updateBreadcrums();
+
+                        itemClickTimeoutOn = false;
+                    }, PROJECT_CLICK_TIMEOUT);
+                }
             }
         };
 
@@ -420,7 +454,6 @@ Page.prototype.addCircle = function(position, callbacks) {
     };
 
     const SIZE_ZOOMED = circleInfo.size * this.viewport.zoom;
-
     const ANIM_TIME = 200;
     const HOVER_COLORS = [
         "orange",
@@ -495,8 +528,8 @@ Page.prototype.addCircle = function(position, callbacks) {
         }, 250);
 
         item.css({
-            opacity: 1,
-            transform: "rotate(" + DEG + "deg) translate(" + HALF_SIZE + "px) rotate(" + (-1 * DEG) + "deg)"
+            "opacity": 1,
+            "transform": "rotate(" + DEG + "deg) translate(" + HALF_SIZE + "px) rotate(" + (-1 * DEG) + "deg)"
         });
     }
 };
@@ -508,11 +541,9 @@ function elementLoseFocus(element, callbacks) {
     if ($(edit).val() == "") {
         if (element.valueBefore == undefined) {
             // remove object if you don't enter a value the first time
-            var left =  $(element).position().left + ($(element).width() / 2);
-            var right = $(element).position().top  + ($(element).width() / 2);
             $(element).animate({
-                "left": left,
-                "top" : right,
+                "left": $(element).position().left + ($(element).width() / 2),
+                "top" : $(element).position().top  + ($(element).width() / 2),
                 "width" : 0,
                 "height": 0
             }, 200, "linear", function() {
@@ -522,15 +553,15 @@ function elementLoseFocus(element, callbacks) {
         } else {
             // error, must enter a name
             $("#dialog").dialogBox({
-                title: "Project Name Empty",
-                content: "Please enter a name for the project.",
-                effect: "sign",
-                hasBtn: true,
-                confirmValue: "OK",
-                confirm: function() {
+                "title": "Project Name Empty",
+                "content": "Please enter a name for the project.",
+                "effect": "sign",
+                "hasBtn": true,
+                "confirmValue": "OK",
+                "confirm": function() {
                     $(edit).select();
                 },
-                callback: function() {
+                "callback": function() {
                 }
             });
         }
@@ -564,6 +595,11 @@ function bindProjectElementEvents(element, callbacks) {
             callbacks.click();
         }
     }).dblclick(function() {
+        if (itemClickTimeoutOn) {
+            clearTimeout(itemClickTimeoutId);
+            itemClickTimeoutOn = false;
+        }
+        
         var txt = $(element).find(".project-circle-text");
         var edit = $("<input type=\"text\">")
             .addClass("project-circle-text-edit")

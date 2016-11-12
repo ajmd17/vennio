@@ -65,7 +65,7 @@ body {
     color:#3E454C;
     text-decoration: none;
     padding: 8px;
-    border: 1px solid #E5F2FA;
+    border: 1px solid #E8F0F7;
     border-radius: 4px;
 }
 .titlebar .titlebar-li > a:hover {
@@ -112,12 +112,9 @@ body {
     z-index: 7;
     box-shadow: 0px 0px 16px -1px rgba(30, 30, 30, 0.2);
     transition: box-shadow 0.3s ease-in-out;
-
-}
-.project-circle-shadow {
 }
 .project-circle:hover {
-    box-shadow: 0px 0px 16px 0px rgba(30, 30, 30, 0.4);
+    box-shadow: 0px 0px 12px 0px rgba(30, 30, 30, 0.6);
 }
 
 .project-circle-text {
@@ -257,6 +254,11 @@ body {
 
 .video-wrapper {
     overflow: hidden;
+    
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
 }
 
 .circle-container {
