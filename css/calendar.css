@@ -1,0 +1,61 @@
+.calendar {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    background-color: white;
+    box-sizing: border-box;
+    border: 1px solid rgb(200, 200, 200);
+    border-radius: 6px;
+}
+.calendar ul {
+    list-style-type: none;
+    margin: 0;
+}
+.calendar .month-name {
+    text-align: center;
+    font-size: 30px;
+    margin: 0;
+    background-color: #3E454C;
+    color: white;
+    padding: 10px 0;
+}
+.calendar hr {
+    border-color: rgba(100, 100, 100, 0.2);
+}
+
+.weekdays {
+    text-align: center;
+    padding: 8px 0;
+    background-color: #2C3135;
+    color: white;
+}
+.weekdays li {
+    display: inline-block;
+    width: 13.6%;
+}
+.weekdays::last-child li {
+    border-right: none;
+}
+
+.days {
+    text-align: center;
+    padding: 2px 0;
+}
+.days li {
+    display: inline-block;
+    width: 13.6%;
+    padding: 8px 0;
+    background-color: white;
+    transition: background-color 0.3s ease;
+    border-radius: 4px;
+
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    cursor: pointer;
+}
+.days li:hover {
+    background-color: #D7DFF0;
+}

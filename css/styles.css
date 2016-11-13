@@ -178,6 +178,14 @@ body {
     outline: none;
 }
 
+.project-event-info {
+    font-size: 14px;
+    text-align: center;
+}
+.project-event-info a {
+    color: rgb(90, 90, 90);
+}
+
 .dropdown-content {
     display: none;
     position: absolute;

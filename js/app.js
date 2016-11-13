@@ -4,12 +4,19 @@ var dragTime = 0;
 var mouseHoldId = 0;
 var showRipple = false;
 
+// on click, a timeout is set.
+// if clicked again, it is cleared.
+// else, the user is taken to the clicked project's page.
+var itemClickTimeoutId = 0;
+var itemClickTimeoutOn = false;
+
 var MIN_ZOOM = 1.0;
 var MAX_ZOOM = 10.0;
 var ZOOM_STEP = 0.1;
 var ZOOM_THETA = 0.1;
 var PAN_THETA = 0.5;
 var RIPPLE_SIZE = 100;
+var PROJECT_CLICK_TIMEOUT = 300;
 
 var focusState = {
     isFocusedOnObject: false,
@@ -168,6 +175,59 @@ function setFocusedObject(element, callbacks) {
     focusState.isFocusedOnObject = true;
     focusState.focusedObject = element;
     focusState.callbacks = callbacks;
+}
+
+/** Handles when an object/project was actually clicked,
+ *  i.e not just clicked while dragging or cancelling editing for another project.
+ * 
+ *  @param project - The project data object of the element clicked.
+*/
+function handleObjectClick(project) {
+    itemClickTimeoutOn = true;
+    itemClickTimeoutId = setTimeout(function() {
+
+        switch (project.projectClass) {
+        case "group":
+            // open the clicked project page
+            var pageBefore = currentPage;
+            pageBefore.unbindEvents();
+            pageBefore.clearProjectElements();
+
+            currentPage = new Page(
+                project.name,
+                $("<div class=\"page\">")
+                    .append("<div class=\"video-wrapper\">"),
+                project.theme,
+                project,
+                project.viewport);
+
+            currentPage.parentPage = pageBefore;
+            currentPage.bindEvents();
+            currentPage.show();
+
+            updateBreadcrums();
+
+            break;
+
+        case "event":
+            // show event data
+            if (project.eventInfo == undefined || project.eventInfo == null) {
+                console.log("Error loading data about the event");
+            } else {
+                
+            }
+
+            break;
+
+        default:
+            console.log("unknown project class: ", project.projectClass);
+            break;
+        }
+
+        
+
+        itemClickTimeoutOn = false;
+    }, PROJECT_CLICK_TIMEOUT);
 }
 
 function afterLogin() {

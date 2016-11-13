@@ -1,10 +1,3 @@
-// on click, a timeout is set.
-// if clicked again, it is cleared.
-// else, the user is taken to the clicked project's page.
-var itemClickTimeoutId = 0;
-var itemClickTimeoutOn = false;
-var PROJECT_CLICK_TIMEOUT = 300;
-
 function Page(name, element, theme, pageProject, viewport) {
     this.name = name;
     this.element = element;
@@ -179,14 +172,30 @@ Page.prototype.bindEvents = function() {
                             element.projectClass);
 
                         projectToAdd.color = element.fillColor;
-                        projectToAdd.viewport = {
-                            "zoom": 1.0,
-                            "zoomLevel": 0,
-                            "left": 0,
-                            "top": 0
-                        };
 
                         projectToAdd.theme = themes["poly_2"]; /* Default theme for a new project */
+
+                        switch (element.projectClass) {
+                        case "group":
+                            projectToAdd.viewport = {
+                                "zoom": 1.0,
+                                "zoomLevel": 0,
+                                "left": 0,
+                                "top": 0
+                            };
+                            break;
+                        case "event":
+                            projectToAdd.eventInfo = {
+                                "date"    : new Date().toString(), /* TODO add date/time picker */
+                                "location": "no location", /* TODO: make this use google maps api?? */
+                                "userInfo": ""
+                            };
+                            break;
+                        default:
+                            console.log("Unknown project class " + element.projectClass.toString());
+                            break;
+                        }
+
                         page.addProject(projectToAdd);
                     },
                 click:
@@ -199,35 +208,7 @@ Page.prototype.bindEvents = function() {
                                 if (hasFocusedObject()) {
                                     objectLoseFocus();
                                 } else {
-                                    itemClickTimeoutOn = true;
-                                    itemClickTimeoutId = setTimeout(function() {
-                                        // open the clicked project page
-                                        var pageBefore = currentPage;
-                                        pageBefore.unbindEvents();
-                                        pageBefore.clearProjectElements();
-
-                                        currentPage = new Page(
-                                            projectToAdd.name,
-                                            $("<div class=\"page\">")
-                                                .append("<div class=\"video-wrapper\">"),
-                                            projectToAdd.theme,
-                                            projectToAdd,
-                                            // create new viewport object for the newly created page.
-                                            {
-                                                zoom: 1.0,
-                                                zoomLevel: 0,
-                                                left: 0,
-                                                top: 0
-                                            });
-
-                                        currentPage.parentPage = pageBefore;
-                                        currentPage.bindEvents();
-                                        currentPage.show();
-
-                                        updateBreadcrums();
-
-                                        itemClickTimeoutOn = false;
-                                    }, PROJECT_CLICK_TIMEOUT);
+                                    handleObjectClick(projectToAdd);
                                 }
                             }
                         }
@@ -330,14 +311,17 @@ Page.prototype.addProject = function(project) {
             .child("projects");
     }
 
-    var projectObject = {
+    var projectObject = project;
+    delete projectObject.element;
+    
+    /*{
         "name": project.name,
         "position": project.position,
         "color": project.color,
         "viewport": project.viewport,
         "theme": project.theme,
         "projectClass": project.projectClass
-    };
+    };*/
 
     project.ref = projectsRef.push(projectObject);
 
@@ -381,7 +365,7 @@ Page.prototype.loadProjectElement = function(project, animationTime) {
         })
         .animate({ "opacity": 1 }, animationTime)
         .append($("<i class=\"fa fa-times-circle close-project-btn\">"))
-        .append(SVG_OBJECTS[project.projectClass].clone().css("fill", project.color))
+        .append(SVG_OBJECTS[PROJECT_CLASS_SVG_NAMES[project.projectClass]].clone().css("fill", project.color))
         .append($("<div>")
             .addClass("project-circle-text")
             .append($("<div>")
@@ -403,31 +387,7 @@ Page.prototype.loadProjectElement = function(project, animationTime) {
                 if (hasFocusedObject()) {
                     objectLoseFocus();
                 } else {
-                    itemClickTimeoutOn = true;
-                    itemClickTimeoutId = setTimeout(function() {
-                        // open the clicked project page
-                        var pageBefore = currentPage;
-
-                        pageBefore.unbindEvents();
-                        pageBefore.clearProjectElements();
-
-                        currentPage = new Page(
-                            project.name,
-                            $("<div class=\"page\">")
-                                .append("<div class=\"video-wrapper\">"),
-                            project.theme,
-                            project,
-                            project.viewport);
-
-                        currentPage.loadProjectsFromDatabase();
-                        currentPage.parentPage = pageBefore;
-                        currentPage.bindEvents();
-                        currentPage.show();
-
-                        updateBreadcrums();
-
-                        itemClickTimeoutOn = false;
-                    }, PROJECT_CLICK_TIMEOUT);
+                    handleObjectClick(project);
                 }
             }
         }
@@ -483,7 +443,7 @@ Page.prototype.addCircle = function(position, callbacks) {
     var circleInfo = {
         size: 200,
         color: randomColor({ luminosity: "light", format: "rgb" }),
-        projectClass: "circle"
+        projectClass: "group"
     };
 
     var ZOOM = this.viewport.zoom;
@@ -513,7 +473,7 @@ Page.prototype.addCircle = function(position, callbacks) {
                 }
             })
         .append($("<i class=\"fa fa-times-circle close-project-btn\">"))
-        .append(SVG_OBJECTS[circleInfo.projectClass].clone().css("fill", circleInfo.color))
+        .append(SVG_OBJECTS[PROJECT_CLASS_SVG_NAMES[circleInfo.projectClass]].clone().css("fill", circleInfo.color))
         .append($("<div>")
             .addClass("project-circle-text")
             .append($("<input type=\"text\">")
@@ -523,11 +483,33 @@ Page.prototype.addCircle = function(position, callbacks) {
     $projectCircleElement.fillColor    = circleInfo.color;
     $projectCircleElement.projectClass = circleInfo.projectClass;
 
-    var changeObjectShape = function(newProjectClass) {
+    var changeProjectClass = function(newProjectClass) {
         if ($projectCircleElement.projectClass != newProjectClass) {
+            if ($projectCircleElement.projectClass == "event") {
+                // remove event related info.
+                $projectCircleElement.remove(".project-event-info");
+            }
+
+            if (newProjectClass == "event") {
+                // show the "New Event" modal
+                var $eventCreateBody = $("#event-create-body");
+                $eventCreateBody.empty();
+                $eventCreateBody.append(createCalendarElement());
+                var inst = $("[data-remodal-id=event-create-modal]").remodal();
+                inst.open();
+
+                var $dateTimePicker = $("<a href=\"#event-create-modal\" class=\"event-date-time-text\">")
+                    .append("Click to select date and time");
+                
+                var $projectEventInfo = $("<div>").addClass("project-event-info");
+                $projectEventInfo.append($dateTimePicker);
+                $projectCircleElement.find(".project-circle-text")
+                    .append($projectEventInfo);
+            }
+
             // re-create element
             $projectCircleElement.find("svg")
-                .html(SVG_OBJECTS[newProjectClass].clone());
+                .html(SVG_OBJECTS[PROJECT_CLASS_SVG_NAMES[newProjectClass]].clone());
             $projectCircleElement.projectClass = newProjectClass;
         }
 
@@ -548,19 +530,21 @@ Page.prototype.addCircle = function(position, callbacks) {
         .append($("<li>")
             .append($("<div>").append($("<img src=\"img/shapes/star.png\">"))
             .append($("<span>").append("Event")))
-            .click(function() { changeObjectShape("star"); }))
+            .click(function() { 
+                changeProjectClass("event");
+            }))
         .append($("<li>")
             .append($("<div>").append($("<img src=\"img/shapes/triangle.png\">"))
             .append($("<span>").append("Reminder")))
-            .click(function() { changeObjectShape("triangle"); }))
+            .click(function() { changeProjectClass("reminder"); }))
         .append($("<li>")
             .append($("<div>").append($("<img src=\"img/shapes/heart.png\">"))
             .append($("<span>").append("Favourite")))
-            .click(function() { changeObjectShape("heart"); }))
+            .click(function() { changeProjectClass("favourite"); }))
         .append($("<li>")
             .append($("<div>").append($("<img src=\"img/shapes/circle.png\">"))
             .append($("<span>").append("Group")))
-            .click(function() { changeObjectShape("circle"); }));
+            .click(function() { changeProjectClass("group"); }));
 
     /*var $clickElement = $projectCircleElement.find("svg");
     if ($clickElement.length == 0) {
