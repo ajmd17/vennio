@@ -193,7 +193,7 @@ function afterLogin() {
     updateBreadcrums();
 
     // to prevent scrolling in on the page
-    $(window).bind("mousewheel", function(e) {
+    $(window).on("mousewheel", function(e) {
         if (e.ctrlKey) {
             e.preventDefault();
         }
@@ -207,7 +207,7 @@ function afterLogin() {
             objectLoseFocus();
         }
 
-    }).on("mouseup touchend", function(e) {
+    }).on("mouseup", function(e) {
         clearTimeout(mouseHoldId);
 
         if (showRipple && dragTime == 0) {
@@ -228,9 +228,9 @@ function afterLogin() {
             );
         }
 
-        if (panning) {
+       // if (panning) {
             $(currentPage.element).css("cursor", "auto");
-        }
+        //}
 
         panning = false;
         dragTime = 0;

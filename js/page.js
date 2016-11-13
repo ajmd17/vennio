@@ -58,8 +58,8 @@ Page.prototype.handlePanning = function(newPos) {
 
     $(".project-circle").each(function() {
         $(this).css({
-            "left": "+=" + (diff.x * PAN_THETA / ZOOM).toString(),
-            "top" : "+=" + (diff.y * PAN_THETA / ZOOM).toString()
+            "left": "+=" + (diff.x * PAN_THETA).toString(),
+            "top" : "+=" + (diff.y * PAN_THETA).toString()
         });
     });
 };
@@ -106,8 +106,8 @@ Page.prototype.bindEvents = function() {
                     };
 
                     var viewportOffset = {
-                        x: (cursor.x * zoomRatio) - cursor.x,
-                        y: (cursor.y * zoomRatio) - cursor.y
+                        x: ((cursor.x * zoomRatio) - cursor.x) / page.viewport.zoom,
+                        y: ((cursor.y * zoomRatio) - cursor.y) / page.viewport.zoom
                     };
 
                     // modify viewport left and top
@@ -175,15 +175,17 @@ Page.prototype.bindEvents = function() {
                                 "x": position.x / page.viewport.zoom,
                                 "y": position.y / page.viewport.zoom
                             }),
-                            element);
+                            element,
+                            element.projectClass);
 
-                        projectToAdd.color = $element.css("background-color");
+                        projectToAdd.color = element.fillColor;
                         projectToAdd.viewport = {
                             "zoom": 1.0,
                             "zoomLevel": 0,
                             "left": 0,
                             "top": 0
                         };
+
                         projectToAdd.theme = themes["poly_2"]; /* Default theme for a new project */
                         page.addProject(projectToAdd);
                     },
@@ -233,44 +235,47 @@ Page.prototype.bindEvents = function() {
                 });
         }
     }).on("mousedown touchstart", function(e) {
-        var $target = $(e.target);
         var $this = $(this);
+        var $offset = $this.offset();
+        var $target = $(e.target);
+
+        if (e.type == "touchstart") {
+            mousePosition = {
+                x: e.touches[0].pageX - $offset.left,
+                y: e.touches[0].pageY - $offset.top
+            };
+        }
 
         if ($target.is($this)) {
             mouseHoldId = setTimeout(function() {
                 showRipple = true;
             }, 250);
 
-            if (!panning) {
+            //if (!panning) {
                 $this.css("cursor", "move");
-            }
+            //}
 
             panning = true;
         }
-    }).on("touchmove", function(e) {
-        e.preventDefault();
-
+    }).on("mousemove touchmove", function(e) {
         var $this = $(this);
         var $offset = $this.offset();
-        
-        var newPos = {
-            x: e.originalEvent.touches[0].pageX - $offset.left,
-            y: e.originalEvent.touches[0].pageY - $offset.top
-        };
 
-        if (panning) {
-            page.handlePanning(newPos);
+        var newPos;
+
+        if (e.type == "touchmove") {
+            e.preventDefault();
+
+            newPos = { 
+                x: e.touches[0].pageX - $offset.left,
+                y: e.touches[0].pageY - $offset.top
+            };
+        } else {
+            newPos = { 
+                x: e.pageX - $offset.left,
+                y: e.pageY - $offset.top
+            };
         }
-
-        mousePosition = newPos;
-    }).on("mousemove", function(e) {
-        var $this = $(this);
-        var $offset = $this.offset();
-
-        var newPos = {
-            x: e.pageX - $offset.left,
-            y: e.pageY - $offset.top
-        };
 
         if (panning) {
             page.handlePanning(newPos);
@@ -330,7 +335,8 @@ Page.prototype.addProject = function(project) {
         "position": project.position,
         "color": project.color,
         "viewport": project.viewport,
-        "theme": project.theme
+        "theme": project.theme,
+        "projectClass": project.projectClass
     };
 
     project.ref = projectsRef.push(projectObject);
@@ -374,12 +380,17 @@ Page.prototype.loadProjectElement = function(project, animationTime) {
             "opacity": 0
         })
         .animate({ "opacity": 1 }, animationTime)
-        .append(SVG_OBJECTS["circle"].clone().css("fill", project.color))
+        .append(SVG_OBJECTS[project.projectClass].clone().css("fill", project.color))
         .append($("<div>")
             .addClass("project-circle-text")
             .append($("<div>")
                 .addClass("project-title-div")
                 .append(project.name)));
+
+    /*var $clickElement = $projectCircleElement.find("svg");
+    if ($clickElement.length == 0) {
+        $clickElement = $projectCircleElement;
+    }*/
 
     // bind click, double click, lose focus events
     bindProjectElementEvents($projectCircleElement, {
@@ -421,7 +432,9 @@ Page.prototype.loadProjectElement = function(project, animationTime) {
         }
     });
 
+    // set element properties
     $projectCircleElement.valueBefore = project.name;
+    $projectCircleElement.projectClass = project.projectClass;
 
     return $projectCircleElement;
 };
@@ -468,7 +481,8 @@ Page.prototype.loadProjectsFromDatabase = function() {
 Page.prototype.addCircle = function(position, callbacks) {
     var circleInfo = {
         size: 200,
-        color: randomColor({luminosity: "light", format: "rgb"}),
+        color: randomColor({ luminosity: "light", format: "rgb" }),
+        projectClass: "circle"
     };
 
     const ZOOM = this.viewport.zoom;
@@ -477,31 +491,11 @@ Page.prototype.addCircle = function(position, callbacks) {
     const NUM_SHAPES = 4;
     const DEG_ACCUM = 360 / NUM_SHAPES;
 
-    var itemTypeSelector = $("<ul>")
-        .addClass("circle-container")
-        .css({
-            position: "absolute",
-            width: "100%",
-            height: "100%"
-        })
-        .append($("<li>")
-            .append($("<div>").append($("<img src=\"img/shapes/star.png\">"))
-            .append($("<span>").append("Event"))))
-        .append($("<li>")
-            .append($("<div>").append($("<img src=\"img/shapes/triangle.png\">"))
-            .append($("<span>").append("Reminder"))))
-        .append($("<li>")
-            .append($("<div>").append($("<img src=\"img/shapes/heart.png\">"))
-            .append($("<span>").append("Favourite"))))
-        .append($("<li>")
-            .append($("<div>").append($("<img src=\"img/shapes/circle.png\">"))
-            .append($("<span>").append("Group"))));
-
-    var projectCircleElement = $("<div>")
+    var $projectCircleElement = $("<div>")
         .addClass("project-circle")
         .css({
             "position": "absolute",
-            "background-color": circleInfo.color,
+            "background-color": "transparent",
             "left": position.x,
             "top" : position.y,
         })
@@ -512,28 +506,77 @@ Page.prototype.addCircle = function(position, callbacks) {
              "height": SIZE_ZOOMED.toString() + "px"
             },
             400, "easeOutBounce", function() {
-                var input = $(this).find("input");
-                if (input.length != 0) {
-                    input.select();
+                var $input = $(this).find("input");
+                if ($input.length != 0) {
+                    $input.select();
                 }
             })
+        .append(SVG_OBJECTS[circleInfo.projectClass].clone().css("fill", circleInfo.color))
         .append($("<div>")
             .addClass("project-circle-text")
             .append($("<input type=\"text\">")
                 .addClass("project-circle-text-edit")));
 
+    // set element properties
+    $projectCircleElement.fillColor    = circleInfo.color;
+    $projectCircleElement.projectClass = circleInfo.projectClass;
+
+    var changeObjectShape = function(newProjectClass) {
+        if ($projectCircleElement.projectClass != newProjectClass) {
+            // re-create element
+            $projectCircleElement.find("svg")
+                .html(SVG_OBJECTS[newProjectClass].clone());
+            $projectCircleElement.projectClass = newProjectClass;
+        }
+
+        // go back to input focus
+        var $input = $projectCircleElement.find("input");
+        if ($input.length != 0) {
+            $input.select();
+        }
+    };
+
+    var $itemTypeSelector = $("<ul>")
+        .addClass("circle-container")
+        .css({
+            position: "absolute",
+            width: "100%",
+            height: "100%"
+        })
+        .append($("<li>")
+            .append($("<div>").append($("<img src=\"img/shapes/star.png\">"))
+            .append($("<span>").append("Event")))
+            .click(function() { changeObjectShape("star"); }))
+        .append($("<li>")
+            .append($("<div>").append($("<img src=\"img/shapes/triangle.png\">"))
+            .append($("<span>").append("Reminder")))
+            .click(function() { changeObjectShape("triangle"); }))
+        .append($("<li>")
+            .append($("<div>").append($("<img src=\"img/shapes/heart.png\">"))
+            .append($("<span>").append("Favourite")))
+            .click(function() { changeObjectShape("heart"); }))
+        .append($("<li>")
+            .append($("<div>").append($("<img src=\"img/shapes/circle.png\">"))
+            .append($("<span>").append("Group")))
+            .click(function() { changeObjectShape("circle"); }));
+
+    /*var $clickElement = $projectCircleElement.find("svg");
+    if ($clickElement.length == 0) {
+        $clickElement = $projectCircleElement;
+    }*/
+
     // bind click, double click, lose focus events
-    bindProjectElementEvents(projectCircleElement, callbacks);
+    bindProjectElementEvents($projectCircleElement, callbacks);
 
     $(this.element)
-        .append(projectCircleElement
-            .append(itemTypeSelector));
+        .append($projectCircleElement
+            .append($itemTypeSelector));
 
-    setFocusedObject(projectCircleElement, callbacks);
+    setFocusedObject($projectCircleElement, callbacks);
 
-    projectCircleElement.attr("tabindex", -1).focus();
+    $projectCircleElement.attr("tabindex", -1).focus();
 
-    itemTypeSelector.animate({
+    $itemTypeSelector.animate({
         opacity: 1
     }, 200);
 
@@ -571,10 +614,5 @@ function bindProjectElementEvents(element, callbacks) {
         holder.append(edit);
 
         edit.select();
-    })/*.blur(function(e) {
-        console.log(e);
-        if ($(element).has($(e.relatedTarget)).length == 0) {
-            elementLoseFocus(element, callbacks);
-        }
-    })*/;
+    });
 }

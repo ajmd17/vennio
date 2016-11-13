@@ -1,7 +1,8 @@
-function Project(name, position, element) {
+function Project(name, position, element, projectClass) {
     this.name = name;
     this.position = position;
     this.element = element;
+    this.projectClass = projectClass;
 }
 
 Project.prototype.setPosition = function(position) {

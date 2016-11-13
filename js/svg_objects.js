@@ -12,13 +12,32 @@ const SVG_OBJECTS = {
         C40.971,27.648,0,68.619,0,119.16c0,113.246,164.149,181.491,164.149,181.491s164.149-67.216,164.149-181.491
         C328.299,68.619,287.327,27.648,236.787,27.648z"/>
     </svg>`),
-    "triangle": $(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 382.365 382.365" xmlns:xlink="http://www.w3.org/1999/xlink" enable-background="new 0 0 382.365 382.365">
+    "triangle": $(`<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 36 36" style="enable-background:new 0 0 36 36;" xml:space="preserve">
+<path d="M35,0H1C0.448,0,0,0.447,0,1v34c0,0.553,0.448,1,1,1h34c0.552,0,1-0.447,1-1V1C36,0.447,35.552,0,35,0z"/>
+</svg>`),
+    
+    /*$(`<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 60.02 60.02" style="enable-background:new 0 0 60.02 60.02;" xml:space="preserve">
+<path d="M30.895,0.54c-0.34-0.678-1.449-0.678-1.789,0l-29,58c-0.155,0.31-0.139,0.678,0.044,0.973
+	C0.332,59.808,0.654,59.988,1,59.988h58c0.008,0,0.016,0,0.02,0c0.553,0,1-0.448,1-1c0-0.229-0.076-0.439-0.205-0.608L30.895,0.54z"
+	/>
+</svg>
+`),*/
+    /*$(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 382.365 382.365" xmlns:xlink="http://www.w3.org/1999/xlink" enable-background="new 0 0 382.365 382.365">
     <g>
         <path d="m378.248,312.399l-162.38-271.915c-5.239-8.774-14.468-14.011-24.686-14.011s-19.446,5.237-24.685,14.011l-162.379,271.915c-5.375,8.999-5.494,19.815-0.32,28.932s14.522,14.561 25.005,14.561h324.76c10.482,0 19.831-5.443 25.005-14.561 5.174-9.116 5.054-19.932-0.32-28.932z"/>
     </g>
     </svg>
-    `),
-    "star": $(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+    `),*/
+    "star": $(`<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.481 19.481" xmlns:xlink="http://www.w3.org/1999/xlink" enable-background="new 0 0 19.481 19.481">
+    <g>
+        <path d="m10.201,.758l2.478,5.865 6.344,.545c0.44,0.038 0.619,0.587 0.285,0.876l-4.812,4.169 1.442,6.202c0.1,0.431-0.367,0.77-0.745,0.541l-5.452-3.288-5.452,3.288c-0.379,0.228-0.845-0.111-0.745-0.541l1.442-6.202-4.813-4.17c-0.334-0.289-0.156-0.838 0.285-0.876l6.344-.545 2.478-5.864c0.172-0.408 0.749-0.408 0.921,0z"/>
+    </g>
+    </svg>
+    `)
+    
+    /*$(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 	 viewBox="0 0 268.477 268.477" style="enable-background:new 0 0 268.477 268.477;" xml:space="preserve">
     <g>
         <path style="fill-rule:evenodd;clip-rule:evenodd;" d="M267.522,99.163c-2.017-5.389-6.963-9.132-12.693-9.621l-75.845-8.999
@@ -29,6 +48,6 @@ const SVG_OBJECTS = {
             l-17.665-80.896l58.463-55.272C268.287,110.628,269.547,104.554,267.522,99.163z"/>
     </g>
     </svg>
-    `)
+    `)*/
 
 };
