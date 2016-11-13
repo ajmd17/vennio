@@ -380,6 +380,7 @@ Page.prototype.loadProjectElement = function(project, animationTime) {
             "opacity": 0
         })
         .animate({ "opacity": 1 }, animationTime)
+        .append($("<i class=\"fa fa-times-circle close-project-btn\">"))
         .append(SVG_OBJECTS[project.projectClass].clone().css("fill", project.color))
         .append($("<div>")
             .addClass("project-circle-text")
@@ -511,6 +512,7 @@ Page.prototype.addCircle = function(position, callbacks) {
                     $input.select();
                 }
             })
+        .append($("<i class=\"fa fa-times-circle close-project-btn\">"))
         .append(SVG_OBJECTS[circleInfo.projectClass].clone().css("fill", circleInfo.color))
         .append($("<div>")
             .addClass("project-circle-text")
@@ -566,7 +568,7 @@ Page.prototype.addCircle = function(position, callbacks) {
     }*/
 
     // bind click, double click, lose focus events
-    bindProjectElementEvents($projectCircleElement, callbacks);
+    bindProjectElementEvents($projectCircleElement.find("svg"), callbacks);
 
     $(this.element)
         .append($projectCircleElement
