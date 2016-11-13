@@ -3,7 +3,7 @@
 // else, the user is taken to the clicked project's page.
 var itemClickTimeoutId = 0;
 var itemClickTimeoutOn = false;
-const PROJECT_CLICK_TIMEOUT = 300;
+var PROJECT_CLICK_TIMEOUT = 300;
 
 function Page(name, element, theme, pageProject, viewport) {
     this.name = name;
@@ -31,7 +31,7 @@ Page.prototype.zoomSpaceToEltSpace = function(vec) {
 };
 
 Page.prototype.handlePanning = function(newPos) {
-    const ZOOM = this.viewport.zoom;
+    var ZOOM = this.viewport.zoom;
 
     dragTime++;
 
@@ -363,10 +363,10 @@ Page.prototype.clearProjectElements = function() {
 };
 
 Page.prototype.loadProjectElement = function(project, animationTime) {
-    const SIZE = 200;
-    const ZOOM = this.viewport.zoom;
-    const SIZE_ZOOMED = SIZE * ZOOM;
-    const HALF_SIZE = SIZE_ZOOMED / 2;
+    var SIZE = 200;
+    var ZOOM = this.viewport.zoom;
+    var SIZE_ZOOMED = SIZE * ZOOM;
+    var HALF_SIZE = SIZE_ZOOMED / 2;
 
     var absPosition = this.zoomSpaceToEltSpace(project.position);
 
@@ -467,8 +467,8 @@ Page.prototype.loadProjectsFromDatabase = function() {
 
         if (snapshotValue != undefined && snapshotValue != null) {
             var keys = Object.keys(snapshotValue);
-            for (let i = 0; i < keys.length; i++) {
-                let project = snapshotValue[keys[i]];
+            for (var i = 0; i < keys.length; i++) {
+                var project = snapshotValue[keys[i]];
                 project.ref = projectsRef.child(keys[i]);
                 page.projects.push(project);
             }
@@ -485,11 +485,11 @@ Page.prototype.addCircle = function(position, callbacks) {
         projectClass: "circle"
     };
 
-    const ZOOM = this.viewport.zoom;
-    const SIZE_ZOOMED = circleInfo.size * ZOOM;
-    const HALF_SIZE = SIZE_ZOOMED / 2;
-    const NUM_SHAPES = 4;
-    const DEG_ACCUM = 360 / NUM_SHAPES;
+    var ZOOM = this.viewport.zoom;
+    var SIZE_ZOOMED = circleInfo.size * ZOOM;
+    var HALF_SIZE = SIZE_ZOOMED / 2;
+    var NUM_SHAPES = 4;
+    var DEG_ACCUM = 360 / NUM_SHAPES;
 
     var $projectCircleElement = $("<div>")
         .addClass("project-circle")
@@ -580,8 +580,8 @@ Page.prototype.addCircle = function(position, callbacks) {
         opacity: 1
     }, 200);
 
-    for (let i = 0; i < NUM_SHAPES; i++) {
-        let DEG = i * DEG_ACCUM;
+    for (var i = 0; i < NUM_SHAPES; i++) {
+        var DEG = i * DEG_ACCUM;
         $(".circle-container>:nth-of-type(" + (i + 1) + ")").css({
             "opacity": 1,
             "transform": "rotate(" + DEG + "deg) translate(" + HALF_SIZE + "px) rotate(" + (-1 * DEG) + "deg)"

@@ -90,18 +90,18 @@ function snapshotHasProperty(snapshot, attrib) {
         return null;
     }
 
-    let snapshotValue = snapshot.val();
+    var snapshotValue = snapshot.val();
     if ((snapshotValue !== undefined && snapshotValue !== null) &&
             Object.keys(snapshotValue).length != 0) {
 
-        let attribKeys = Object.keys(attrib);
-        let attribKey = attribKeys[0].toString();
-        let attribVal = attrib[attribKey];
+        var attribKeys = Object.keys(attrib);
+        var attribKey = attribKeys[0].toString();
+        var attribVal = attrib[attribKey];
 
-        let snapshotKeys = Object.keys(snapshotValue);
+        var snapshotKeys = Object.keys(snapshotValue);
 
-        for (let i = 0; i < snapshotKeys.length; i++) {
-            let curObject = snapshotValue[snapshotKeys[i]];
+        for (var i = 0; i < snapshotKeys.length; i++) {
+            var curObject = snapshotValue[snapshotKeys[i]];
             if (curObject[attribKey] == attribVal) {
                 curObject.key = snapshotKeys[i];
                 return curObject;

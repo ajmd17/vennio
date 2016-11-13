@@ -4,14 +4,12 @@ var dragTime = 0;
 var mouseHoldId = 0;
 var showRipple = false;
 
-const MIN_ZOOM = 1.0;
-const MAX_ZOOM = 10.0;
-const ZOOM_STEP = 0.1;
-const ZOOM_THETA = 0.1;
-
-const PAN_THETA = 0.5;
-
-const RIPPLE_SIZE = 100;
+var MIN_ZOOM = 1.0;
+var MAX_ZOOM = 10.0;
+var ZOOM_STEP = 0.1;
+var ZOOM_THETA = 0.1;
+var PAN_THETA = 0.5;
+var RIPPLE_SIZE = 100;
 
 var focusState = {
     isFocusedOnObject: false,
@@ -58,25 +56,25 @@ function updateBreadcrums() {
     var page = currentPage;
 
     while (page != null && page != undefined) {
-        let $li = $("<li>");
-        let $a = $("<a href=\"#\">").append(page.name);
+        var $li = $("<li>");
+        var $a = $("<a href=\"#\">").append(page.name);
 
         if (page == currentPage) {
             $a.addClass("current");
         } else {
-            let thisPage = page;
+            (function(thisPage) {
+                $a.click(function() {
+                    // navigate to parent page
+                    currentPage.unbindEvents();
+                    currentPage.clearProjectElements();
+                    currentPage = thisPage;
+                    currentPage.bindEvents();
+                    currentPage.show();
+                    currentPage.loadProjectElements();
 
-            $a.click(function() {
-                // navigate to parent page
-                currentPage.unbindEvents();
-                currentPage.clearProjectElements();
-                currentPage = thisPage;
-                currentPage.bindEvents();
-                currentPage.show();
-                currentPage.loadProjectElements();
-
-                updateBreadcrums();
-            });
+                    updateBreadcrums();
+                });
+            })(page);
         }
 
         $li.append($a);
@@ -126,7 +124,7 @@ function handleObjectLoseFocus(element, callbacks) {
         element.valueBefore = $edit.val();
 
         // convert text element to div
-        let $replacementDiv = $("<div>")
+        var $replacementDiv = $("<div>")
             .addClass("project-title-div")
             .append(element.valueBefore);
 
