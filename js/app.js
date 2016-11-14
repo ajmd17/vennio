@@ -30,28 +30,6 @@ var mousePosition = {
     y: 0
 };
 
-var BackgroundType = {
-    IMAGE: 0,
-    VIDEO: 1
-};
-
-function Theme(backgroundUrl, backgroundType, blurAmt) {
-    this.backgroundUrl = backgroundUrl;
-    this.backgroundType = backgroundType;
-    this.blurAmt = blurAmt;
-}
-
-var themes = {
-    "leaves": new Theme("videos/leaves.mp4", BackgroundType.VIDEO, 18),
-    "stars":  new Theme("videos/stars.mp4", BackgroundType.VIDEO, 8),
-    "woods":  new Theme("videos/woods.mp4", BackgroundType.VIDEO, 8),
-    "autumn-leaf": new Theme("videos/autumn-leaf.mp4", BackgroundType.VIDEO, 8),
-    "poly":   new Theme("img/poly.png", BackgroundType.IMAGE, 0),
-    "poly_2": new Theme("img/poly_2.png", BackgroundType.IMAGE, 0),
-    "hex":    new Theme("img/hex.png", BackgroundType.IMAGE, 6),
-    "milky-way": new Theme("img/milky-way.jpg", BackgroundType.IMAGE, 5)
-};
-
 // pages are held in a linked list: each page contains a property 'parentPage'
 var currentPage = null;
 
@@ -201,6 +179,7 @@ function handleObjectClick(project) {
                 project,
                 project.viewport);
 
+            currentPage.loadProjectsFromDatabase();
             currentPage.parentPage = pageBefore;
             currentPage.bindEvents();
             currentPage.show();
@@ -251,7 +230,7 @@ function afterLogin() {
     updateBreadcrums();
 
     // to prevent scrolling in on the page
-    $(window).on("mousewheel", function(e) {
+    $(window).on("wheel mousewheel", function(e) {
         if (e.ctrlKey) {
             e.preventDefault();
         }
@@ -260,7 +239,6 @@ function afterLogin() {
 
         if ($target.is(".project-circle") || $(".project-circle").has($target).length != 0) {
             // let the click callback for the project handle it
-            console.log("mouse down on project");
         } else {
             objectLoseFocus();
         }
@@ -286,9 +264,7 @@ function afterLogin() {
             );
         }
 
-       // if (panning) {
-            $(currentPage.element).css("cursor", "auto");
-        //}
+        $(currentPage.element).css("cursor", "auto");
 
         panning = false;
         dragTime = 0;

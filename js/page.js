@@ -66,7 +66,7 @@ Page.prototype.bindEvents = function() {
     var page = this;
 
     $element.bind("wheel mousewheel", function(e) {
-        if (e.ctrlKey) {
+        //if (e.ctrlKey) {
             // on ctrl + scroll, zoom in on each circle element.
             // only zoom if there are no elements being edited at the moment
             if (!hasFocusedObject()) {
@@ -140,7 +140,7 @@ Page.prototype.bindEvents = function() {
                     }
                 }
             }
-        }
+       // }
     }).on("dblclick", function(event) {
         if (event.target == this) {
             // add project item
@@ -232,10 +232,7 @@ Page.prototype.bindEvents = function() {
                 showRipple = true;
             }, 250);
 
-            //if (!panning) {
-                $this.css("cursor", "move");
-            //}
-
+            $this.css("cursor", "move");
             panning = true;
         }
     }).on("mousemove touchmove", function(e) {
@@ -280,7 +277,7 @@ Page.prototype.loadTheme = function() {
         $videoWrapper.empty();
 
         switch (this.theme.backgroundType) {
-        case BackgroundType.Video:
+        case BackgroundType.VIDEO:
             $background = $("<video playsinline autoplay muted loop class=\"video-bg\">")
                 .append($("<source src=\"" + this.theme.backgroundUrl + "\" type=\"video/mp4\">"));
             break;
@@ -429,9 +426,13 @@ Page.prototype.loadProjectsFromDatabase = function() {
         if (snapshotValue != undefined && snapshotValue != null) {
             var keys = Object.keys(snapshotValue);
             for (var i = 0; i < keys.length; i++) {
-                var project = snapshotValue[keys[i]];
-                project.ref = projectsRef.child(keys[i]);
-                page.projects.push(project);
+                (function(key) {
+                    var project = snapshotValue[key];
+                    project.ref = projectsRef.child(key);
+                    page.projects.push(project);
+
+                    console.log("Load project: ", project);
+                })(keys[i]);
             }
         }
 
@@ -492,19 +493,20 @@ Page.prototype.addCircle = function(position, callbacks) {
 
             if (newProjectClass == "event") {
                 // show the "New Event" modal
-                var $eventCreateBody = $("#event-create-body");
-                $eventCreateBody.empty();
-                $eventCreateBody.append(createCalendarElement());
-                var inst = $("[data-remodal-id=event-create-modal]").remodal();
-                inst.open();
 
-                var $dateTimePicker = $("<a href=\"#event-create-modal\" class=\"event-date-time-text\">")
-                    .append("Click to select date and time");
-                
-                var $projectEventInfo = $("<div>").addClass("project-event-info");
-                $projectEventInfo.append($dateTimePicker);
-                $projectCircleElement.find(".project-circle-text")
-                    .append($projectEventInfo);
+                $("#dialog").dialogBox({
+                    "title": "Create Event",
+                    "content": createCalendarElement(),
+                    "effect": "sign",
+                    "hasBtn": true,
+                    "confirmValue": "OK",
+                    "cancelValue" : "Cancel",
+                    "confirm": function() {
+                        // todo
+                    },
+                    "callback": function() {
+                    }
+                });
             }
 
             // re-create element
@@ -552,7 +554,7 @@ Page.prototype.addCircle = function(position, callbacks) {
     }*/
 
     // bind click, double click, lose focus events
-    bindProjectElementEvents($projectCircleElement.find("svg"), callbacks);
+    bindProjectElementEvents($projectCircleElement, callbacks);
 
     $(this.element)
         .append($projectCircleElement
