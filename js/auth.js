@@ -16,6 +16,10 @@ $(document).ready(function() {
     auth = new firebase.auth();
     database = new firebase.database();
 
+    auth.onAuthStateChanged(function(user) {
+        handleLogin(user);
+    });
+
     $(".social-login-google").click(function() {
         signInWithGoogle(auth, database);
     });
@@ -35,36 +39,38 @@ function signInWithTwitter(auth, database) {
 
 function signIn(auth, database, provider) {
     auth.signInWithPopup(provider).then(function(result) {
-        var usersRef = database.ref("/users");
-        var token = result.credential.accessToken;
-        var user = result.user;
-
-        usersRef.once("value").then(function(snapshot) {
-            var foundUser = snapshotHasProperty(snapshot, { "uid": result.user.uid });
-            if (!foundUser) {
-                loggedUser = addNewUser(result, usersRef);
-            } else {
-                loggedUser = foundUser;
-            }
-
-            $("#login-window").remove();
-            $("#after-login").show();
-
-            afterLogin();
-        });
+        handleLogin(result.user);
 
     }).catch(function(error) {
         alert(error.toString());
     });
 }
 
-function addNewUser(result, ref) {
+function handleLogin(user) {
+    var usersRef = database.ref("/users");
+
+    usersRef.once("value").then(function(snapshot) {
+        var foundUser = snapshotHasProperty(snapshot, { "uid": user.uid });
+        if (!foundUser) {
+            loggedUser = addNewUser(user.uid, user.displayName, usersRef);
+        } else {
+            loggedUser = foundUser;
+        }
+
+        $("#login-window").remove();
+        $("#after-login").show();
+
+        afterLogin();
+    });
+}
+
+function addNewUser(uid, displayName, ref) {
     var user = {
-        uid: result.user.uid,
-        name:  result.user.displayName,
-        theme: BUILTIN_THEMES["poly"] /* default theme */,
-        projects: { },
-        viewport: {
+        "uid":   uid,
+        "name":  displayName,
+        "theme": BUILTIN_THEMES["poly"] /* default theme */,
+        "projects": { },
+        "viewport": {
             zoom: 1.0,
             zoomLevel: 0,
             left: 0,

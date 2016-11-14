@@ -145,6 +145,29 @@ Page.prototype.bindEvents = function() {
             var position = { x: event.pageX, y: event.pageY };
             var projectToAdd = null;
 
+            /*var $itemTypeSelector = $("<ul>")
+                .addClass("circle-container")
+                .css({
+                    "position": "absolute",
+                    "width" : "200px",
+                    "height": "200px",
+                    "left": (position.x - 100).toString() + "px",
+                    "top" : (position.y - 100).toString() + "px"
+                })
+                .append($("<li>")
+                    .append($("<div>").append($("<img src=\"img/shapes/star.png\">"))
+                    .append($("<span>").append("Event"))))
+                .append($("<li>")
+                    .append($("<div>").append($("<img src=\"img/shapes/triangle.png\">"))
+                    .append($("<span>").append("Reminder"))))
+                .append($("<li>")
+                    .append($("<div>").append($("<img src=\"img/shapes/heart.png\">"))
+                    .append($("<span>").append("Favourite"))))
+                .append($("<li>")
+                    .append($("<div>").append($("<img src=\"img/shapes/circle.png\">"))
+                    .append($("<span>").append("Group"))));
+            $element.append($itemTypeSelector);*/
+
             page.addCircle(position, {
                 success:
                     function(element) {
@@ -348,7 +371,11 @@ Page.prototype.loadProjectElement = function(project, animationTime) {
         })
         .animate({ "opacity": 1 }, animationTime)
         .append($("<i class=\"fa fa-times-circle close-project-btn\">"))
-        .append(SVG_OBJECTS[PROJECT_CLASS_SVG_NAMES[project.projectClass]].clone().css("fill", project.color))
+        .append($("<div>")
+            .addClass("project-image")
+            .append(SVG_OBJECTS[PROJECT_CLASS_SVG_NAMES[project.projectClass]]
+                .clone()
+                .css("fill", project.color)))
         .append($("<div>")
             .addClass("project-circle-text")
             .append($("<div>")
@@ -460,7 +487,11 @@ Page.prototype.addCircle = function(position, callbacks) {
                 }
             })
         .append($("<i class=\"fa fa-times-circle close-project-btn\">"))
-        .append(SVG_OBJECTS[PROJECT_CLASS_SVG_NAMES[circleInfo.projectClass]].clone().css("fill", circleInfo.color))
+        .append($("<div>")
+            .addClass("project-image")
+            .append(SVG_OBJECTS[PROJECT_CLASS_SVG_NAMES[circleInfo.projectClass]]
+                .clone()
+                .css("fill", circleInfo.color)))
         .append($("<div>")
             .addClass("project-circle-text")
             .append($("<input type=\"text\">")
@@ -496,8 +527,15 @@ Page.prototype.addCircle = function(position, callbacks) {
             }
 
             // re-create element
-            $projectCircleElement.find("svg")
-                .html(SVG_OBJECTS[PROJECT_CLASS_SVG_NAMES[newProjectClass]].clone());
+
+            var $projectImage = $projectCircleElement.find(".project-image");
+            var $fillColor = $projectImage
+                .find("svg")
+                .css("fill");
+            $projectImage.empty();
+            $projectImage.append(SVG_OBJECTS[PROJECT_CLASS_SVG_NAMES[newProjectClass]]
+                .clone()
+                .css("fill", $fillColor));
             $projectCircleElement.projectClass = newProjectClass;
         }
 
