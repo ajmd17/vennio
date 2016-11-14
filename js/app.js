@@ -163,7 +163,6 @@ function setFocusedObject(element, callbacks) {
 function handleObjectClick(project) {
     itemClickTimeoutOn = true;
     itemClickTimeoutId = setTimeout(function() {
-
         switch (project.projectClass) {
         case "group":
             // open the clicked project page
@@ -193,7 +192,7 @@ function handleObjectClick(project) {
             if (project.eventInfo == undefined || project.eventInfo == null) {
                 console.log("Error loading data about the event");
             } else {
-                
+                // TODO
             }
 
             break;
@@ -202,8 +201,6 @@ function handleObjectClick(project) {
             console.log("unknown project class: ", project.projectClass);
             break;
         }
-
-        
 
         itemClickTimeoutOn = false;
     }, PROJECT_CLICK_TIMEOUT);
@@ -271,7 +268,9 @@ function afterLogin() {
         showRipple = false;
     });
 
-    $("#main-container").css({ "padding-top": $(".titlebar").height().toString() + "px" });
+    $("#main-container").css({ 
+        "padding-top": $(".titlebar").height().toString() + "px" 
+    });
 }
 
 $(document).ready(function() {

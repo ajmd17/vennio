@@ -66,81 +66,78 @@ Page.prototype.bindEvents = function() {
     var page = this;
 
     $element.bind("wheel mousewheel", function(e) {
-        //if (e.ctrlKey) {
-            // on ctrl + scroll, zoom in on each circle element.
-            // only zoom if there are no elements being edited at the moment
-            if (!hasFocusedObject()) {
-                var delta;
-                if (e.originalEvent.wheelDelta !== undefined) {
-                    delta = e.originalEvent.wheelDelta;
-                } else {
-                    delta = e.originalEvent.deltaY * -1;
-                }
+        // only zoom if there are no elements being edited at the moment
+        if (!hasFocusedObject()) {
+            var delta;
+            if (e.originalEvent.wheelDelta !== undefined) {
+                delta = e.originalEvent.wheelDelta;
+            } else {
+                delta = e.originalEvent.deltaY * -1;
+            }
 
-                var deltaSign = Math.sign(delta);
-                var nextZoom = page.viewport.zoom + (deltaSign * ZOOM_STEP);
-                var oldZoom  = page.viewport.zoom;
+            var deltaSign = Math.sign(delta);
+            var nextZoom = page.viewport.zoom + (deltaSign * ZOOM_STEP);
+            var oldZoom  = page.viewport.zoom;
 
-                mousePosition = {
-                    x: e.pageX - $element.offset().left,
-                    y: e.pageY - $element.offset().top
+            mousePosition = {
+                x: e.pageX - $element.offset().left,
+                y: e.pageY - $element.offset().top
+            };
+
+            if (nextZoom >= MIN_ZOOM && nextZoom <= MAX_ZOOM) {
+                var sign = Math.sign(nextZoom - page.viewport.zoom);
+                page.viewport.zoomLevel += sign;
+
+                var zoomRatio = nextZoom / page.viewport.zoom;
+                page.viewport.zoom = nextZoom;
+
+                var cursor = {
+                    x: (e.pageX - $element.offset().left),
+                    y: (e.pageY - $element.offset().top)
                 };
 
-                if (nextZoom >= MIN_ZOOM && nextZoom <= MAX_ZOOM) {
-                    var sign = Math.sign(nextZoom - page.viewport.zoom);
-                    page.viewport.zoomLevel += sign;
+                var viewportOffset = {
+                    x: ((cursor.x * zoomRatio) - cursor.x) / page.viewport.zoom,
+                    y: ((cursor.y * zoomRatio) - cursor.y) / page.viewport.zoom
+                };
 
-                    var zoomRatio = nextZoom / page.viewport.zoom;
-                    page.viewport.zoom = nextZoom;
+                // modify viewport left and top
+                page.viewport.left += viewportOffset.x;
+                page.viewport.top  += viewportOffset.y;
 
-                    var cursor = {
-                        x: (e.pageX - $element.offset().left),
-                        y: (e.pageY - $element.offset().top)
-                    };
+                // update each project element immediately
+                $(".project-circle").each(function() {
+                    var $this = $(this);
 
-                    var viewportOffset = {
-                        x: ((cursor.x * zoomRatio) - cursor.x) / page.viewport.zoom,
-                        y: ((cursor.y * zoomRatio) - cursor.y) / page.viewport.zoom
-                    };
+                    var currentLeft = $this.position().left;
+                    var currentTop  = $this.position().top;
+                    var currentWidth  = $this.width();
+                    var currentHeight = $this.height();
+                    var newWidth  = 200 * page.viewport.zoom;
+                    var newHeight = 200 * page.viewport.zoom;
 
-                    // modify viewport left and top
-                    page.viewport.left += viewportOffset.x;
-                    page.viewport.top  += viewportOffset.y;
-
-                    // update each project element immediately
-                    $(".project-circle").each(function() {
-                        var $this = $(this);
-
-                        var currentLeft = $this.position().left;
-                        var currentTop  = $this.position().top;
-                        var currentWidth  = $this.width();
-                        var currentHeight = $this.height();
-                        var newWidth  = 200 * page.viewport.zoom;
-                        var newHeight = 200 * page.viewport.zoom;
-
-                        $this.css({
-                            "width" : newWidth.toString(),
-                            "height": newHeight.toString(),
-                            "left": (((currentLeft + (currentWidth / 2)) / oldZoom - viewportOffset.x) * page.viewport.zoom - (newWidth  / 2)).toString() + "px",
-                            "top" : (((currentTop  + (currentWidth / 2)) / oldZoom - viewportOffset.y) * page.viewport.zoom - (newHeight / 2)).toString() + "px"
-                        });
+                    $this.css({
+                        "width" : newWidth.toString(),
+                        "height": newHeight.toString(),
+                        "left": (((currentLeft + (currentWidth / 2)) / oldZoom - viewportOffset.x) * page.viewport.zoom - (newWidth  / 2)).toString() + "px",
+                        "top" : (((currentTop  + (currentWidth / 2)) / oldZoom - viewportOffset.y) * page.viewport.zoom - (newHeight / 2)).toString() + "px"
                     });
+                });
 
-                    // update database with the viewport data
-                    if (page.pageProject != null && page.pageProject != undefined) {
-                        page.pageProject.viewport = page.viewport;
-                        page.pageProject.ref
-                            .child("viewport")
-                            .set(page.viewport);
-                    } else {
-                        database.ref("users")
-                            .child(loggedUser.key)
-                            .child("viewport")
-                            .set(page.viewport);
-                    }
+                // update database with the viewport data
+                if (page.pageProject != null && page.pageProject != undefined) {
+                    page.pageProject.viewport = page.viewport;
+                    page.pageProject.ref
+                        .child("viewport")
+                        .set(page.viewport);
+                } else {
+                    database.ref("users")
+                        .child(loggedUser.key)
+                        .child("viewport")
+                        .set(page.viewport);
                 }
             }
-       // }
+        }
     }).on("dblclick", function(event) {
         if (event.target == this) {
             // add project item
@@ -173,7 +170,7 @@ Page.prototype.bindEvents = function() {
 
                         projectToAdd.color = element.fillColor;
 
-                        projectToAdd.theme = themes["poly_2"]; /* Default theme for a new project */
+                        projectToAdd.theme = BUILTIN_THEMES["poly_2"]; /* Default theme for a new project */
 
                         switch (element.projectClass) {
                         case "group":
@@ -181,7 +178,7 @@ Page.prototype.bindEvents = function() {
                                 "zoom": 1.0,
                                 "zoomLevel": 0,
                                 "left": 0,
-                                "top": 0
+                                "top" : 0
                             };
                             break;
                         case "event":
@@ -239,12 +236,12 @@ Page.prototype.bindEvents = function() {
         var $this = $(this);
         var $offset = $this.offset();
 
-        var newPos;
+        var newPos = {};
 
         if (e.type == "touchmove") {
             e.preventDefault();
 
-            newPos = { 
+            newPos = {
                 x: e.touches[0].pageX - $offset.left,
                 y: e.touches[0].pageY - $offset.top
             };
@@ -310,18 +307,7 @@ Page.prototype.addProject = function(project) {
 
     var projectObject = project;
     delete projectObject.element;
-    
-    /*{
-        "name": project.name,
-        "position": project.position,
-        "color": project.color,
-        "viewport": project.viewport,
-        "theme": project.theme,
-        "projectClass": project.projectClass
-    };*/
-
     project.ref = projectsRef.push(projectObject);
-
     this.projects.push(project);
 };
 

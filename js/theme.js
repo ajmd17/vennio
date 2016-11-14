@@ -9,7 +9,7 @@ function Theme(backgroundUrl, backgroundType, blurAmt) {
     this.blurAmt = blurAmt;
 }
 
-var themes = {
+var BUILTIN_THEMES = {
     "leaves": new Theme("videos/leaves.mp4", BackgroundType.VIDEO, 18),
     "stars":  new Theme("videos/stars.mp4", BackgroundType.VIDEO, 8),
     "woods":  new Theme("videos/woods.mp4", BackgroundType.VIDEO, 8),
