@@ -491,3 +491,17 @@ body {
     opacity: 0;
   }
 }
+
+.modal-text {
+    padding: 0;
+}
+.textbox {
+    background-color: #EDEDED;
+    padding: 4px;
+    border: 2px solid #ACB2B5;
+    font-size: 22px;
+    width: 90%;
+}
+.textbox:active {
+    border-color: #2DB2EA;
+}

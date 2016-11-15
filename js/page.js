@@ -151,7 +151,7 @@ Page.prototype.bindEvents = function() {
                     url  : "img/shapes/star2.png",
                     select: function() {
                         // show 'new event' dialog
-                        $("#dialog").dialogBox({
+                        /*$("#dialog").dialogBox({
                             title: "New Event",
                             content: createCalendarElement(),
                             effect: "sign",
@@ -162,6 +162,49 @@ Page.prototype.bindEvents = function() {
                                 // TODO 
                             },
                             callback: function() {
+                            }
+                        });*/
+                        modal({
+                            type: 'primary',
+                            title: 'New Event',
+                            text: $("<input type=\"text\" placeholder=\"Title\">")
+                                .addClass("textbox"),
+                            size: 'normal', //Modal Size (normal | large | small)
+                            buttons: [
+                                {
+                                    text: 'OK',
+                                    val: 'ok',
+                                    eKey: true,
+                                    addClass: 'btn-light-blue',
+                                    onClick: function(dialog) {
+                                        return true;
+                                    }
+                                } 
+                            ],
+                            center: true,
+                            autoclose: false,
+                            callback: null,
+                            onShow: function(r) {
+                            },
+                            closeClick: true,
+                            closable: true,
+                            theme: 'atlant',
+                            animate: false,
+                            background: 'rgba(0,0,0,0.5)',
+                            zIndex: 10,
+                            buttonText: {
+                                ok: 'OK',
+                                yes: 'Yes',
+                                cancel: 'Cancel'
+                            },
+                            template: '<div class="modal-box"><div class="modal-inner"><div class="modal-title"><a class="modal-close-btn"></a></div><div class="modal-text"></div><div class="modal-buttons"></div></div></div>',
+                            _classes: {
+                                box: '.modal-box',
+                                boxInner: ".modal-inner",
+                                title: '.modal-title',
+                                content: '.modal-text',
+                                buttons: '.modal-buttons',
+                                closebtn: '.modal-close-btn'
                             }
                         });
                     }
@@ -228,6 +271,12 @@ Page.prototype.bindEvents = function() {
             var NUM_SHAPES = RADIAL_MENU_ITEMS.length;
             var DEG_STEP = 360 / NUM_SHAPES;
 
+            var $blurredBackground = $("<div>")
+                .addClass("blurred-background")
+                .css({
+                    "opacity": 0
+                });
+
             var $radialMenu = $("<ul>")
                 .addClass("radial-menu")
                 .css({
@@ -245,6 +294,13 @@ Page.prototype.bindEvents = function() {
                         "opacity": 0
                     }, 200, function() {
                         $this.remove();
+                    });
+
+                    // remove blurred background
+                    $blurredBackground.animate({
+                        "opacity": 0
+                    }, 200, function() {
+                        $blurredBackground.remove();
                     });
                 })
                 .append($("<h2>")
@@ -271,6 +327,13 @@ Page.prototype.bindEvents = function() {
                         }, 200, function() {
                             $radialMenu.remove();
                         });
+                        
+                        // remove blurred background
+                        $blurredBackground.animate({
+                            "opacity": 0
+                        }, 200, function() {
+                            $blurredBackground.remove();
+                        });
 
                         if (item.select != undefined) {
                             item.select();
@@ -284,9 +347,13 @@ Page.prototype.bindEvents = function() {
                 degrees += DEG_STEP;
             });
             
+            $element.append($blurredBackground);
             $element.append($radialMenu);
             
             $radialMenu.animate({
+                "opacity": 1
+            }, 200);
+            $blurredBackground.animate({
                 "opacity": 1
             }, 200);
 
