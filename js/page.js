@@ -10,16 +10,16 @@ function Page(name, element, theme, pageProject, viewport) {
 Page.prototype.eltSpaceToZoomSpace = function(vec) {
     var $element = $(this.element);
     return {
-        x: (vec.x - ($element.width()  / 2) - $element.offset().left) + this.viewport.left,
-        y: (vec.y - ($element.height() / 2) - $element.offset().top)  + this.viewport.top
+        x: vec.x + this.viewport.left,
+        y: vec.y + this.viewport.top
     };
 };
 
 Page.prototype.zoomSpaceToEltSpace = function(vec) {
     var $element = $(this.element);
     return {
-        x: ((vec.x - this.viewport.left) + ($element.width()  / 2) + $element.offset().left),
-        y: ((vec.y - this.viewport.top)  + ($element.height() / 2) + $element.offset().top)
+        x: vec.x - this.viewport.left,
+        y: vec.y - this.viewport.top
     };
 };
 
@@ -150,6 +150,21 @@ Page.prototype.bindEvents = function() {
                     title: "Event",
                     url  : "img/shapes/star2.png",
                     select: function() {
+                        var modal = new Modal("New Event", "", [
+                            {
+                                text: "Click",
+                                click: function() {
+                                }
+                            },
+                            {
+                                text: "Cancel",
+                                click: function() {
+                                }
+                            }
+                        ]);
+
+                        modal.show();
+
                         // show 'new event' dialog
                         /*$("#dialog").dialogBox({
                             title: "New Event",
@@ -164,7 +179,7 @@ Page.prototype.bindEvents = function() {
                             callback: function() {
                             }
                         });*/
-                        modal({
+                        /*modal({
                             type: 'primary',
                             title: 'New Event',
                             text: $("<input type=\"text\" placeholder=\"Title\">")
@@ -206,7 +221,7 @@ Page.prototype.bindEvents = function() {
                                 buttons: '.modal-buttons',
                                 closebtn: '.modal-close-btn'
                             }
-                        });
+                        });*/
                     }
                 },
                 {
@@ -280,7 +295,6 @@ Page.prototype.bindEvents = function() {
             var $radialMenu = $("<ul>")
                 .addClass("radial-menu")
                 .css({
-                    position: "absolute",
                     width : SELECTOR_SIZE.toString() + "px",
                     height: SELECTOR_SIZE.toString() + "px",
                     left: (position.x - HALF_SELECTOR_SIZE).toString() + "px",
