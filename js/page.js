@@ -145,30 +145,154 @@ Page.prototype.bindEvents = function() {
             var position = { x: event.pageX, y: event.pageY };
             var projectToAdd = null;
 
-            /*var $itemTypeSelector = $("<ul>")
-                .addClass("circle-container")
-                .css({
-                    "position": "absolute",
-                    "width" : "200px",
-                    "height": "200px",
-                    "left": (position.x - 100).toString() + "px",
-                    "top" : (position.y - 100).toString() + "px"
-                })
-                .append($("<li>")
-                    .append($("<div>").append($("<img src=\"img/shapes/star.png\">"))
-                    .append($("<span>").append("Event"))))
-                .append($("<li>")
-                    .append($("<div>").append($("<img src=\"img/shapes/triangle.png\">"))
-                    .append($("<span>").append("Reminder"))))
-                .append($("<li>")
-                    .append($("<div>").append($("<img src=\"img/shapes/heart.png\">"))
-                    .append($("<span>").append("Favourite"))))
-                .append($("<li>")
-                    .append($("<div>").append($("<img src=\"img/shapes/circle.png\">"))
-                    .append($("<span>").append("Group"))));
-            $element.append($itemTypeSelector);*/
+            var RADIAL_MENU_ITEMS = [
+                {
+                    title: "Event",
+                    url  : "img/shapes/star2.png",
+                    select: function() {
+                        // show 'new event' dialog
+                        $("#dialog").dialogBox({
+                            title: "New Event",
+                            content: createCalendarElement(),
+                            effect: "sign",
+                            hasBtn: true,
+                            confirmValue: "OK",
+                            cancelValue : "Cancel",
+                            confirm: function() {
+                                // TODO 
+                            },
+                            callback: function() {
+                            }
+                        });
+                    }
+                },
+                {
+                    title: "Group",
+                    url  : "img/shapes/circle.png",
+                    select: function() {
+                        page.addCircle(position, {
+                        success:
+                            function(element) {
+                                var $element = $(element);
+                                var $input = $element.find(".project-circle-text").find("input");
+                                var name = $input.length > 0
+                                    ? $input.val()
+                                    : $element.find(".project-title-div").text();
 
-            page.addCircle(position, {
+                                projectToAdd = new Project(
+                                    name, 
+                                    page.eltSpaceToZoomSpace({
+                                        x: position.x / page.viewport.zoom,
+                                        y: position.y / page.viewport.zoom
+                                    }),
+                                    element,
+                                    element.projectClass);
+
+                                projectToAdd.color = element.fillColor;
+                                projectToAdd.theme = BUILTIN_THEMES["poly_2"]; // Default theme for a new project
+                                projectToAdd.viewport = {
+                                    zoom: 1.0,
+                                    zoomLevel: 0,
+                                    left: 0,
+                                    top : 0
+                                };
+                                
+                                page.addProject(projectToAdd);
+                            },
+                        click:
+                            function() {
+                                if (projectToAdd != null) {
+                                    if (itemClickTimeoutOn) {
+                                        clearTimeout(itemClickTimeoutId);
+                                        itemClickTimeoutOn = false;
+                                    } else {
+                                        if (hasFocusedObject()) {
+                                            objectLoseFocus();
+                                        } else {
+                                            handleObjectClick(projectToAdd);
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                },
+                {
+                    title: "Sticky",
+                    url  : "img/shapes/sticky.png"
+                },
+            ];
+
+            var SELECTOR_SIZE = 250;
+            var HALF_SELECTOR_SIZE = SELECTOR_SIZE / 2;
+            var NUM_SHAPES = RADIAL_MENU_ITEMS.length;
+            var DEG_STEP = 360 / NUM_SHAPES;
+
+            var $radialMenu = $("<ul>")
+                .addClass("radial-menu")
+                .css({
+                    position: "absolute",
+                    width : SELECTOR_SIZE.toString() + "px",
+                    height: SELECTOR_SIZE.toString() + "px",
+                    left: (position.x - HALF_SELECTOR_SIZE).toString() + "px",
+                    top : (position.y - HALF_SELECTOR_SIZE).toString() + "px",
+                    opacity: 0
+                })
+                .focusout(function() {
+                    // remove menu on lose focus (after fade out)
+                    var $this = $(this);
+                    $this.animate({
+                        "opacity": 0
+                    }, 200, function() {
+                        $this.remove();
+                    });
+                })
+                .append($("<h2>")
+                    .addClass("radial-menu-title")
+                    .append("Create"))
+
+            var degrees = 0;
+
+            RADIAL_MENU_ITEMS.forEach(function(item) {
+                $radialMenu.append($("<li>")
+                    .append($("<img src=\"" + item.url + "\">"))
+                    .hover(function() {
+                        $(".radial-menu-title").html(item.title);
+                    }, function() {
+                        $(".radial-menu-title").html("Create");
+                    })
+                    .click(function(e) {
+                        // don't bubble up the DOM
+                        e.stopPropagation();
+
+                        // remove the 'Create' menu
+                        $radialMenu.animate({
+                            "opacity": 0
+                        }, 200, function() {
+                            $radialMenu.remove();
+                        });
+
+                        if (item.select != undefined) {
+                            item.select();
+                        }
+                    })
+                    .css({
+                        opacity: 1,
+                        transform: "rotate(" + degrees + "deg) translate(" + (HALF_SELECTOR_SIZE - 40) + "px) rotate(" + (-1 * degrees) + "deg)"
+                    }));
+
+                degrees += DEG_STEP;
+            });
+            
+            $element.append($radialMenu);
+            
+            $radialMenu.animate({
+                "opacity": 1
+            }, 200);
+
+            $radialMenu.attr("tabindex", -1).focus();
+
+            /*page.addCircle(position, {
                 success:
                     function(element) {
                         var $element = $(element);
@@ -193,7 +317,7 @@ Page.prototype.bindEvents = function() {
 
                         projectToAdd.color = element.fillColor;
 
-                        projectToAdd.theme = BUILTIN_THEMES["poly_2"]; /* Default theme for a new project */
+                        projectToAdd.theme = BUILTIN_THEMES["poly_2"]; // Default theme for a new project
 
                         switch (element.projectClass) {
                         case "group":
@@ -206,8 +330,8 @@ Page.prototype.bindEvents = function() {
                             break;
                         case "event":
                             projectToAdd.eventInfo = {
-                                "date"    : new Date().toString(), /* TODO add date/time picker */
-                                "location": "no location", /* TODO: make this use google maps api?? */
+                                "date"    : new Date().toString(), // TODO add date/time picker 
+                                "location": "no location", // TODO: make this use google maps api?? 
                                 "userInfo": ""
                             };
                             break;
@@ -233,7 +357,7 @@ Page.prototype.bindEvents = function() {
                             }
                         }
                     }
-                });
+                });*/
         }
     }).on("mousedown touchstart", function(e) {
         var $this = $(this);
@@ -463,8 +587,6 @@ Page.prototype.addCircle = function(position, callbacks) {
     var ZOOM = this.viewport.zoom;
     var SIZE_ZOOMED = circleInfo.size * ZOOM;
     var HALF_SIZE = SIZE_ZOOMED / 2;
-    var NUM_SHAPES = 4;
-    var DEG_ACCUM = 360 / NUM_SHAPES;
 
     var $projectCircleElement = $("<div>")
         .addClass("project-circle")
@@ -501,104 +623,13 @@ Page.prototype.addCircle = function(position, callbacks) {
     $projectCircleElement.fillColor    = circleInfo.color;
     $projectCircleElement.projectClass = circleInfo.projectClass;
 
-    var changeProjectClass = function(newProjectClass) {
-        if ($projectCircleElement.projectClass != newProjectClass) {
-            if ($projectCircleElement.projectClass == "event") {
-                // remove event related info.
-                $projectCircleElement.remove(".project-event-info");
-            }
-
-            if (newProjectClass == "event") {
-                // show the "New Event" modal
-
-                $("#dialog").dialogBox({
-                    "title": "Create Event",
-                    "content": createCalendarElement(),
-                    "effect": "sign",
-                    "hasBtn": true,
-                    "confirmValue": "OK",
-                    "cancelValue" : "Cancel",
-                    "confirm": function() {
-                        // todo
-                    },
-                    "callback": function() {
-                    }
-                });
-            }
-
-            // re-create element
-
-            var $projectImage = $projectCircleElement.find(".project-image");
-            var $fillColor = $projectImage
-                .find("svg")
-                .css("fill");
-            $projectImage.empty();
-            $projectImage.append(SVG_OBJECTS[PROJECT_CLASS_SVG_NAMES[newProjectClass]]
-                .clone()
-                .css("fill", $fillColor));
-            $projectCircleElement.projectClass = newProjectClass;
-        }
-
-        // go back to input focus
-        var $input = $projectCircleElement.find("input");
-        if ($input.length != 0) {
-            $input.select();
-        }
-    };
-
-    var $itemTypeSelector = $("<ul>")
-        .addClass("circle-container")
-        .css({
-            position: "absolute",
-            width: "100%",
-            height: "100%"
-        })
-        .append($("<li>")
-            .append($("<div>").append($("<img src=\"img/shapes/star.png\">"))
-            .append($("<span>").append("Event")))
-            .click(function() { 
-                changeProjectClass("event");
-            }))
-        .append($("<li>")
-            .append($("<div>").append($("<img src=\"img/shapes/triangle.png\">"))
-            .append($("<span>").append("Reminder")))
-            .click(function() { changeProjectClass("reminder"); }))
-        .append($("<li>")
-            .append($("<div>").append($("<img src=\"img/shapes/heart.png\">"))
-            .append($("<span>").append("Favourite")))
-            .click(function() { changeProjectClass("favourite"); }))
-        .append($("<li>")
-            .append($("<div>").append($("<img src=\"img/shapes/circle.png\">"))
-            .append($("<span>").append("Group")))
-            .click(function() { changeProjectClass("group"); }));
-
-    /*var $clickElement = $projectCircleElement.find("svg");
-    if ($clickElement.length == 0) {
-        $clickElement = $projectCircleElement;
-    }*/
-
     // bind click, double click, lose focus events
     bindProjectElementEvents($projectCircleElement, callbacks);
 
-    $(this.element)
-        .append($projectCircleElement
-            .append($itemTypeSelector));
-
+    $(this.element).append($projectCircleElement);
+    
     setFocusedObject($projectCircleElement, callbacks);
-
     $projectCircleElement.attr("tabindex", -1).focus();
-
-    $itemTypeSelector.animate({
-        opacity: 1
-    }, 200);
-
-    for (var i = 0; i < NUM_SHAPES; i++) {
-        var DEG = i * DEG_ACCUM;
-        $(".circle-container>:nth-of-type(" + (i + 1) + ")").css({
-            "opacity": 1,
-            "transform": "rotate(" + DEG + "deg) translate(" + HALF_SIZE + "px) rotate(" + (-1 * DEG) + "deg)"
-        });
-    }
 };
 
 function bindProjectElementEvents(element, callbacks) {

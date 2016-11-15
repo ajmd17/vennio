@@ -1,0 +1,78 @@
+.radial-menu {
+    width : 250px;
+    height: 250px;
+    padding: 0;
+    margin : 0;
+    border-radius: 50%;
+    background-color: rgba(62, 69, 76, 0.8);
+    border: 6px solid #2DB2EA;
+    list-style: none;
+    overflow: hidden;
+    box-sizing: content-box;
+
+    box-shadow: 1px 1px 16px 2px rgba(0, 0, 0, 0.2);
+    color: #EEEEEE;
+    outline: none;
+
+    z-index: 20;
+}
+.radial-menu > h2 {
+    font-size: 26px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    font-weight: bold;
+    text-align: center;
+    position: absolute;
+    margin: 0;
+    top : 50%;
+    left: 50%;
+
+    -ms-transform    : translateX(-50%) translateY(-50%);
+    -moz-transform   : translateX(-50%) translateY(-50%);
+    -webkit-transform: translateX(-50%) translateY(-50%);
+    transform        : translateX(-50%) translateY(-50%);
+
+    -ms-user-select    : none;
+    -moz-user-select   : none;
+    -webkit-user-select: none;
+    user-select        : none;
+
+    cursor: default;
+}
+.radial-menu > li {
+    display: block;
+    position: absolute;
+    top : 50%;
+    left: 50%;
+    width : 50px;
+    height: 50px;
+    margin: -25px;
+}
+.radial-menu > li h4 {
+    text-align: center;
+    font-size: 12px;
+    margin: 0;
+    padding: 0;
+    visibility: hidden;
+}
+.radial-menu > li:hover h4 {
+    visibility: visible;
+}
+.radial-menu > li:hover img {
+    filter: contrast(70%) brightness(140%);
+}
+.radial-menu > li img {
+    height: 100%;
+    width : 100%;
+
+    -ms-user-select    : none;
+    -moz-user-select   : none;
+    -webkit-user-select: none;
+    user-select        : none;
+   /* transition: all 0.5s ease;*/
+
+    /* fixes strange bug in chrome where imgs wobble on hover */
+    /*-webkit-backface-visibility: hidden;
+    -moz-backface-visibility: hidden;
+    -ms-backface-visibility: hidden;
+    backface-visibility: hidden;*/
+}

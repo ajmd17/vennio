@@ -233,6 +233,7 @@ function afterLogin() {
         }
     }).click(function(e) {
         var $target = $(e.target);
+        console.log("CLICK! ", e);
 
         if ($target.is(".project-circle") || $(".project-circle").has($target).length != 0) {
             // let the click callback for the project handle it
