@@ -38,7 +38,10 @@ function updateCalendarData(calendar, date) {
         var $dayElement = $("<li>");
 
         if (i >= startingDay && dayNumber <= daysInMonth) {
-            $dayElement.append(dayNumber.toString());
+            $dayElement.append($("<div>")
+                .addClass("day-item")
+                .append($("<a href=\"#\">")
+                    .append(dayNumber.toString())));
             dayNumber++;
         } else {
             $dayElement.css({
@@ -55,8 +58,6 @@ function createCalendarElement() {
         .addClass("calendar")
         .append($("<h3>")
             .addClass("month-name"));
-
-   // $calendarDiv.append($("<hr>"));
 
     var $weekdays = $("<ul>")
         .addClass("weekdays");

@@ -145,12 +145,29 @@ Page.prototype.bindEvents = function() {
             var position = { x: event.pageX, y: event.pageY };
             var projectToAdd = null;
 
+            var $eventModalContent = $("<ul>")
+                .addClass("form-list")
+                .append($("<li>")
+                    .append($("<i class=\"fa fa-pencil\">"))
+                    .append($("<input type=\"text\" placeholder=\"Title\">")))
+                /*.append($("<li>")
+                    .append($("<hr>")))*/
+                .append($("<li>")
+                    .append($("<i class=\"fa fa-calendar\">"))
+                    .append($("<input type=\"text\" placeholder=\"Date\">"))
+                    .append($(createCalendarElement())
+                        .css({
+                            "width": "300px"
+                        })))
+                .append($("<li>")
+                    .append("<i class=\"fa fa-clock-o\">"));
+
             var RADIAL_MENU_ITEMS = [
                 {
                     title: "Event",
                     url  : "img/shapes/star2.png",
                     select: function() {
-                        var modal = new Modal("New Event", "", [
+                        var modal = new Modal("New Event", $eventModalContent, [
                             {
                                 text: "Click",
                                 click: function() {
@@ -727,9 +744,9 @@ function bindProjectElementEvents(element, callbacks) {
         // re-focus this object for editing.
         setFocusedObject(element, { });
 
-        var name = $(element).find(".project-title-div").text();
+        var name   = $(element).find(".project-title-div").text();
         var holder = $(element).find(".project-circle-text");
-        var edit = $("<input type=\"text\">")
+        var edit   = $("<input type=\"text\">")
             .addClass("project-circle-text-edit");
 
         edit.val(name);

@@ -505,3 +505,27 @@ body {
 .textbox:active {
     border-color: #2DB2EA;
 }
+
+.form-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 22px;
+}
+.form-list > li {
+    display: block;
+    margin-bottom: 8px;
+}
+.form-list > li input {
+    font-size: 22px;
+    border-width: 0;
+    border-bottom: 2px solid #D0D0D0;
+    outline: none;
+    transition: border 0.5s ease;
+}
+.form-list > li input:focus {
+    border-bottom: 2px solid #2DB2EA;
+}
+.form-list > li .fa {
+    margin-right: 20px;
+}
