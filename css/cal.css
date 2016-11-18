@@ -1,0 +1,116 @@
+.cal {
+    margin: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    border: 1px solid #F3F3F3;
+    border-radius: 8px;
+    background-color: #FFFFFF;
+    max-width: 750px;
+}
+.cal ul {
+    list-style-type: none;
+    padding: 0;
+    margin : 0;
+}
+.cal .banner {
+    margin: 0;
+    padding: 6px 0;
+    text-align: center;
+    font-size: 22px;
+    color: #FFFFFF;
+    background-color: #3E454D;
+
+    -moz-user-select   : none;
+    -webkit-user-select: none;
+    -ms-user-select    : none;
+    user-select        : none;
+    cursor: default;
+}
+.cal .banner div {
+    display: inline-block;
+}
+.cal .weekdays-wrapper {
+    padding: 6px 0;
+    background-color: #FE8067;
+}
+.cal .weekdays {
+    color: #FFFFFF;
+}
+.cal .weekdays li {
+    display: inline-block;
+    width: 13.64827%;
+    text-align: center;
+    vertical-align: middle;
+    padding: 0;
+    margin : 0;
+
+    -moz-user-select   : none;
+    -webkit-user-select: none;
+    -ms-user-select    : none;
+    user-select        : none;
+    cursor: default;
+}
+.cal .week {
+    overflow: hidden;
+}
+.cal .week li {
+    color: #4F6069;
+    font-size: 20px;
+
+    display: inline-block;
+    width: 13.64827%;
+    text-align: center;
+    padding: 0;
+    margin : 0;
+
+    background-color: #FFFFFF;
+}
+.cal .week:nth-child(odd) li:nth-child(odd) {
+    background-color: #FAFBFC;
+}
+.cal .week:nth-child(even) li:nth-child(even) {
+    background-color: #FAFBFC;
+}
+.cal .day {
+    -moz-user-select   : none;
+    -webkit-user-select: none;
+    -ms-user-select    : none;
+    user-select        : none;
+
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+.cal .day:not(.active):hover {
+    background-color: #D7DFF0 !important;
+    color: #748DA8;
+}
+.cal .next-month {
+    background-color: #EBF0FA !important;
+    color: #86898F !important;
+}
+.cal .active {
+    background-color: #FE8067 !important;
+}
+.cal .month-back {
+    float: left;
+    padding: 0 8px;
+    cursor: pointer;
+}
+.cal .month-forward {
+    float: right;
+    padding: 0 8px;
+    cursor: pointer;
+}
+
+@media (max-width: 450px) {
+    .cal .banner {
+        font-size: 18px;
+    }
+    .cal .weekdays li {
+        font-size: 12px;
+    }
+    .cal .week li {
+        font-size: 14px;
+    }
+}

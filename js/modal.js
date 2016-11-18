@@ -11,6 +11,7 @@ function Modal(title, content, buttons) {
         .css({
             "opacity": 0
         });
+        
     this.$modalWindowElement = $("<div>")
         .addClass("modal-wrapper")
         .css({
@@ -47,7 +48,6 @@ function Modal(title, content, buttons) {
                 .append(content))
             .append($("<div>")
                 .addClass("modal-bottom")));
-    
 }
 
 Modal.prototype.show = function() {
@@ -74,7 +74,7 @@ Modal.prototype.show = function() {
     this.$modalWindowElement.animate({
         "opacity": 1
     }, 200);
-}
+};
 
 Modal.prototype.hide = function() {
     $(".modal-background-blurred").css("filter", "");
@@ -92,4 +92,4 @@ Modal.prototype.hide = function() {
     }, 200, function() {
         $(this).remove();
     });
-}
+};

@@ -145,28 +145,41 @@ Page.prototype.bindEvents = function() {
             var position = { x: event.pageX, y: event.pageY };
             var projectToAdd = null;
 
-            var $eventModalContent = $("<ul>")
-                .addClass("form-list")
-                .append($("<li>")
-                    .append($("<i class=\"fa fa-pencil\">"))
-                    .append($("<input type=\"text\" placeholder=\"Title\">")))
-                /*.append($("<li>")
-                    .append($("<hr>")))*/
-                .append($("<li>")
-                    .append($("<i class=\"fa fa-calendar\">"))
-                    .append($("<input type=\"text\" placeholder=\"Date\">"))
-                    .append($(createCalendarElement())
-                        .css({
-                            "width": "300px"
-                        })))
-                .append($("<li>")
-                    .append("<i class=\"fa fa-clock-o\">"));
-
             var RADIAL_MENU_ITEMS = [
                 {
                     title: "Event",
                     url  : "img/shapes/star2.png",
                     select: function() {
+                        var $dateInput = $("<input type=\"text\" placeholder=\"Date\">");
+
+                        var cal = new Calendar(new Date(), function(date) {
+                            var year  = date.getFullYear();
+                            var month = ("0" + (date.getMonth() + 1)).slice(-2);
+                            var day   = ("0" + date.getDate()).slice(-2);
+                            $dateInput.val(year + "/" + month + "/" + day);
+                        });
+
+                        var $eventModalContent = $("<ul>")
+                            .addClass("form-list")
+                            .append($("<li>")
+                                .append($("<i class=\"fa fa-pencil\">")
+                                    .addClass("list-item-icon"))
+                                .append($("<input type=\"text\" placeholder=\"Title\">")))
+                            .append($("<li>")
+                                .append($("<i class=\"fa fa-calendar\">")
+                                    .addClass("list-item-icon"))
+                                .append($dateInput)
+                                .append(cal.getElement())
+                                    .css({
+                                        "width": "300px",
+                                        "float": "left"
+                                    })
+                                .css("display", "inline-block"))
+                            .append($("<li>")
+                                .append($("<i class=\"fa fa-clock-o\">")
+                                    .addClass("list-item-icon"))
+                                .append($("<input type=\"text\" placeholder=\"Title\">")));
+
                         var modal = new Modal("New Event", $eventModalContent, [
                             {
                                 text: "Click",
@@ -181,6 +194,7 @@ Page.prototype.bindEvents = function() {
                         ]);
 
                         modal.show();
+                        cal.updateSize();
 
                         // show 'new event' dialog
                         /*$("#dialog").dialogBox({
