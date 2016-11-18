@@ -72,7 +72,7 @@ body {
     background-color: #D9E0E7;
     border-color: #D0DCE3;
 }
-.active {
+.titlebar .active {
     background-color: #D9E0E7;
     box-shadow: 0px 0px 12px -4px #3E454C inset;
 }
@@ -174,7 +174,7 @@ body {
     text-align: center;
     vertical-align: middle;
     resize: none;
-    font-family: 'Lato', sans-serif;
+    font-family: "Montserrat", sans-serif;
     outline: none;
 }
 
@@ -508,7 +508,7 @@ body {
 
 .form-list {
     list-style: none;
-    margin: 0;
+    margin : 0;
     padding: 0;
 }
 .form-list > li {
@@ -516,17 +516,20 @@ body {
     margin-bottom: 8px;
 }
 .form-list > li input {
+    font-family: "Montserrat", sans-serif;
     font-size: 22px;
+    color: #464646;
     border-width: 0;
     border-bottom: 2px solid #D0D0D0;
     outline: none;
     transition: border 0.5s ease;
+    margin: 4px 8px;
+    width: 225px;
 }
 .form-list > li input:focus {
     border-bottom: 2px solid #2DB2EA;
 }
 .form-list > li .list-item-icon {
     font-size: 22px;
-    margin-right: 10px;
-    position: inline-block;
+    display: inline-block;
 }
