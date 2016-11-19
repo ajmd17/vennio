@@ -190,16 +190,47 @@ Calendar.prototype.updateData = function() {
 };
 
 Calendar.prototype.updateSize = function() {
-    var eltSize   = this.$calendarElement.width() / 7;
-    var $days     = this.$calendarElement.find(".days");
-    var $weekdays = this.$calendarElement.find(".weekdays");
+    var width     = this.$calendarElement.width();
+    var eltSize   = width / 7;
 
-    $weekdays.find("li").css("width", eltSize.toString() + "px");
-    $days.find("li").css({
+    var $days       = this.$calendarElement.find(".days");
+    var $daysLi     = $days.find("li");
+
+    var $weekdays   = this.$calendarElement.find(".weekdays");
+    var $weekdaysLi = $weekdays.find("li");
+
+    $weekdaysLi.css("width", eltSize.toString() + "px");
+    $daysLi.css({
         "width" : eltSize.toString() + "px",
         "height": eltSize.toString() + "px",
         "line-height": eltSize.toString() + "px"
     });
+
+    var bannerSize  = 22;
+    var weekdaySize = 16;
+    var daySize     = 20;
+
+    if (width >= 750) {
+        bannerSize  = 30;
+        weekdaySize = 20;
+        daySize     = 22;
+    } else if (width >= 600) {
+        bannerSize  = 28;
+        weekdaySize = 18;
+        daySize     = 18;
+    } else if (width >= 400) {
+        bannerSize  = 24;
+        weekdaySize = 16;
+        daySize     = 16;
+    } else {
+        bannerSize  = 20;
+        weekdaySize = 12;
+        daySize     = 14;
+    }
+
+    this.$calendarElement.find(".banner").css("font-size", bannerSize);
+    $weekdaysLi.css("font-size", weekdaySize);
+    $daysLi.css("font-size", daySize);
 };
 
 function getDaysInMonth(year, month) {

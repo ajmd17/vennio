@@ -524,7 +524,9 @@ body {
     outline: none;
     transition: border 0.5s ease;
     margin: 4px 8px;
-    width: 225px;
+    width: 100%;
+    min-width: 40px;
+    max-width: 225px;
 }
 .form-list > li input:focus {
     border-bottom: 2px solid #2DB2EA;
@@ -532,4 +534,24 @@ body {
 .form-list > li .list-item-icon {
     font-size: 22px;
     display: inline-block;
+}
+
+.form-list .split {
+    width: 50%;
+    display: inline;
+    position: relative;
+}
+.form-list .split-left {
+    float: left;
+}
+
+@media (max-width: 600px) {
+    .form-list .split {
+        width: 100%;
+        margin: 0 auto;
+    }
+    .form-list .split .clock {
+        width: 50%;
+        margin: 0 auto;
+    }
 }

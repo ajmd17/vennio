@@ -103,15 +103,3 @@
     padding: 0 8px;
     cursor: pointer;
 }
-
-@media (max-width: 450px) {
-    .cal .banner {
-        font-size: 18px;
-    }
-    .cal .weekdays li {
-        font-size: 12px;
-    }
-    .cal .week li {
-        font-size: 14px;
-    }
-}

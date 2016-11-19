@@ -4,7 +4,7 @@
     padding: 0;
     border-radius: 8px;
 
-    min-width: 450px;
+    width: 550px;
     max-height: 700px;
 
     color: #646464;
@@ -64,8 +64,7 @@
 
 @media (max-width: 600px) {
     .modal {
-        min-width: 300px;
-        max-width: 550px;
+        width: 345px;
         max-height: 700px;
     }
 }
