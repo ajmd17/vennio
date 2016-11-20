@@ -31,8 +31,8 @@ var circleInfo = [
         color: "#6ABB47"
     },
     {
-        x: 0.15,
-        y: 0.3,
+        x: 0.32,
+        y: 0.13,
         radius: 26,
         color: "#7B539B"
     },
@@ -72,7 +72,11 @@ Circle.prototype.update = function() {
 
 Circle.prototype.draw = function() {
     ctx.beginPath();
-    ctx.arc(this.x + parallaxOffset.x, this.y + parallaxOffset.y, this.radius, 0, 2 * Math.PI);
+    ctx.arc((this.x + parallaxOffset.x) * canvas.width, 
+        (this.y + parallaxOffset.y) * canvas.height, 
+        (canvas.width > 600 ? this.radius : (this.radius * (canvas.width / 600))), 
+        0, 
+        2 * Math.PI);
     ctx.fillStyle = this.color;
     ctx.fill();
     ctx.strokeStyle = this.color;
@@ -88,7 +92,7 @@ $(function() {
     // create all circles
     for (var i = 0; i < circleInfo.length; i++) {
         circles.push(
-            new Circle(Math.floor(circleInfo[i].x * canvas.width), Math.floor(circleInfo[i].y * canvas.height), circleInfo[i].radius, circleInfo[i].color));
+            new Circle(circleInfo[i].x, circleInfo[i].y, circleInfo[i].radius, circleInfo[i].color));
     }
 
     loop();
@@ -119,26 +123,26 @@ function loop() {
     ctx.fillStyle = "#3E454C";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    var width  = canvas.width  || 1;
+    var height = canvas.height || 1;
+
     // update parallax
     if (Math.abs(parallaxVelocity.x) > 0.005) {
-        parallaxOffset.x += Math.sign(parallaxVelocity.x) * 0.6;
+        parallaxOffset.x += Math.sign(parallaxVelocity.x) * 0.5 / width;
         parallaxVelocity.x *= 0.1;
     }
     if (Math.abs(parallaxVelocity.y) > 0.005) {
-        parallaxOffset.y += Math.sign(parallaxVelocity.y) * 0.6;
+        parallaxOffset.y += Math.sign(parallaxVelocity.y) * 0.5 / height;
         parallaxVelocity.y *= 0.1;
     }
-
-    var width  = canvas.width  || 1;
-    var height = canvas.height || 1;
 
     for (var i = 0; i < circles.length; i++) {
         (function(circle) {
 
             circle.angle += circle.incrementer;
 
-            circle.x = circle.initialX + circle.rotationRadius * Math.cos(circle.angle);
-            circle.y = circle.initialY + circle.rotationRadius * Math.sin(circle.angle);
+            circle.x = circle.initialX + ((circle.rotationRadius * Math.cos(circle.angle)) / width);
+            circle.y = circle.initialY + ((circle.rotationRadius * Math.sin(circle.angle)) / height);
 
             if (circle.time <= 0) {
                 circle.time = randRange(50, 150);

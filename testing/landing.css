@@ -47,11 +47,11 @@ body {
 
 #landing-page-hero {
     position: absolute;
-    width: 45%;
-    height: 30%;
+    width: 650px;
+    height: 250px;
     left: 50%;
     top : 50%;
-    color: #3E454C;
+    color: #FFFFFF;
     -ms-transform    : translateX(-50%) translateY(-50%);
     -moz-transform   : translateX(-50%) translateY(-50%);
     -webkit-transform: translateX(-50%) translateY(-50%);
@@ -59,11 +59,11 @@ body {
     -webkit-font-smoothing: antialiased; 
     backface-visibility: hidden;
     border-radius: 8px;
-    background-color: rgba(217, 224, 231, 0.8);
+    background-color: rgba(110, 115, 120, 0.9);
     box-shadow: 1px 2px 8px rgba(0, 0, 0, 0.2);
 }
 #landing-page-hero h3 {
-    color: #FE8067;
+    color: #FFFFFF;
     text-align: center;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
     font-size: 40px;
@@ -72,7 +72,7 @@ body {
 #landing-page-hero hr {
     border: none;
     border-bottom: 1px solid #FE8067;
-    margin: 0 50px;
+    margin: 0 20px;
 }
 #landing-page-hero p {
     text-align: center;
