@@ -21,11 +21,11 @@ body {
 
 #brand {
     font-size: 18px;
+    font-weight: bold;
     color: #FE8067;
     height: 40px;
     line-height: 40px;
     vertical-align: middle;
-    text-shadow: 1px 1px 1px rgba(120, 120, 120, 0.3);
     margin: 0 4px;
     text-transform: uppercase;
 }

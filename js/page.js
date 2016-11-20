@@ -210,27 +210,97 @@ Page.prototype.bindEvents = function() {
                                     .addClass("split split-left")
                                     .append($("<i class=\"fa fa-calendar\">")
                                         .addClass("list-item-icon"))
-                                    .append($dateInput)
-                                    /*.append(cal.getElement())*/)
+                                    .append($dateInput))
                                 .append($("<div>")
                                     .addClass("split split-left")
                                     .append($("<i class=\"fa fa-clock-o\">")
                                         .addClass("list-item-icon"))
-                                    .append($timeInput)
-                                    /*.append($("<div>")
-                                        .css("padding", "12px")
-                                        .append(clock.getElement()))*/));
+                                    .append($timeInput)));
 
                         var modal = new Modal("Create Event", $eventModalContent, [
                             {
                                 text: "Create",
                                 type: "primary",
                                 click: function() {
+                                    // verify the input is valid
+                                    var inputValid = true;
+
+                                    var eventName = $nameInput.val().trim();
+                                    var eventDate = null;
+
+                                    // verify name is not empty
+                                    if (!eventName || !eventName.length) {
+                                        // TODO show error for invalid name
+                                        inputValid = false;
+                                    }
+
+                                    // verify date is legal
+                                    var timestamp = Date.parse($dateInput.val() + " " + $timeInput.val());
+                                    if (!isNaN(timestamp)) {
+                                        eventDate = new Date(timestamp);
+                                    } else {
+                                        // TODO show error for invalid date.
+                                        inputValid = false;
+                                    }
+                                    
+                                    if (inputValid) {
+                                        // create event, then hide the modal
+                                        page.addCircle(position, "event", eventName, {
+                                            success:
+                                                function(element) {
+                                                    var $element = $(element);
+
+                                                    projectToAdd = new Project(
+                                                        eventName, 
+                                                        page.eltSpaceToZoomSpace({
+                                                            x: position.x / page.viewport.zoom,
+                                                            y: position.y / page.viewport.zoom
+                                                        }),
+                                                        element,
+                                                        element.projectClass);
+
+                                                    projectToAdd.color = element.fillColor;
+                                                    projectToAdd.theme = BUILTIN_THEMES["poly_2"]; // Default theme for a new project
+
+                                                    // event info
+                                                    projectToAdd.eventInfo = {
+                                                        "date"    : new Date().toString(), // TODO add date/time picker 
+                                                        "location": "no location", // TODO: make this use google maps api?? 
+                                                        "userInfo": ""
+                                                    };
+
+                                                    // set 'valueBefore' property, so it doesn't act like we need to enter the name
+                                                    element.valueBefore = eventName;
+                                                    
+                                                    page.addProject(projectToAdd);
+
+                                                    // hide modal once project is created
+                                                    modal.hide();
+                                                },
+                                            click:
+                                                function() {
+                                                    if (projectToAdd != null) {
+                                                        if (itemClickTimeoutOn) {
+                                                            clearTimeout(itemClickTimeoutId);
+                                                            itemClickTimeoutOn = false;
+                                                        } else {
+                                                            if (hasFocusedObject()) {
+                                                                objectLoseFocus();
+                                                            } else {
+                                                                handleObjectClick(projectToAdd);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            });
+                                    }
                                 }
                             },
                             {
                                 text: "Cancel",
                                 click: function() {
+                                    // hide the modal
+                                    modal.hide();
                                 }
                             }
                         ]);
@@ -302,7 +372,7 @@ Page.prototype.bindEvents = function() {
                     title: "Group",
                     url  : "img/shapes/circle.png",
                     select: function() {
-                        page.addCircle(position, {
+                        page.addCircle(position, "group", null, {
                         success:
                             function(element) {
                                 var $element = $(element);
@@ -683,7 +753,7 @@ Page.prototype.loadProjectElement = function(project, animationTime) {
     });
 
     // set element properties
-    $projectCircleElement.valueBefore = project.name;
+    $projectCircleElement.valueBefore  = project.name;
     $projectCircleElement.projectClass = project.projectClass;
 
     return $projectCircleElement;
@@ -732,11 +802,11 @@ Page.prototype.loadProjectsFromDatabase = function() {
     });
 };
 
-Page.prototype.addCircle = function(position, callbacks) {
+Page.prototype.addCircle = function(position, projectClass, projectName, callbacks) {
     var circleInfo = {
-        size: 200,
-        color: randomColor({ luminosity: "light", format: "rgb" }),
-        projectClass: "group"
+        "size": 200,
+        "color": randomColor({ "luminosity": "light", "format": "rgb" }),
+        "projectClass": projectClass
     };
 
     var ZOOM = this.viewport.zoom;
@@ -772,9 +842,11 @@ Page.prototype.addCircle = function(position, callbacks) {
         .append($("<div>")
             .addClass("project-circle-text")
             .append($("<input type=\"text\">")
-                .addClass("project-circle-text-edit")));
+                .addClass("project-circle-text-edit")
+                .val(!projectName ? "" : projectName)));
 
     // set element properties
+    $projectCircleElement.valueBefore  = projectName;
     $projectCircleElement.fillColor    = circleInfo.color;
     $projectCircleElement.projectClass = circleInfo.projectClass;
 

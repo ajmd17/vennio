@@ -80,7 +80,7 @@ function handleObjectLoseFocus(element, callbacks) {
 
     if ($edit.val() == "") {
         // remove object if you don't enter a value the first time
-        if (element.valueBefore == undefined) {
+        if (!element.valueBefore || !element.valueBefore.length) {
             $element.animate({
                 "left": ($element.position().left + ($element.width() / 2)).toString() + "px",
                 "top" : ($element.position().top  + ($element.width() / 2)).toString() + "px",
