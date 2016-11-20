@@ -1,7 +1,7 @@
 body {
     padding: 0;
     margin: 0;
-    overflow: scroll;
+    overflow: hidden;
     font-family: "Montserrat", sans-serif;
 }
 
@@ -47,28 +47,32 @@ body {
 
 #landing-page-hero {
     position: absolute;
-    width: 50%;
-    height: 40%;
+    width: 45%;
+    height: 30%;
     left: 50%;
     top : 50%;
-    color: #FFF;
+    color: #3E454C;
     -ms-transform    : translateX(-50%) translateY(-50%);
     -moz-transform   : translateX(-50%) translateY(-50%);
     -webkit-transform: translateX(-50%) translateY(-50%);
-    transform        : translateX(-50%) translateY(-50%);
+    transform        : translateZ(0) translateX(-50%) translateY(-50%);
+    -webkit-font-smoothing: antialiased; 
     backface-visibility: hidden;
     border-radius: 8px;
-    /*background-color: rgba(217, 224, 231, 0.8);
-    box-shadow: 1px 2px 8px rgba(0, 0, 0, 0.2);*/
+    background-color: rgba(217, 224, 231, 0.8);
+    box-shadow: 1px 2px 8px rgba(0, 0, 0, 0.2);
 }
 #landing-page-hero h3 {
+    color: #FE8067;
     text-align: center;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
     font-size: 40px;
     margin: 25px 10px;
 }
 #landing-page-hero hr {
-    border: 1px solid #7B8082;
-    margin: 0 8px;
+    border: none;
+    border-bottom: 1px solid #FE8067;
+    margin: 0 50px;
 }
 #landing-page-hero p {
     text-align: center;

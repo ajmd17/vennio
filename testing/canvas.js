@@ -93,7 +93,7 @@ $(function() {
 
     loop();
 
-    $(window).resize(resizeCanvas);
+    //$(window).resize(resizeCanvas);
     $(window).mousemove(function(e) {
         if (lastMouse !== null) {
             parallaxVelocity.x = (lastMouse.x - (e.pageX)) - ((lastMouse.x - (e.pageX))/2);
@@ -113,6 +113,8 @@ function resizeCanvas() {
 }
 
 function loop() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
     // fill background
     ctx.fillStyle = "#3E454C";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
