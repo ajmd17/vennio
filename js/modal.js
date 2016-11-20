@@ -11,6 +11,36 @@ function Modal(title, content, buttons) {
         .css({
             "opacity": 0
         });
+
+    var $modalBottom = $("<div>")
+        .addClass("bottom");
+
+    var $modalButtons = $("<div>")
+        .addClass("buttons");
+    
+    if (buttons !== undefined && buttons.length != 0) {
+        for (var i = 0; i < buttons.length; i++) {
+            (function(index) {
+                var buttonObject = buttons[index];
+                var $button = $("<button>")
+                    .addClass("btn");
+
+                if (buttonObject.type != undefined && buttonObject.type.length != 0) {
+                    $button.addClass(buttonObject.type);
+                }
+
+                $button.append(buttonObject.text);
+
+                if (buttonObject.click !== undefined) {
+                    $button.click(buttonObject.click);
+                }
+
+                $modalButtons.append($button);
+            })(i);
+        }
+
+        $modalBottom.append($modalButtons);
+    }
         
     this.$modalWindowElement = $("<div>")
         .addClass("modal-wrapper")
@@ -32,9 +62,10 @@ function Modal(title, content, buttons) {
                         "font-size": "20px",
                         "float": "left",
                         "position": "absolute",
-                        "margin-left": "8px",
-                        "margin-top": "4px",
-                        "cursor": "pointer"
+                        "margin-left": "12px",
+                        "cursor": "pointer",
+                        "vertical-align": "middle",
+                        "line-height": "40px"
                     })
                     .click(function() {
                         modal.hide();
@@ -46,8 +77,7 @@ function Modal(title, content, buttons) {
             .append($("<div>")
                 .addClass("modal-body")
                 .append(content))
-            .append($("<div>")
-                .addClass("modal-bottom")));
+            .append($modalBottom));
 }
 
 Modal.prototype.show = function() {

@@ -1,0 +1,46 @@
+.tooltip {
+    position: relative;
+    overflow: hidden;
+    padding: 0;
+    border-radius: 8px;
+    min-height: 100px;
+
+    color: #3E454D;
+    background-color: #FFFFFF;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.6);
+    
+}
+.tooltip-wrapper {
+    position: fixed;
+    background: transparent;
+    outline: none;
+}
+.tooltip .banner {
+    margin: 0;
+    padding: 4px 0;
+    text-align: center;
+    font-size: 18px;
+    text-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+    border-bottom: 2px solid #FE8067;
+    color: #FFFFFF;
+    background-color: #3E454D;
+
+    -moz-user-select   : none;
+    -webkit-user-select: none;
+    -ms-user-select    : none;
+    user-select        : none;
+    cursor: default;
+}
+.tooltip .banner div {
+    display: inline-block;
+}
+.tooltip hr {
+    margin: 4px 0;
+    border: none;
+    border-top: 1px solid rgb(230, 230, 230);
+}
+.tooltip .tooltip-body {
+    font-size: 16px;
+    color: #3E454D;
+    padding: 8px;
+}

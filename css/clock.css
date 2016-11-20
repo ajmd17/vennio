@@ -47,6 +47,7 @@
 .clock a {
     text-decoration: none;
     color: #FFF;
+    cursor: pointer;
 }
 .clock .hour:not(.active):hover {
     background-color: #D7DFF0 !important;
@@ -137,6 +138,7 @@
 }
 .clock .am-pm a {
     color: #FFF;
+    cursor: pointer;
 }
 .clock .selected-time {
     font-size: 34px;

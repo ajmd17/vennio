@@ -173,6 +173,32 @@ Page.prototype.bindEvents = function() {
                                 (isPm ? " PM" : " AM"));
                         });
 
+                        var clockTooltip = new Tooltip($timeInput, "Pick Time", clock.getElement(), {
+                            show: function() {
+                                clock.updateSize();
+                            },
+                            hide: function() {
+                            }
+                        });
+
+                        var calTooltip = new Tooltip($dateInput, "", cal.getElement(), {
+                            show: function() {
+                                cal.updateSize();
+                            },
+                            hide: function() {
+                            }
+                        });
+
+                        // custom css modifications
+                        calTooltip.getElement()
+                            .find(".tooltip")
+                            .css("border-radius", cal.getElement().css("border-radius"));
+                        calTooltip.getElement()
+                            .find(".tooltip-body")
+                            .css("padding", 0);
+                        clock.getElement()
+                            .css("width", "180px");
+
                         var $eventModalContent = $("<ul>")
                             .addClass("form-list")
                             .append($("<li>")
@@ -185,19 +211,20 @@ Page.prototype.bindEvents = function() {
                                     .append($("<i class=\"fa fa-calendar\">")
                                         .addClass("list-item-icon"))
                                     .append($dateInput)
-                                    .append(cal.getElement()))
+                                    /*.append(cal.getElement())*/)
                                 .append($("<div>")
                                     .addClass("split split-left")
                                     .append($("<i class=\"fa fa-clock-o\">")
                                         .addClass("list-item-icon"))
                                     .append($timeInput)
-                                    .append($("<div>")
+                                    /*.append($("<div>")
                                         .css("padding", "12px")
-                                        .append(clock.getElement()))));
+                                        .append(clock.getElement()))*/));
 
-                        var modal = new Modal("New Event", $eventModalContent, [
+                        var modal = new Modal("Create Event", $eventModalContent, [
                             {
-                                text: "Click",
+                                text: "Create",
+                                type: "primary",
                                 click: function() {
                                 }
                             },
@@ -209,8 +236,6 @@ Page.prototype.bindEvents = function() {
                         ]);
 
                         modal.show();
-                        cal.updateSize();
-                        clock.updateSize();
                         $nameInput.select();
 
 

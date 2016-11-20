@@ -32,7 +32,7 @@ function Clock(date, timeChangedCallback) {
     
     var $am = $("<div>")
         .addClass("clock-am")
-        .append($("<a href=\"#\">")
+        .append($("<a>")
         .append("AM"))
         .click(function() {
             var $this = $(this);
@@ -53,7 +53,7 @@ function Clock(date, timeChangedCallback) {
 
     var $pm = $("<div>")
         .addClass("clock-pm")
-        .append($("<a href=\"#\">")
+        .append($("<a>")
         .append("PM"))
         .click(function() {
             var $this = $(this);
@@ -259,7 +259,7 @@ Clock.prototype.updateData = function() {
                     });
                 });
 
-            var $hourText = $("<a href=\"#\">");
+            var $hourText = $("<a>");
 
             if (clock.pickingMode == ClockPickMode.HOUR) {
                 if (hour == itemHour) {
