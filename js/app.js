@@ -267,10 +267,6 @@ function afterLogin() {
         dragTime = 0;
         showRipple = false;
     });
-
-    $("#main-container").css({ 
-        "padding-top": $(".titlebar").height().toString() + "px" 
-    });
 }
 
 $(document).ready(function() {
