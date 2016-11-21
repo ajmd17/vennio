@@ -8,8 +8,8 @@ var lastMouse = null;
 
 var circleInfo = [
     {
-        x: 0.86,
-        y: 0.13,
+        x: 0.7,
+        y: 0.21,
         radius: 60,
         color: "#E6E273"
     },
@@ -20,26 +20,14 @@ var circleInfo = [
         color: "#E68373"
     },
     {
-        x: 0.86,
-        y: 0.8,
+        x: 0.8,
+        y: 0.75,
         radius: 90,
         color: "#4E7993"
     },
     {
-        x: 0.88,
-        y: 0.45,
-        radius: 30,
-        color: "#6ABB47"
-    },
-    {
-        x: 0.32,
-        y: 0.13,
-        radius: 26,
-        color: "#7B539B"
-    },
-    {
-        x: 0.12,
-        y: 0.15,
+        x: 0.2,
+        y: 0.24,
         radius: 34,
         color: "#FFAD6B"
     },
