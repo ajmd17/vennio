@@ -171,6 +171,8 @@ body {
     -moz-user-select: none !important;
     -ms-user-select: none !important;
     user-select: none !important;
+    pointer-events: none;
+    cursor: default;
     text-align:center;
     vertical-align: middle;
 }
@@ -186,6 +188,36 @@ body {
     resize: none;
     font-family: "Montserrat", sans-serif;
     outline: none;
+}
+
+.project-actions-menu {
+    position: absolute;
+    display: inline;
+    opacity: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 15px;
+    transition: opacity 0.2s ease;
+    z-index: 30;
+}
+.project-actions-menu:hover {
+    opacity: 1;
+}
+.project-actions-menu ul {
+    position: relative;
+    list-style: none;
+    padding: 0;
+}
+.project-actions-menu li {
+    display: inline-block;
+    margin: 0 2px;
+    padding: 0;
+    width : 24px;
+    height: 24px;
+}
+.project-actions-menu li img {
+    width: 100%;
+    height: 100%;
 }
 
 .project-event-info {
@@ -222,7 +254,7 @@ body {
     -moz-user-select: none !important;
     -ms-user-select: none !important;
     user-select: none !important;
-    pointer-events:none;
+    pointer-events: none;
     position: fixed;
     top: 50%;
     left: 50%;

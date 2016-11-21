@@ -1,3 +1,36 @@
+
+
+var viewspace = {
+    currentPage: null,
+
+    isPanning: false,
+    panTheta: 0.5,
+
+    showRipple: false,
+    rippleSize: 100,
+
+    dragTime: 0,
+    mouseHoldId: 0,
+    itemClickTimeoutId: 0,
+    itemClickTimeoutEnabled: false,
+    projectClickTimeout: 300,
+    mousePosition: { x: 0, y: 0 },
+
+    minZoom: 1.0,
+    maxZoom: 10.0,
+    zoomStep: 0.1,
+    zoomTheta: 0.1,
+
+
+    focusState: {
+        isFocusedOnObject: false,
+        focusedObject: null,
+        callbacks: {
+        }
+    },
+
+};
+
 var sidebarVisible = false;
 var panning = false;
 var dragTime = 0;
@@ -123,6 +156,9 @@ function handleObjectLoseFocus(element, callbacks) {
             $(this).remove();
         });
 
+        // allow the action selector to be shown
+        $element.find(".project-actions-menu").css("display", "inline");
+
         if (callbacks.success != undefined) {
             callbacks.success(element);
         }
@@ -207,6 +243,10 @@ function handleObjectClick(project) {
 }
 
 function afterLogin() {
+    // show the main content
+    $("#login-window").remove();
+    $("#after-login").show();
+
     if (loggedUser.currentThemeName == undefined || loggedUser.currentThemeName == null) {
         loggedUser.currentThemeName = "poly";
     }

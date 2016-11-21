@@ -1,3 +1,24 @@
+var ACTION_MENU_ITEMS = [
+    {
+        text: "Flag",
+        imgUrl: "img/actions/flag.png",
+        click: function() {
+        }
+    },
+    {
+        text: "Archive",
+        imgUrl: "img/actions/archive.png",
+        click: function() {
+        }
+    },
+    {
+        text: "Remove",
+        imgUrl: "img/actions/remove.png",
+        click: function() {
+        }
+    },
+];
+
 function Page(name, element, theme, pageProject, viewport) {
     this.name = name;
     this.element = element;
@@ -148,7 +169,7 @@ Page.prototype.bindEvents = function() {
             var RADIAL_MENU_ITEMS = [
                 {
                     title: "Event",
-                    url  : "img/shapes/star2.png",
+                    url  : "img/shapes/calendar.png",
                     select: function() {
                         var $nameInput = $("<input type=\"text\" placeholder=\"Name\">");
                         var $dateInput = $("<input type=\"text\" placeholder=\"Date\">");
@@ -310,6 +331,14 @@ Page.prototype.bindEvents = function() {
                     }
                 },
                 {
+                    title: "Pin",
+                    url  : "img/shapes/pin.png"
+                },
+                {
+                    title: "Sticky",
+                    url  : "img/shapes/sticky.png"
+                },
+                {
                     title: "Group",
                     url  : "img/shapes/circle.png",
                     select: function() {
@@ -361,8 +390,8 @@ Page.prototype.bindEvents = function() {
                     }
                 },
                 {
-                    title: "Sticky",
-                    url  : "img/shapes/sticky.png"
+                    title: "Task",
+                    url  : "img/shapes/todo.png"
                 },
             ];
 
@@ -593,7 +622,7 @@ Page.prototype.loadProjectElement = function(project, animationTime) {
             "opacity": 0
         })
         .animate({ "opacity": 1 }, animationTime)
-        .append($("<i class=\"fa fa-times-circle close-project-btn\">"))
+        .append(createActionsMenu())
         .append($("<div>")
             .addClass("project-image")
             .append(SVG_OBJECTS[PROJECT_CLASS_SVG_NAMES[project.projectClass]]
@@ -705,7 +734,8 @@ Page.prototype.addCircle = function(position, projectClass, projectName, callbac
                     $input.select();
                 }
             })
-        .append($("<i class=\"fa fa-times-circle close-project-btn\">"))
+        .append(createActionsMenu()
+            .css("display", "none"))
         .append($("<div>")
             .addClass("project-image")
             .append(SVG_OBJECTS[PROJECT_CLASS_SVG_NAMES[circleInfo.projectClass]]
@@ -715,7 +745,9 @@ Page.prototype.addCircle = function(position, projectClass, projectName, callbac
             .addClass("project-circle-text")
             .append($("<input type=\"text\">")
                 .addClass("project-circle-text-edit")
-                .val(!projectName ? "" : projectName)));
+                .val(!projectName ? "" : projectName))
+            )
+        ;
 
     // set element properties
     $projectCircleElement.valueBefore  = projectName;
@@ -758,4 +790,27 @@ function bindProjectElementEvents(element, callbacks) {
 
         edit.select();
     });
+}
+
+function createActionsMenu() {
+    var $actionsMenu = $("<div>")
+        .addClass("project-actions-menu");
+    var $actionsMenuItems = $("<ul>");
+
+    for (var i = 0; i < ACTION_MENU_ITEMS.length; i++) {
+        (function(menuItem) {
+            $actionsMenuItems.append($("<li>")
+                .append("<img src=\"" + menuItem.imgUrl + "\">")
+                .click(function(e) {
+                    // do not bubble up the DOM
+                    e.stopPropagation();
+
+                    menuItem.click(/* ... */);
+                }));
+        })(ACTION_MENU_ITEMS[i]);
+    }
+
+    $actionsMenu.append($actionsMenuItems);
+
+    return $actionsMenu;
 }
