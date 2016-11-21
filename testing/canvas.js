@@ -1,6 +1,7 @@
 var canvas = null;
 var ctx    = null;
 var timer  = null;
+var background = null;
 var parallaxVelocity = { x: 0, y: 0 }; 
 var parallaxOffset   = { x: 0, y: 0 };
 var lastMouse = null;
@@ -19,8 +20,8 @@ var circleInfo = [
         color: "#E68373"
     },
     {
-        x: 0.9,
-        y: 0.88,
+        x: 0.86,
+        y: 0.8,
         radius: 90,
         color: "#4E7993"
     },
@@ -74,7 +75,7 @@ Circle.prototype.draw = function() {
     ctx.beginPath();
     ctx.arc((this.x + parallaxOffset.x) * canvas.width, 
         (this.y + parallaxOffset.y) * canvas.height, 
-        (canvas.width > 600 ? this.radius : (this.radius * (canvas.width / 600))), 
+        (canvas.width > 600 ? (this.radius * 1.4) : (this.radius * (canvas.width / 600))), 
         0, 
         2 * Math.PI);
     ctx.fillStyle = this.color;
@@ -86,6 +87,9 @@ Circle.prototype.draw = function() {
 $(function() {
     canvas = document.getElementById("bg-canvas");
     ctx    = canvas.getContext("2d");
+
+    background = new Image();
+    background.src = "../img/poly-green.png";
 
     resizeCanvas();
 
@@ -117,11 +121,13 @@ function resizeCanvas() {
 }
 
 function loop() {
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
+    //var $pageHead = $("#page-head");
+    canvas.width  = window.innerWidth;//$pageHead.width();
+    canvas.height = window.innerHeight;//$pageHead.height();
     // fill background
-    ctx.fillStyle = "#3E454C";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    //ctx.fillStyle = "#3E454C";
+    //ctx.fillRect(0, 0, canvas.width, canvas.height);
+    drawImageProp(background);
 
     var width  = canvas.width  || 1;
     var height = canvas.height || 1;
@@ -164,4 +170,51 @@ function loop() {
     }
 
     timer = window.setTimeout(loop, 45);
+}
+
+function drawImageProp(img, x, y, w, h, offsetX, offsetY) {
+    if (arguments.length === 1) {
+        x = y = 0;
+        w = canvas.width;
+        h = canvas.height;
+    }
+
+    /// default offset is center
+    offsetX = typeof offsetX === 'number' ? offsetX : 0.5;
+    offsetY = typeof offsetY === 'number' ? offsetY : 0.5;
+
+    /// keep bounds [0.0, 1.0]
+    if (offsetX < 0) offsetX = 0;
+    if (offsetY < 0) offsetY = 0;
+    if (offsetX > 1) offsetX = 1;
+    if (offsetY > 1) offsetY = 1;
+
+    var iw = img.width,
+        ih = img.height,
+        r = Math.min(w / iw, h / ih),
+        nw = iw * r,   /// new prop. width
+        nh = ih * r,   /// new prop. height
+        cx, cy, cw, ch, ar = 1;
+
+    /// decide which gap to fill    
+    if (nw < w) ar = w / nw;
+    if (nh < h) ar = h / nh;
+    nw *= ar;
+    nh *= ar;
+
+    /// calc source rectangle
+    cw = iw / (nw / w);
+    ch = ih / (nh / h);
+
+    cx = (iw - cw) * offsetX;
+    cy = (ih - ch) * offsetY;
+
+    /// make sure source rectangle is valid
+    if (cx < 0) cx = 0;
+    if (cy < 0) cy = 0;
+    if (cw > iw) cw = iw;
+    if (ch > ih) ch = ih;
+
+    /// fill image in dest. rectangle
+    ctx.drawImage(img, cx, cy, cw, ch,  x, y, w, h);
 }
