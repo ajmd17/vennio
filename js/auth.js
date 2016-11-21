@@ -41,7 +41,8 @@ function signIn(auth, database, provider) {
     auth.signInWithPopup(provider).then(function(result) {
         handleLogin(result.user);
 
-    }).catch(function(error) {
+    })
+    .catch(function(error) {
         alert(error.toString());
     });
 }

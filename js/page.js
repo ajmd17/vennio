@@ -307,65 +307,6 @@ Page.prototype.bindEvents = function() {
 
                         modal.show();
                         $nameInput.select();
-
-
-                        // show 'new event' dialog
-                        /*$("#dialog").dialogBox({
-                            title: "New Event",
-                            content: createCalendarElement(),
-                            effect: "sign",
-                            hasBtn: true,
-                            confirmValue: "OK",
-                            cancelValue : "Cancel",
-                            confirm: function() {
-                                // TODO 
-                            },
-                            callback: function() {
-                            }
-                        });*/
-                        /*modal({
-                            type: 'primary',
-                            title: 'New Event',
-                            text: $("<input type=\"text\" placeholder=\"Title\">")
-                                .addClass("textbox"),
-                            size: 'normal', //Modal Size (normal | large | small)
-                            buttons: [
-                                {
-                                    text: 'OK',
-                                    val: 'ok',
-                                    eKey: true,
-                                    addClass: 'btn-light-blue',
-                                    onClick: function(dialog) {
-                                        return true;
-                                    }
-                                } 
-                            ],
-                            center: true,
-                            autoclose: false,
-                            callback: null,
-                            onShow: function(r) {
-                            },
-                            closeClick: true,
-                            closable: true,
-                            theme: 'atlant',
-                            animate: false,
-                            background: 'rgba(0,0,0,0.5)',
-                            zIndex: 10,
-                            buttonText: {
-                                ok: 'OK',
-                                yes: 'Yes',
-                                cancel: 'Cancel'
-                            },
-                            template: '<div class="modal-box"><div class="modal-inner"><div class="modal-title"><a class="modal-close-btn"></a></div><div class="modal-text"></div><div class="modal-buttons"></div></div></div>',
-                            _classes: {
-                                box: '.modal-box',
-                                boxInner: ".modal-inner",
-                                title: '.modal-title',
-                                content: '.modal-text',
-                                buttons: '.modal-buttons',
-                                closebtn: '.modal-close-btn'
-                            }
-                        });*/
                     }
                 },
                 {
@@ -498,8 +439,8 @@ Page.prototype.bindEvents = function() {
                         }
                     })
                     .css({
-                        opacity: 1,
-                        transform: "rotate(" + degrees + "deg) translate(" + (HALF_SELECTOR_SIZE - 40) + "px) rotate(" + (-1 * degrees) + "deg)"
+                        "opacity": 1,
+                        "transform": "rotate(" + degrees + "deg) translate(" + (HALF_SELECTOR_SIZE - 40) + "px) rotate(" + (-1 * degrees) + "deg)"
                     }));
 
                 degrees += DEG_STEP;
@@ -516,73 +457,6 @@ Page.prototype.bindEvents = function() {
             }, 200);
 
             $radialMenu.attr("tabindex", -1).focus();
-
-            /*page.addCircle(position, {
-                success:
-                    function(element) {
-                        var $element = $(element);
-
-                        var name = "";
-                        var $input = $element.find(".project-circle-text").find("input");
-
-                        if ($input.length > 0) {
-                            name = $input.val();
-                        } else {
-                            name = $element.find(".project-title-div").text();
-                        }
-
-                        projectToAdd = new Project(
-                            name, 
-                            page.eltSpaceToZoomSpace({
-                                "x": position.x / page.viewport.zoom,
-                                "y": position.y / page.viewport.zoom
-                            }),
-                            element,
-                            element.projectClass);
-
-                        projectToAdd.color = element.fillColor;
-
-                        projectToAdd.theme = BUILTIN_THEMES["poly_2"]; // Default theme for a new project
-
-                        switch (element.projectClass) {
-                        case "group":
-                            projectToAdd.viewport = {
-                                "zoom": 1.0,
-                                "zoomLevel": 0,
-                                "left": 0,
-                                "top" : 0
-                            };
-                            break;
-                        case "event":
-                            projectToAdd.eventInfo = {
-                                "date"    : new Date().toString(), // TODO add date/time picker 
-                                "location": "no location", // TODO: make this use google maps api?? 
-                                "userInfo": ""
-                            };
-                            break;
-                        default:
-                            console.log("Unknown project class " + element.projectClass.toString());
-                            break;
-                        }
-
-                        page.addProject(projectToAdd);
-                    },
-                click:
-                    function() {
-                        if (projectToAdd != null) {
-                            if (itemClickTimeoutOn) {
-                                clearTimeout(itemClickTimeoutId);
-                                itemClickTimeoutOn = false;
-                            } else {
-                                if (hasFocusedObject()) {
-                                    objectLoseFocus();
-                                } else {
-                                    handleObjectClick(projectToAdd);
-                                }
-                            }
-                        }
-                    }
-                });*/
         }
     }).on("mousedown touchstart", function(e) {
         var $this = $(this);
@@ -608,7 +482,7 @@ Page.prototype.bindEvents = function() {
         var $this = $(this);
         var $offset = $this.offset();
 
-        var newPos = {};
+        var newPos = null;
 
         if (e.type == "touchmove") {
             e.preventDefault();
@@ -731,11 +605,6 @@ Page.prototype.loadProjectElement = function(project, animationTime) {
                 .addClass("project-title-div")
                 .append(project.name)));
 
-    /*var $clickElement = $projectCircleElement.find("svg");
-    if ($clickElement.length == 0) {
-        $clickElement = $projectCircleElement;
-    }*/
-
     // bind click, double click, lose focus events
     bindProjectElementEvents($projectCircleElement, {
         click: function() {
@@ -805,7 +674,10 @@ Page.prototype.loadProjectsFromDatabase = function() {
 Page.prototype.addCircle = function(position, projectClass, projectName, callbacks) {
     var circleInfo = {
         "size": 200,
-        "color": randomColor({ "luminosity": "light", "format": "rgb" }),
+        "color": randomColor({ 
+            "luminosity": "light", 
+            "format": "rgb" 
+        }),
         "projectClass": projectClass
     };
 
@@ -864,7 +736,8 @@ function bindProjectElementEvents(element, callbacks) {
         if (callbacks.click != undefined) {
             callbacks.click();
         }
-    }).on("dblclick", function() {
+    })
+    .on("dblclick", function() {
         if (itemClickTimeoutOn) {
             clearTimeout(itemClickTimeoutId);
             itemClickTimeoutOn = false;

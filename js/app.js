@@ -75,8 +75,8 @@ function updateBreadcrums() {
 
 function handleObjectLoseFocus(element, callbacks) {
     var $element = $(element);
-    var $txt = $element.find(".project-circle-text");
-    var $edit = $txt.find("input");
+    var $txt     = $element.find(".project-circle-text");
+    var $edit    = $txt.find("input");
 
     if ($edit.val() == "") {
         // remove object if you don't enter a value the first time
@@ -207,8 +207,7 @@ function handleObjectClick(project) {
 }
 
 function afterLogin() {
-    if (loggedUser.currentThemeName == undefined ||
-        loggedUser.currentThemeName == null) {
+    if (loggedUser.currentThemeName == undefined || loggedUser.currentThemeName == null) {
         loggedUser.currentThemeName = "poly";
     }
 
@@ -231,7 +230,8 @@ function afterLogin() {
         if (e.ctrlKey) {
             e.preventDefault();
         }
-    }).click(function(e) {
+    })
+    .click(function(e) {
         var $target = $(e.target);
         
         if ($target.is(".project-circle") || $(".project-circle").has($target).length != 0) {
@@ -240,7 +240,8 @@ function afterLogin() {
             objectLoseFocus();
         }
 
-    }).on("mouseup", function(e) {
+    })
+    .on("mouseup", function(e) {
         clearTimeout(mouseHoldId);
 
         if (showRipple && dragTime == 0) {

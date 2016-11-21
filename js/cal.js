@@ -190,11 +190,11 @@ Calendar.prototype.updateData = function() {
 };
 
 Calendar.prototype.updateSize = function() {
-    var width     = this.$calendarElement.width();
-    var eltSize   = width / 7;
+    var width   = this.$calendarElement.width();
+    var eltSize = width / 7;
 
-    var $days       = this.$calendarElement.find(".days");
-    var $daysLi     = $days.find("li");
+    var $days   = this.$calendarElement.find(".days");
+    var $daysLi = $days.find("li");
 
     var $weekdays   = this.$calendarElement.find(".weekdays");
     var $weekdaysLi = $weekdays.find("li");

@@ -17,25 +17,25 @@ var circleInfo = [
         x: 0.1,
         y: 0.55,
         radius: 55,
-        color: "#E68373"
+        color: "#EC514B"
     },
     {
         x: 0.8,
         y: 0.75,
-        radius: 90,
-        color: "#4E7993"
+        radius: 70,
+        color: "#914A78"
     },
     {
         x: 0.2,
         y: 0.24,
         radius: 34,
-        color: "#FFAD6B"
+        color: "#409EEC"
     },
     {
         x: 0.16,
         y: 0.85,
         radius: 50,
-        color: "#7D9EB1"
+        color: "#33A059"
     },
 ];
 
@@ -83,8 +83,7 @@ $(function() {
 
     // create all circles
     for (var i = 0; i < circleInfo.length; i++) {
-        circles.push(
-            new Circle(circleInfo[i].x, circleInfo[i].y, circleInfo[i].radius, circleInfo[i].color));
+        circles.push(new Circle(circleInfo[i].x, circleInfo[i].y, circleInfo[i].radius, circleInfo[i].color));
     }
 
     loop();
