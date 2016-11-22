@@ -1,94 +1,26 @@
-
-
-var viewspace = {
-    currentPage: null,
-
-    isPanning: false,
-    panTheta: 0.5,
-
-    showRipple: false,
-    rippleSize: 100,
-
-    dragTime: 0,
-    mouseHoldId: 0,
-    itemClickTimeoutId: 0,
-    itemClickTimeoutEnabled: false,
-    projectClickTimeout: 300,
-    mousePosition: { x: 0, y: 0 },
-
-    minZoom: 1.0,
-    maxZoom: 10.0,
-    zoomStep: 0.1,
-    zoomTheta: 0.1,
-
-
-    focusState: {
-        isFocusedOnObject: false,
-        focusedObject: null,
-        callbacks: {
-        }
-    },
-
-};
-
-var sidebarVisible = false;
-var panning = false;
-var dragTime = 0;
-var mouseHoldId = 0;
-var showRipple = false;
-
-// on click, a timeout is set.
-// if clicked again, it is cleared.
-// else, the user is taken to the clicked project's page.
-var itemClickTimeoutId = 0;
-var itemClickTimeoutOn = false;
-
-var MIN_ZOOM = 1.0;
-var MAX_ZOOM = 10.0;
-var ZOOM_STEP = 0.1;
-var ZOOM_THETA = 0.1;
-var PAN_THETA = 0.5;
-var RIPPLE_SIZE = 100;
-var PROJECT_CLICK_TIMEOUT = 300;
-
-var focusState = {
-    isFocusedOnObject: false,
-    focusedObject: null,
-    callbacks: {
-    }
-};
-
-var mousePosition = {
-    x: 0,
-    y: 0
-};
-
-// pages are held in a linked list: each page contains a property 'parentPage'
-var currentPage = null;
-
 function updateBreadcrums() {
     var $topBreadcrumbs = $("#top-breadcrums");
     $topBreadcrumbs.empty();
 
     var elementsToAdd = [];
-    var page = currentPage;
+    var page = viewspace.currentPage;
 
     while (page != null && page != undefined) {
         var $li = $("<li>");
         var $a = $("<a href=\"#\">").append(page.name);
 
-        if (page == currentPage) {
+        if (page == viewspace.currentPage) {
             $a.addClass("current");
         } else {
             (function(thisPage) {
                 $a.click(function() {
                     // navigate to parent page
-                    currentPage.unbindEvents();
-                    currentPage.clearProjectElements();
-                    currentPage = thisPage;
-                    currentPage.bindEvents();
-                    currentPage.show();
-                    currentPage.loadProjectElements();
+                    viewspace.currentPage.unbindEvents();
+                    viewspace.currentPage.clearProjectElements();
+                    viewspace.currentPage = thisPage;
+                    viewspace.currentPage.bindEvents();
+                    viewspace.currentPage.show();
+                    viewspace.currentPage.loadProjectElements();
 
                     updateBreadcrums();
                 });
@@ -111,7 +43,7 @@ function handleObjectLoseFocus(element, callbacks) {
     var $txt     = $element.find(".project-circle-text");
     var $edit    = $txt.find("input");
 
-    if ($edit.val() == "") {
+    if ($edit.val().trim().length == 0) {
         // remove object if you don't enter a value the first time
         if (!element.valueBefore || !element.valueBefore.length) {
             $element.animate({
@@ -165,81 +97,62 @@ function handleObjectLoseFocus(element, callbacks) {
     }
 }
 
-function clearObjectFocus() {
-    focusState = {
-        isFocusedOnObject: false,
-        focusedObject: null,
-        callbacks: {
-        }
-    };
-}
-
-function objectLoseFocus() {
-    if (focusState.isFocusedOnObject && focusState.focusedObject != null) {
-        handleObjectLoseFocus(focusState.focusedObject, focusState.callbacks);
-    }
-    clearObjectFocus();
-}
-
-function hasFocusedObject() {
-    return focusState.isFocusedOnObject && focusState.focusedObject != null;
-}
-
-function setFocusedObject(element, callbacks) {
-    focusState.isFocusedOnObject = true;
-    focusState.focusedObject = element;
-    focusState.callbacks = callbacks;
-}
-
 /** Handles when an object/project was actually clicked,
  *  i.e not just clicked while dragging or cancelling editing for another project.
  * 
  *  @param project - The project data object of the element clicked.
 */
 function handleObjectClick(project) {
-    itemClickTimeoutOn = true;
-    itemClickTimeoutId = setTimeout(function() {
-        switch (project.projectClass) {
-        case "group":
-            // open the clicked project page
-            var pageBefore = currentPage;
-            pageBefore.unbindEvents();
-            pageBefore.clearProjectElements();
+    if (viewspace.itemClickTimeoutEnabled) {
+        window.clearTimeout(viewspace.itemClickTimeoutId);
+        viewspace.itemClickTimeoutEnabled = false;
+    } else {
+        if (viewspace.hasFocusedObject()) {
+            viewspace.objectLoseFocus();
+        } else {
+            viewspace.itemClickTimeoutEnabled = true;
+            viewspace.itemClickTimeoutId = setTimeout(function() {
+                viewspace.itemClickTimeoutEnabled = false;
 
-            currentPage = new Page(
-                project.name,
-                $("<div class=\"page\">")
-                    .append("<div class=\"video-wrapper\">"),
-                project.theme,
-                project,
-                project.viewport);
+                switch (project.projectClass) {
+                case "group":
+                    // open the clicked project page
+                    var pageBefore = viewspace.currentPage;
+                    pageBefore.unbindEvents();
+                    pageBefore.clearProjectElements();
 
-            currentPage.loadProjectsFromDatabase();
-            currentPage.parentPage = pageBefore;
-            currentPage.bindEvents();
-            currentPage.show();
+                    viewspace.currentPage = new Page(
+                        project.name,
+                        $("<div class=\"page\">")
+                            .append("<div class=\"video-wrapper\">"),
+                        project.theme,
+                        project,
+                        project.viewport);
 
-            updateBreadcrums();
+                    viewspace.currentPage.loadProjectsFromDatabase();
+                    viewspace.currentPage.parentPage = pageBefore;
+                    viewspace.currentPage.bindEvents();
+                    viewspace.currentPage.show();
 
-            break;
+                    updateBreadcrums();
 
-        case "event":
-            // show event data
-            if (project.eventInfo == undefined || project.eventInfo == null) {
-                console.log("Error loading data about the event");
-            } else {
-                // TODO
-            }
+                    break;
+                case "event":
+                    // show event data
+                    if (!project.eventInfo) {
+                        console.log("Error loading data about the event");
+                    } else {
+                        // TODO
+                    }
 
-            break;
-
-        default:
-            console.log("unknown project class: ", project.projectClass);
-            break;
+                    break;
+                default:
+                    console.log("Not implemented: ", project.projectClass);
+                    break;
+                }
+            }, viewspace.projectClickTimeout);
         }
-
-        itemClickTimeoutOn = false;
-    }, PROJECT_CLICK_TIMEOUT);
+    }
 }
 
 function afterLogin() {
@@ -251,17 +164,7 @@ function afterLogin() {
         loggedUser.currentThemeName = "poly";
     }
 
-    // create root projects page
-    currentPage = new Page("Home", $("<div class=\"page\">")
-        .append("<div class=\"video-wrapper\">"),
-        loggedUser.theme,
-        null,
-        loggedUser.viewport);
-
-    currentPage.loadProjectsFromDatabase();
-    currentPage.parentPage = null;
-    currentPage.bindEvents();
-    currentPage.show();
+    viewspace.init();
 
     updateBreadcrums();
 
@@ -270,21 +173,18 @@ function afterLogin() {
         if (e.ctrlKey) {
             e.preventDefault();
         }
-    })
-    .click(function(e) {
+    }).click(function(e) {
         var $target = $(e.target);
         
         if ($target.is(".project-circle") || $(".project-circle").has($target).length != 0) {
             // let the click callback for the project handle it
         } else {
-            objectLoseFocus();
+            viewspace.objectLoseFocus();
         }
+    }).on("mouseup", function(e) {
+        window.clearTimeout(viewspace.mouseHoldId);
 
-    })
-    .on("mouseup", function(e) {
-        clearTimeout(mouseHoldId);
-
-        if (showRipple && dragTime == 0) {
+        if (viewspace.showRipple && viewspace.dragTime == 0) {
             var $pageContent = $("#page-content");
 
             $(".ripple").remove();
@@ -302,11 +202,11 @@ function afterLogin() {
             );
         }
 
-        $(currentPage.element).css("cursor", "auto");
+        $(viewspace.currentPage.element).css("cursor", "auto");
 
-        panning = false;
-        dragTime = 0;
-        showRipple = false;
+        viewspace.isPanning = false;
+        viewspace.dragTime = 0;
+        viewspace.showRipple = false;
     });
 }
 
@@ -317,22 +217,6 @@ $(document).ready(function() {
 
     $menuBtn.click(function() {
         $menuBtn.toggleClass("active");
-
-        sidebarVisible = !sidebarVisible;
-        if (sidebarVisible) {
-            var sidebarWidth = "300px";
-            
-            $mainSidebar.show();
-            $mainSidebar.css({ "width": sidebarWidth });
-            $pageContent.css({ "margin-left": sidebarWidth });
-        } else {
-            $pageContent.css({ "margin-left": 0 });
-            $mainSidebar.css({ "width": 0 });
-
-            // hide after transition
-            setTimeout(function() {
-                $mainSidebar.hide();
-            }, 100);
-        }
+        viewspace.toggleSidebar();
     });
 });

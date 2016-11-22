@@ -47,15 +47,15 @@ Page.prototype.zoomSpaceToEltSpace = function(vec) {
 Page.prototype.handlePanning = function(newPos) {
     var ZOOM = this.viewport.zoom;
 
-    dragTime++;
+    viewspace.dragTime++;
 
     var diff = {
-        x: newPos.x - mousePosition.x,
-        y: newPos.y - mousePosition.y
+        x: newPos.x - viewspace.mousePosition.x,
+        y: newPos.y - viewspace.mousePosition.y
     };
 
-    this.viewport.left -= diff.x * PAN_THETA / ZOOM;
-    this.viewport.top  -= diff.y * PAN_THETA / ZOOM;
+    this.viewport.left -= diff.x * viewspace.PAN_THETA / ZOOM;
+    this.viewport.top  -= diff.y * viewspace.PAN_THETA / ZOOM;
 
     // update viewport
     if (this.pageProject != null && this.pageProject != undefined) {
@@ -72,8 +72,8 @@ Page.prototype.handlePanning = function(newPos) {
 
     $(".project-circle").each(function() {
         $(this).css({
-            "left": "+=" + (diff.x * PAN_THETA).toString(),
-            "top" : "+=" + (diff.y * PAN_THETA).toString()
+            "left": "+=" + (diff.x * viewspace.PAN_THETA).toString(),
+            "top" : "+=" + (diff.y * viewspace.PAN_THETA).toString()
         });
     });
 };
@@ -88,7 +88,7 @@ Page.prototype.bindEvents = function() {
 
     $element.bind("wheel mousewheel", function(e) {
         // only zoom if there are no elements being edited at the moment
-        if (!hasFocusedObject()) {
+        if (!viewspace.hasFocusedObject()) {
             var delta;
             if (e.originalEvent.wheelDelta !== undefined) {
                 delta = e.originalEvent.wheelDelta;
@@ -97,15 +97,15 @@ Page.prototype.bindEvents = function() {
             }
 
             var deltaSign = Math.sign(delta);
-            var nextZoom = page.viewport.zoom + (deltaSign * ZOOM_STEP);
+            var nextZoom = page.viewport.zoom + (deltaSign * viewspace.ZOOM_STEP);
             var oldZoom  = page.viewport.zoom;
 
-            mousePosition = {
+            viewspace.mousePosition = {
                 x: e.pageX - $element.offset().left,
                 y: e.pageY - $element.offset().top
             };
 
-            if (nextZoom >= MIN_ZOOM && nextZoom <= MAX_ZOOM) {
+            if (nextZoom >= viewspace.ZOOM_MIN && nextZoom <= viewspace.ZOOM_MAX) {
                 var sign = Math.sign(nextZoom - page.viewport.zoom);
                 page.viewport.zoomLevel += sign;
 
@@ -162,7 +162,6 @@ Page.prototype.bindEvents = function() {
     }).on("dblclick", function(event) {
         if (event.target == this) {
             // add project item
-
             var position = { x: event.pageX, y: event.pageY };
             var projectToAdd = null;
 
@@ -301,16 +300,7 @@ Page.prototype.bindEvents = function() {
                                             click:
                                                 function() {
                                                     if (projectToAdd != null) {
-                                                        if (itemClickTimeoutOn) {
-                                                            clearTimeout(itemClickTimeoutId);
-                                                            itemClickTimeoutOn = false;
-                                                        } else {
-                                                            if (hasFocusedObject()) {
-                                                                objectLoseFocus();
-                                                            } else {
-                                                                handleObjectClick(projectToAdd);
-                                                            }
-                                                        }
+                                                        handleObjectClick(projectToAdd);
                                                     }
                                                 }
                                             });
@@ -336,7 +326,45 @@ Page.prototype.bindEvents = function() {
                 },
                 {
                     title: "Sticky",
-                    url  : "img/shapes/sticky.png"
+                    url  : "img/shapes/sticky.png",
+                    select: function() {
+                        page.addCircle(position, "sticky", "sticky text here", {
+                        success:
+                            function(element) {
+                                var $element = $(element);
+                                var $input = $element.find(".project-circle-text").find("input");
+                                var name = $input.length > 0
+                                    ? $input.val()
+                                    : $element.find(".project-title-div").text();
+
+                                projectToAdd = new Project(
+                                    name, 
+                                    page.eltSpaceToZoomSpace({
+                                        x: position.x / page.viewport.zoom,
+                                        y: position.y / page.viewport.zoom
+                                    }),
+                                    element,
+                                    element.projectClass);
+
+                                projectToAdd.color = element.fillColor;
+                                projectToAdd.theme = BUILTIN_THEMES["poly_2"]; // Default theme for a new project
+                                projectToAdd.viewport = {
+                                    zoom: 1.0,
+                                    zoomLevel: 0,
+                                    left: 0,
+                                    top : 0
+                                };
+                                
+                                page.addProject(projectToAdd);
+                            },
+                        click:
+                            function() {
+                                if (projectToAdd != null) {
+                                    handleObjectClick(projectToAdd);
+                                }
+                            }
+                        });
+                    }
                 },
                 {
                     title: "Group",
@@ -374,12 +402,12 @@ Page.prototype.bindEvents = function() {
                         click:
                             function() {
                                 if (projectToAdd != null) {
-                                    if (itemClickTimeoutOn) {
-                                        clearTimeout(itemClickTimeoutId);
-                                        itemClickTimeoutOn = false;
+                                    if (viewspace.itemClickTimeoutEnabled) {
+                                        window.clearTimeout(viewspace.itemClickTimeoutId);
+                                        viewspace.itemClickTimeoutEnabled = false;
                                     } else {
-                                        if (hasFocusedObject()) {
-                                            objectLoseFocus();
+                                        if (viewspace.hasFocusedObject()) {
+                                            viewspace.objectLoseFocus();
                                         } else {
                                             handleObjectClick(projectToAdd);
                                         }
@@ -493,19 +521,19 @@ Page.prototype.bindEvents = function() {
         var $target = $(e.target);
 
         if (e.type == "touchstart") {
-            mousePosition = {
+            viewspace.mousePosition = {
                 x: e.touches[0].pageX - $offset.left,
                 y: e.touches[0].pageY - $offset.top
             };
         }
 
         if ($target.is($this)) {
-            mouseHoldId = setTimeout(function() {
+            viewspace.mouseHoldId = window.setTimeout(function() {
                 showRipple = true;
             }, 250);
 
             $this.css("cursor", "move");
-            panning = true;
+            viewspace.isPanning = true;
         }
     }).on("mousemove touchmove", function(e) {
         var $this = $(this);
@@ -527,11 +555,11 @@ Page.prototype.bindEvents = function() {
             };
         }
 
-        if (panning) {
+        if (viewspace.isPanning) {
             page.handlePanning(newPos);
         }
 
-        mousePosition = newPos;
+        viewspace.mousePosition = newPos;
     });
 };
 
@@ -637,16 +665,7 @@ Page.prototype.loadProjectElement = function(project, animationTime) {
     // bind click, double click, lose focus events
     bindProjectElementEvents($projectCircleElement, {
         click: function() {
-            if (itemClickTimeoutOn) {
-                clearTimeout(itemClickTimeoutId);
-                itemClickTimeoutOn = false;
-            } else {
-                if (hasFocusedObject()) {
-                    objectLoseFocus();
-                } else {
-                    handleObjectClick(project);
-                }
-            }
+            handleObjectClick(project);
         }
     });
 
@@ -690,12 +709,9 @@ Page.prototype.loadProjectsFromDatabase = function() {
                     var project = snapshotValue[key];
                     project.ref = projectsRef.child(key);
                     page.projects.push(project);
-
-                    console.log("Load project: ", project);
                 })(keys[i]);
             }
         }
-
         page.loadProjectElements();
     });
 };
@@ -759,7 +775,7 @@ Page.prototype.addCircle = function(position, projectClass, projectName, callbac
 
     $(this.element).append($projectCircleElement);
     
-    setFocusedObject($projectCircleElement, callbacks);
+    viewspace.setFocusedObject($projectCircleElement, callbacks);
     $projectCircleElement.attr("tabindex", -1).focus();
 };
 
@@ -768,15 +784,14 @@ function bindProjectElementEvents(element, callbacks) {
         if (callbacks.click != undefined) {
             callbacks.click();
         }
-    })
-    .on("dblclick", function() {
-        if (itemClickTimeoutOn) {
-            clearTimeout(itemClickTimeoutId);
-            itemClickTimeoutOn = false;
+    }).on("dblclick", function() {
+        if (viewspace.itemClickTimeoutEnabled) {
+            window.clearTimeout(viewspace.itemClickTimeoutId);
+            viewspace.itemClickTimeoutEnabled = false;
         }
 
         // re-focus this object for editing.
-        setFocusedObject(element, { });
+        viewspace.setFocusedObject(element, { });
 
         var name   = $(element).find(".project-title-div").text();
         var holder = $(element).find(".project-circle-text");

@@ -2,8 +2,10 @@ var canvas = null;
 var ctx    = null;
 var timer  = null;
 var background = null;
-var parallaxVelocity = { x: 0, y: 0 }; 
+//var parallaxVelocity = { x: 0, y: 0 }; 
+var parallaxVelocity = 0;
 var parallaxOffset   = { x: 0, y: 0 };
+var parallaxOffsetDest = { x: 0, y: 0 };
 var lastMouse = null;
 
 var circleInfo = [
@@ -49,10 +51,10 @@ function Circle(x, y, radius, color) {
     this.radius = radius;
     this.color = color;
 
-    this.time = randRange(50, 150);
+    this.time = randRange(30, 60);
     this.angle = Math.random() * 2 * Math.PI;
-    this.rotationRadius = 1.0 + Math.random() * 4.0;
-    this.incrementer = 0.01 + Math.random() * 0.1;
+    this.rotationRadius = 1.0 + Math.random() * 9.0;
+    this.incrementer = (0.01 + Math.random() * 0.1) * Math.sign(Math.random() - 0.5);
 }
 
 Circle.prototype.update = function() {
@@ -61,8 +63,8 @@ Circle.prototype.update = function() {
 
 Circle.prototype.draw = function() {
     ctx.beginPath();
-    ctx.arc((this.x + parallaxOffset.x) * canvas.width, 
-        (this.y + parallaxOffset.y) * canvas.height, 
+    ctx.arc((this.x) * canvas.width + parallaxOffset.x, 
+        (this.y ) * canvas.height + parallaxOffset.y, 
         (canvas.width > 600 ? (this.radius * 1.4) : (this.radius * (canvas.width / 600))), 
         0, 
         2 * Math.PI);
@@ -91,13 +93,13 @@ $(function() {
     //$(window).resize(resizeCanvas);
     $(window).mousemove(function(e) {
         if (lastMouse !== null) {
-            parallaxVelocity.x = (lastMouse.x - (e.pageX)) - ((lastMouse.x - (e.pageX))/2);
-            parallaxVelocity.y = (lastMouse.y - (e.pageY)) - ((lastMouse.y - (e.pageY))/2);  
+            parallaxOffsetDest.x = Math.sign(e.clientX - (canvas.width/2)) * 20;
+            parallaxOffsetDest.y = Math.sign(e.clientY - (canvas.height/2)) * 20;
         }
 
         lastMouse = { 
-            x: e.pageX, 
-            y: e.pageY 
+            x: e.clientX, 
+            y: e.clientY 
         };
     });
 });
@@ -108,26 +110,15 @@ function resizeCanvas() {
 }
 
 function loop() {
-    //var $pageHead = $("#page-head");
-    canvas.width  = window.innerWidth;//$pageHead.width();
-    canvas.height = window.innerHeight;//$pageHead.height();
-    // fill background
-    //ctx.fillStyle = "#3E454C";
-    //ctx.fillRect(0, 0, canvas.width, canvas.height);
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
     drawImageProp(background);
 
     var width  = canvas.width  || 1;
     var height = canvas.height || 1;
 
-    // update parallax
-    if (Math.abs(parallaxVelocity.x) > 0.005) {
-        parallaxOffset.x += Math.sign(parallaxVelocity.x) * 0.5 / width;
-        parallaxVelocity.x *= 0.1;
-    }
-    if (Math.abs(parallaxVelocity.y) > 0.005) {
-        parallaxOffset.y += Math.sign(parallaxVelocity.y) * 0.5 / height;
-        parallaxVelocity.y *= 0.1;
-    }
+    parallaxOffset.x = Math.lerp(parallaxOffset.x, parallaxOffsetDest.x, 0.04);
+    parallaxOffset.y = Math.lerp(parallaxOffset.y, parallaxOffsetDest.y, 0.04);
 
     for (var i = 0; i < circles.length; i++) {
         (function(circle) {
@@ -139,14 +130,12 @@ function loop() {
 
             if (circle.time <= 0) {
                 circle.time = randRange(50, 150);
-                circle.incrementer = 0.01 + Math.random() * 0.1;
+                circle.incrementer = (0.01 + Math.random() * 0.1) * Math.sign(Math.random() - 0.5);
             }
 
             if (circle.angle >= Math.PI * 2) {
                 circle.angle = 0;
             }
-
-
 
             circle.time--;
 
@@ -205,3 +194,7 @@ function drawImageProp(img, x, y, w, h, offsetX, offsetY) {
     /// fill image in dest. rectangle
     ctx.drawImage(img, cx, cy, cw, ch,  x, y, w, h);
 }
+
+Math.lerp = function(a, b, amt) {
+    return (1 - amt) * a + amt * b;
+};

@@ -138,8 +138,6 @@ body {
     transition: filter 0.3s ease-in-out;
 }
 .project-circle:hover svg {
-    -webkit-filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.4));
-    filter:         drop-shadow(0 0 4px rgba(0, 0, 0, 0.4));
 }
 .project-circle .close-project-btn {
     display: inline;
@@ -190,7 +188,7 @@ body {
     outline: none;
 }
 
-.project-actions-menu {
+.project-circle .project-actions-menu {
     position: absolute;
     display: inline;
     opacity: 0;
@@ -200,22 +198,22 @@ body {
     transition: opacity 0.2s ease;
     z-index: 30;
 }
-.project-actions-menu:hover {
+.project-circle:hover .project-actions-menu {
     opacity: 1;
 }
-.project-actions-menu ul {
+.project-circle .project-actions-menu ul {
     position: relative;
     list-style: none;
     padding: 0;
 }
-.project-actions-menu li {
+.project-circle .project-actions-menu li {
     display: inline-block;
     margin: 0 2px;
     padding: 0;
     width : 24px;
     height: 24px;
 }
-.project-actions-menu li img {
+.project-circle .project-actions-menu li img {
     width: 100%;
     height: 100%;
 }

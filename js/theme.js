@@ -1,13 +1,13 @@
-var BackgroundType = {
-    IMAGE: 0,
-    VIDEO: 1
-};
-
 function Theme(backgroundUrl, backgroundType, blurAmt) {
     this.backgroundUrl = backgroundUrl;
     this.backgroundType = backgroundType;
     this.blurAmt = blurAmt;
 }
+
+var BackgroundType = {
+    IMAGE: 0,
+    VIDEO: 1
+};
 
 var BUILTIN_THEMES = {
     "leaves": new Theme("videos/leaves.mp4", BackgroundType.VIDEO, 18),
