@@ -283,9 +283,10 @@ Page.prototype.bindEvents = function() {
 
                                                     // event info
                                                     projectToAdd.eventInfo = {
-                                                        "date"    : new Date().toString(), // TODO add date/time picker 
-                                                        "location": "no location", // TODO: make this use google maps api?? 
-                                                        "userInfo": ""
+                                                        "date"        : eventDate.getTime(),
+                                                        "location"    : "no location", // TODO: make this use google maps api?? 
+                                                        "userInfo"    : "",
+                                                        "acknowledged": false,
                                                     };
 
                                                     // set 'valueBefore' property, so it doesn't act like we need to enter the name

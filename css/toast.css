@@ -1,0 +1,34 @@
+.toast {
+    position: relative;
+    display: inline-block;
+    padding: 8px;
+    border-radius: 8px;
+    border: 4px solid #2DB2EA;
+    box-shadow: 1px 2px 6px rgba(0, 0, 0, 0.4);
+    background-color: rgba(62, 69, 77, 0.98);
+    color: #FFFFFF;
+    font-size: 16px;
+    max-width: 320px;
+    min-width : 240px;
+    min-height: 80px;
+    margin-top: 8px;
+    cursor: pointer;
+}
+.toast-wrapper {
+    position: absolute;
+    right: 0;
+    margin-top  : 50px;
+    margin-right: 15px;
+    z-index: 1000;
+}
+.toast h3 {
+    padding: 0;
+    margin: 0;
+    margin-bottom: 8px;
+
+    -ms-user-select    : none;
+    -moz-user-select   : none;
+    -webkit-user-select: none;
+    user-select        : none;
+    cursor: pointer;
+}
