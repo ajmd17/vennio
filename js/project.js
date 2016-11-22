@@ -1,9 +1,12 @@
-function Project(name, position, element, projectClass) {
-    this.name = name;
-    this.position = position;
-    this.element = element;
-    this.projectClass = projectClass;
+function Project(position, element, data) {
+    this.position     = position;
+    this.element      = element;
+    this.data         = data;
 }
+
+Project.prototype.getPosition = function() {
+    return this.position;
+};
 
 Project.prototype.setPosition = function(position) {
     this.position = position;

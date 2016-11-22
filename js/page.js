@@ -58,7 +58,7 @@ Page.prototype.handlePanning = function(newPos) {
     this.viewport.top  -= diff.y * viewspace.PAN_THETA / ZOOM;
 
     // update viewport
-    if (this.pageProject != null && this.pageProject != undefined) {
+    if (this.pageProject !== null && this.pageProject !== undefined) {
         this.pageProject.viewport = this.viewport;
         this.pageProject.ref
             .child("viewport")
@@ -130,23 +130,24 @@ Page.prototype.bindEvents = function() {
                 $(".project-circle").each(function() {
                     var $this = $(this);
 
-                    var currentLeft = $this.position().left;
-                    var currentTop  = $this.position().top;
+                    var currentLeft   = $this.position().left;
+                    var currentTop    = $this.position().top;
                     var currentWidth  = $this.width();
                     var currentHeight = $this.height();
-                    var newWidth  = 200 * page.viewport.zoom;
-                    var newHeight = 200 * page.viewport.zoom;
+                    var newWidth  = Math.ceil(currentWidth  / oldZoom) * page.viewport.zoom;
+                    var newHeight = Math.ceil(currentHeight / oldZoom) * page.viewport.zoom;
 
                     $this.css({
                         "width" : newWidth.toString(),
                         "height": newHeight.toString(),
                         "left": (((currentLeft + (currentWidth / 2)) / oldZoom - viewportOffset.x) * page.viewport.zoom - (newWidth  / 2)).toString() + "px",
-                        "top" : (((currentTop  + (currentWidth / 2)) / oldZoom - viewportOffset.y) * page.viewport.zoom - (newHeight / 2)).toString() + "px"
+                        "top" : (((currentTop  + (currentWidth / 2)) / oldZoom - viewportOffset.y) * page.viewport.zoom - (newHeight / 2)).toString() + "px",
+                        "font-size": roundTo(newWidth / 10, 1).toString() + "px"
                     });
                 });
 
                 // update database with the viewport data
-                if (page.pageProject != null && page.pageProject != undefined) {
+                if (page.pageProject !== null && page.pageProject !== undefined) {
                     page.pageProject.viewport = page.viewport;
                     page.pageProject.ref
                         .child("viewport")
@@ -222,19 +223,19 @@ Page.prototype.bindEvents = function() {
                         var $eventModalContent = $("<ul>")
                             .addClass("form-list")
                             .append($("<li>")
-                                .append($("<i class=\"fa fa-pencil\">")
-                                    .addClass("list-item-icon"))
+                                .append($("<i>")
+                                    .addClass("fa fa-pencil list-item-icon"))
                                 .append($nameInput))
                             .append($("<li>")
                                 .append($("<div>")
                                     .addClass("split split-left")
-                                    .append($("<i class=\"fa fa-calendar\">")
-                                        .addClass("list-item-icon"))
+                                    .append($("<i>")
+                                        .addClass("fa fa-calendar list-item-icon"))
                                     .append($dateInput))
                                 .append($("<div>")
                                     .addClass("split split-left")
-                                    .append($("<i class=\"fa fa-clock-o\">")
-                                        .addClass("list-item-icon"))
+                                    .append($("<i>")
+                                        .addClass("fa fa-clock-o list-item-icon"))
                                     .append($timeInput)));
 
                         var modal = new Modal("Create Event", $eventModalContent, [
@@ -256,7 +257,7 @@ Page.prototype.bindEvents = function() {
 
                                     // verify date is legal
                                     var timestamp = Date.parse($dateInput.val() + " " + $timeInput.val());
-                                    if (!isNaN(timestamp)) {
+                                    if (!Number.isNaN(timestamp)) {
                                         eventDate = new Date(timestamp);
                                     } else {
                                         // TODO show error for invalid date.
@@ -267,19 +268,17 @@ Page.prototype.bindEvents = function() {
                                         // create event, then hide the modal
                                         page.addCircle(position, "event", eventName, {
                                             success:
-                                                function(element) {
+                                                function(element, data) {
                                                     var $element = $(element);
 
                                                     projectToAdd = new Project(
-                                                        eventName, 
                                                         page.eltSpaceToZoomSpace({
                                                             x: position.x / page.viewport.zoom,
                                                             y: position.y / page.viewport.zoom
                                                         }),
                                                         element,
-                                                        element.projectClass);
+                                                        data);
 
-                                                    projectToAdd.color = element.fillColor;
                                                     projectToAdd.theme = BUILTIN_THEMES["poly_2"]; // Default theme for a new project
 
                                                     // event info
@@ -300,7 +299,7 @@ Page.prototype.bindEvents = function() {
                                             click:
                                                 function() {
                                                     if (projectToAdd != null) {
-                                                        handleObjectClick(projectToAdd);
+                                                        viewspace.handleObjectClick(projectToAdd);
                                                     }
                                                 }
                                             });
@@ -328,67 +327,49 @@ Page.prototype.bindEvents = function() {
                     title: "Sticky",
                     url  : "img/shapes/sticky.png",
                     select: function() {
-                        page.addCircle(position, "sticky", "sticky text here", {
+                        page.addCircle(position, "sticky", "", {
                         success:
-                            function(element) {
+                            function(element, data) {
                                 var $element = $(element);
-                                var $input = $element.find(".project-circle-text").find("input");
-                                var name = $input.length > 0
-                                    ? $input.val()
-                                    : $element.find(".project-title-div").text();
-
+                                
                                 projectToAdd = new Project(
-                                    name, 
                                     page.eltSpaceToZoomSpace({
                                         x: position.x / page.viewport.zoom,
                                         y: position.y / page.viewport.zoom
                                     }),
                                     element,
-                                    element.projectClass);
+                                    data);
 
-                                projectToAdd.color = element.fillColor;
                                 projectToAdd.theme = BUILTIN_THEMES["poly_2"]; // Default theme for a new project
-                                projectToAdd.viewport = {
-                                    zoom: 1.0,
-                                    zoomLevel: 0,
-                                    left: 0,
-                                    top : 0
-                                };
                                 
                                 page.addProject(projectToAdd);
                             },
                         click:
                             function() {
                                 if (projectToAdd != null) {
-                                    handleObjectClick(projectToAdd);
+                                    viewspace.handleObjectClick(projectToAdd);
                                 }
                             }
                         });
                     }
                 },
                 {
-                    title: "Group",
+                    title: "Project",
                     url  : "img/shapes/circle.png",
                     select: function() {
                         page.addCircle(position, "group", null, {
                         success:
-                            function(element) {
+                            function(element, data) {
                                 var $element = $(element);
-                                var $input = $element.find(".project-circle-text").find("input");
-                                var name = $input.length > 0
-                                    ? $input.val()
-                                    : $element.find(".project-title-div").text();
-
+                                
                                 projectToAdd = new Project(
-                                    name, 
                                     page.eltSpaceToZoomSpace({
                                         x: position.x / page.viewport.zoom,
                                         y: position.y / page.viewport.zoom
                                     }),
                                     element,
-                                    element.projectClass);
+                                    data);
 
-                                projectToAdd.color = element.fillColor;
                                 projectToAdd.theme = BUILTIN_THEMES["poly_2"]; // Default theme for a new project
                                 projectToAdd.viewport = {
                                     zoom: 1.0,
@@ -402,16 +383,7 @@ Page.prototype.bindEvents = function() {
                         click:
                             function() {
                                 if (projectToAdd != null) {
-                                    if (viewspace.itemClickTimeoutEnabled) {
-                                        window.clearTimeout(viewspace.itemClickTimeoutId);
-                                        viewspace.itemClickTimeoutEnabled = false;
-                                    } else {
-                                        if (viewspace.hasFocusedObject()) {
-                                            viewspace.objectLoseFocus();
-                                        } else {
-                                            handleObjectClick(projectToAdd);
-                                        }
-                                    }
+                                    viewspace.handleObjectClick(projectToAdd);
                                 }
                             }
                         });
@@ -423,97 +395,101 @@ Page.prototype.bindEvents = function() {
                 },
             ];
 
-            var SELECTOR_SIZE = 250;
-            var HALF_SELECTOR_SIZE = SELECTOR_SIZE / 2;
-            var NUM_SHAPES = RADIAL_MENU_ITEMS.length;
-            var DEG_STEP = 360 / NUM_SHAPES;
+            var showRadialMenu = function($element, position) {
+                var SELECTOR_SIZE = 250;
+                var HALF_SELECTOR_SIZE = SELECTOR_SIZE / 2;
+                var NUM_SHAPES = RADIAL_MENU_ITEMS.length;
+                var DEG_STEP = 360 / NUM_SHAPES;
 
-            var $blurredBackground = $("<div>")
-                .addClass("blurred-background")
-                .css({
-                    "opacity": 0
-                });
-
-            var $radialMenu = $("<ul>")
-                .addClass("radial-menu")
-                .css({
-                    width : SELECTOR_SIZE.toString() + "px",
-                    height: SELECTOR_SIZE.toString() + "px",
-                    left: (position.x - HALF_SELECTOR_SIZE).toString() + "px",
-                    top : (position.y - HALF_SELECTOR_SIZE).toString() + "px",
-                    opacity: 0
-                })
-                .focusout(function() {
-                    // remove menu on lose focus (after fade out)
-                    var $this = $(this);
-                    $this.animate({
+                var $blurredBackground = $("<div>")
+                    .addClass("blurred-background")
+                    .css({
                         "opacity": 0
-                    }, 200, function() {
-                        $this.remove();
                     });
 
-                    // remove blurred background
-                    $blurredBackground.animate({
+                var $radialMenu = $("<ul>")
+                    .addClass("radial-menu")
+                    .css({
+                        "width"  : SELECTOR_SIZE.toString() + "px",
+                        "height" : SELECTOR_SIZE.toString() + "px",
+                        "left"   : (position.x - HALF_SELECTOR_SIZE).toString() + "px",
+                        "top"    : (position.y - HALF_SELECTOR_SIZE).toString() + "px",
                         "opacity": 0
-                    }, 200, function() {
-                        $blurredBackground.remove();
-                    });
-                })
-                .append($("<h2>")
-                    .addClass("radial-menu-title")
-                    .append("Create"))
-
-            var degrees = 0;
-
-            RADIAL_MENU_ITEMS.forEach(function(item) {
-                $radialMenu.append($("<li>")
-                    .append($("<img src=\"" + item.url + "\">"))
-                    .hover(function() {
-                        $(".radial-menu-title").html(item.title);
-                    }, function() {
-                        $(".radial-menu-title").html("Create");
                     })
-                    .click(function(e) {
-                        // don't bubble up the DOM
-                        e.stopPropagation();
-
-                        // remove the 'Create' menu
-                        $radialMenu.animate({
+                    .focusout(function() {
+                        // remove menu on lose focus (after fade out)
+                        var $this = $(this);
+                        $this.animate({
                             "opacity": 0
                         }, 200, function() {
-                            $radialMenu.remove();
+                            $this.remove();
                         });
-                        
+
                         // remove blurred background
                         $blurredBackground.animate({
                             "opacity": 0
                         }, 200, function() {
                             $blurredBackground.remove();
                         });
-
-                        if (item.select != undefined) {
-                            item.select();
-                        }
                     })
-                    .css({
-                        "opacity": 1,
-                        "transform": "rotate(" + degrees + "deg) translate(" + (HALF_SELECTOR_SIZE - 40) + "px) rotate(" + (-1 * degrees) + "deg)"
-                    }));
+                    .append($("<h2>")
+                        .addClass("radial-menu-title")
+                        .append("Create"))
 
-                degrees += DEG_STEP;
-            });
-            
-            $element.append($blurredBackground);
-            $element.append($radialMenu);
-            
-            $radialMenu.animate({
-                "opacity": 1
-            }, 200);
-            $blurredBackground.animate({
-                "opacity": 1
-            }, 200);
+                var degrees = 0;
 
-            $radialMenu.attr("tabindex", -1).focus();
+                RADIAL_MENU_ITEMS.forEach(function(item) {
+                    $radialMenu.append($("<li>")
+                        .append($("<img src=\"" + item.url + "\">"))
+                        .hover(function() {
+                            $(".radial-menu-title").html(item.title);
+                        }, function() {
+                            $(".radial-menu-title").html("Create");
+                        })
+                        .click(function(e) {
+                            // don't bubble up the DOM
+                            e.stopPropagation();
+
+                            // remove the 'Create' menu
+                            $radialMenu.animate({
+                                "opacity": 0
+                            }, 200, function() {
+                                $radialMenu.remove();
+                            });
+                            
+                            // remove blurred background
+                            $blurredBackground.animate({
+                                "opacity": 0
+                            }, 200, function() {
+                                $blurredBackground.remove();
+                            });
+
+                            if (item.select != undefined) {
+                                item.select();
+                            }
+                        })
+                        .css({
+                            "opacity": 1,
+                            "transform": "rotate(" + degrees + "deg) translate(" + (HALF_SELECTOR_SIZE - 40) + "px) rotate(" + (-1 * degrees) + "deg)"
+                        }));
+
+                    degrees += DEG_STEP;
+                });
+                
+                $element.append($blurredBackground);
+                $element.append($radialMenu);
+                
+                $radialMenu.animate({
+                    "opacity": 1
+                }, 200);
+                $blurredBackground.animate({
+                    "opacity": 1
+                }, 200);
+
+                $radialMenu.attr("tabindex", -1).focus();
+            };
+
+            showRadialMenu($element, position);
         }
     }).on("mousedown touchstart", function(e) {
         var $this = $(this);
@@ -574,17 +550,17 @@ Page.prototype.loadTheme = function() {
     var $background = null;
 
     if ($videoWrapper.length > 0) {
-        $videoWrapper.empty();
-
         switch (this.theme.backgroundType) {
         case BackgroundType.VIDEO:
-            $background = $("<video playsinline autoplay muted loop class=\"video-bg\">")
+            $background = $("<video playsinline autoplay muted loop>")
                 .append($("<source src=\"" + this.theme.backgroundUrl + "\" type=\"video/mp4\">"));
             break;
         case BackgroundType.IMAGE:
-            $background = $("<img class=\"video-bg\" src=\"" + this.theme.backgroundUrl + "\">");
+            $background = $("<img src=\"" + this.theme.backgroundUrl + "\">");
             break;
         }
+
+        $background.addClass("video-bg");
 
         if (this.theme.blurAmt > 0) {
             $background.css("filter", "blur(" + this.theme.blurAmt.toString() + "px)");
@@ -592,14 +568,14 @@ Page.prototype.loadTheme = function() {
             $background.css("filter", "");
         }
 
-        $videoWrapper.append($background);
+        $videoWrapper.html($background);
     }
 };
 
 Page.prototype.addProject = function(project) {
     // add project to DB
     var projectsRef = null;
-    if (this.pageProject != null && this.pageProject != undefined) {
+    if (this.pageProject !== undefined && this.pageProject !== null) {
         projectsRef = this.pageProject.ref
             .child("subnodes");
     } else {
@@ -615,11 +591,8 @@ Page.prototype.addProject = function(project) {
 };
 
 Page.prototype.show = function() {
-    var $pageContent = $("#page-content");
-    $pageContent.empty();
-    $pageContent.append(this.element);
-
-    if (this.theme != undefined && this.theme != null) {
+    $("#page-content").html(this.element);
+    if (this.theme !== undefined && this.theme !== null) {
         this.loadTheme();
     }
 };
@@ -633,12 +606,16 @@ Page.prototype.clearProjectElements = function() {
 };
 
 Page.prototype.loadProjectElement = function(project, animationTime) {
-    var SIZE = 200;
+    var SIZE = (project.data.size != undefined) ? project.data.size : 200;
     var ZOOM = this.viewport.zoom;
     var SIZE_ZOOMED = SIZE * ZOOM;
     var HALF_SIZE = SIZE_ZOOMED / 2;
 
     var absPosition = this.zoomSpaceToEltSpace(project.position);
+
+    var $projImg = SVG_OBJECTS[PROJECT_CLASS_SVG_NAMES[project.data.type]]
+                .clone()
+                .css("fill", project.data.color);
 
     var $projectCircleElement = $("<div>")
         .addClass("project-circle")
@@ -647,31 +624,33 @@ Page.prototype.loadProjectElement = function(project, animationTime) {
             "top" : (absPosition.y * ZOOM - HALF_SIZE).toString() + "px",
             "width" : SIZE_ZOOMED.toString() + "px",
             "height": SIZE_ZOOMED.toString() + "px",
+            "font-size": roundTo(SIZE_ZOOMED / 10, 1).toString() + "px",
             "opacity": 0
         })
-        .animate({ "opacity": 1 }, animationTime)
         .append(createActionsMenu())
+        .animate({ "opacity": 1 }, animationTime)
         .append($("<div>")
             .addClass("project-image")
-            .append(SVG_OBJECTS[PROJECT_CLASS_SVG_NAMES[project.projectClass]]
-                .clone()
-                .css("fill", project.color)))
+            .append($projImg))
         .append($("<div>")
             .addClass("project-circle-text")
             .append($("<div>")
                 .addClass("project-title-div")
-                .append(project.name)));
+                .append(project.data.name)));
 
     // bind click, double click, lose focus events
-    bindProjectElementEvents($projectCircleElement, {
+    bindProjectElementEvents($projectCircleElement, project.data, {
+        success: function(element, data) {
+            // TODO change project name in db?
+            console.log("Success editing element: ", element, "data: ", data);
+        },
         click: function() {
-            handleObjectClick(project);
-        }
+            viewspace.handleObjectClick(project);
+        },
     });
 
     // set element properties
-    $projectCircleElement.valueBefore  = project.name;
-    $projectCircleElement.projectClass = project.projectClass;
+    $projectCircleElement.valueBefore  = project.data.name;
 
     return $projectCircleElement;
 };
@@ -688,7 +667,7 @@ Page.prototype.loadProjectElements = function() {
 /** Load projects from database into the array */
 Page.prototype.loadProjectsFromDatabase = function() {
     var projectsRef = null;
-    if (this.pageProject != null && this.pageProject != undefined) {
+    if (this.pageProject !== undefined && this.pageProject !== null) {
         projectsRef = this.pageProject.ref
             .child("subnodes");
     } else {
@@ -697,38 +676,40 @@ Page.prototype.loadProjectsFromDatabase = function() {
             .child("projects");
     }
 
-    var page = this;
+    (function(page) {
+        projectsRef.once("value", function(snapshot) {
+            var snapshotValue = snapshot.val();
 
-    projectsRef.once("value", function(snapshot) {
-        var snapshotValue = snapshot.val();
-
-        if (snapshotValue != undefined && snapshotValue != null) {
-            var keys = Object.keys(snapshotValue);
-            for (var i = 0; i < keys.length; i++) {
-                (function(key) {
-                    var project = snapshotValue[key];
-                    project.ref = projectsRef.child(key);
-                    page.projects.push(project);
-                })(keys[i]);
+            if (snapshotValue !== undefined && snapshotValue !== null) {
+                var keys = Object.keys(snapshotValue);
+                for (var i = 0; i < keys.length; i++) {
+                    (function(key) {
+                        var project = snapshotValue[key];
+                        project.ref = projectsRef.child(key);
+                        page.projects.push(project);
+                    })(keys[i]);
+                }
             }
-        }
-        page.loadProjectElements();
-    });
+            page.loadProjectElements();
+        });
+    })(this);
 };
 
-Page.prototype.addCircle = function(position, projectClass, projectName, callbacks) {
-    var circleInfo = {
+Page.prototype.addCircle = function(position, type, projectName, callbacks) {
+    var data = {
+        "name": projectName,
         "size": 200,
         "color": randomColor({ 
             "luminosity": "light", 
             "format": "rgb" 
         }),
-        "projectClass": projectClass
+        "type": type
     };
 
     var ZOOM = this.viewport.zoom;
-    var SIZE_ZOOMED = circleInfo.size * ZOOM;
+    var SIZE_ZOOMED = data.size * ZOOM;
     var HALF_SIZE = SIZE_ZOOMED / 2;
+    var FONT_SIZE = roundTo(SIZE_ZOOMED / 10, 1);
 
     var $projectCircleElement = $("<div>")
         .addClass("project-circle")
@@ -737,6 +718,7 @@ Page.prototype.addCircle = function(position, projectClass, projectName, callbac
             "background-color": "transparent",
             "left": position.x,
             "top" : position.y,
+            "font-size": FONT_SIZE.toString() + "px",
         })
         .animate({
              "left": position.x - HALF_SIZE,
@@ -750,37 +732,44 @@ Page.prototype.addCircle = function(position, projectClass, projectName, callbac
                     $input.select();
                 }
             })
-        .append(createActionsMenu()
-            .css("display", "none"))
+        .append(createActionsMenu().css("display", "none"))
         .append($("<div>")
             .addClass("project-image")
-            .append(SVG_OBJECTS[PROJECT_CLASS_SVG_NAMES[circleInfo.projectClass]]
+            .append(SVG_OBJECTS[PROJECT_CLASS_SVG_NAMES[data.type]]
                 .clone()
-                .css("fill", circleInfo.color)))
+                .css("fill", data.color)))
         .append($("<div>")
             .addClass("project-circle-text")
             .append($("<input type=\"text\">")
                 .addClass("project-circle-text-edit")
-                .val(!projectName ? "" : projectName))
-            )
-        ;
+                .val(!projectName ? "" : projectName)
+                .css({
+                    "font-size": FONT_SIZE.toString() + "px"
+                })
+                .on("keyup", function(e) {
+                    if (e.keyCode == 13) {
+                        // enter key pressed
+                        viewspace.objectLoseFocus();
+                    }
+                }))
+            );
 
     // set element properties
-    $projectCircleElement.valueBefore  = projectName;
-    $projectCircleElement.fillColor    = circleInfo.color;
-    $projectCircleElement.projectClass = circleInfo.projectClass;
+    $projectCircleElement.valueBefore  = data.name;
 
     // bind click, double click, lose focus events
-    bindProjectElementEvents($projectCircleElement, callbacks);
+    bindProjectElementEvents($projectCircleElement, data, callbacks);
 
     $(this.element).append($projectCircleElement);
     
-    viewspace.setFocusedObject($projectCircleElement, callbacks);
+    viewspace.setFocusedObject($projectCircleElement, data, callbacks);
     $projectCircleElement.attr("tabindex", -1).focus();
 };
 
-function bindProjectElementEvents(element, callbacks) {
-    $(element).click(function() {
+function bindProjectElementEvents(element, data, callbacks) {
+    var $element = $(element);
+
+    $element.click(function() {
         if (callbacks.click != undefined) {
             callbacks.click();
         }
@@ -791,19 +780,17 @@ function bindProjectElementEvents(element, callbacks) {
         }
 
         // re-focus this object for editing.
-        viewspace.setFocusedObject(element, { });
+        viewspace.setFocusedObject(element, data, callbacks);
 
-        var name   = $(element).find(".project-title-div").text();
-        var holder = $(element).find(".project-circle-text");
-        var edit   = $("<input type=\"text\">")
-            .addClass("project-circle-text-edit");
+        var name = $element.find(".project-title-div").text();
 
-        edit.val(name);
+        var $holder = $element.find(".project-circle-text");
+        var $edit   = $("<input type=\"text\">")
+            .addClass("project-circle-text-edit")
+            .val(name);
 
-        holder.empty();
-        holder.append(edit);
-
-        edit.select();
+        $holder.html($edit);
+        $edit.select();
     });
 }
 

@@ -21,7 +21,7 @@ var viewspace = {
     projectClickTimeout: 300,
     mousePosition: { x: 0, y: 0 },
 
-    ZOOM_MIN: 1.0,
+    ZOOM_MIN: 0.5,
     ZOOM_MAX: 10.0,
     ZOOM_STEP: 0.1,
 
@@ -44,6 +44,16 @@ var viewspace = {
         this.currentPage.show();
     },
 
+    setCurrentPage: function(newPage) {
+        this.currentPage.unbindEvents();
+        this.currentPage.clearProjectElements();
+        this.currentPage = newPage;
+        this.currentPage.bindEvents();
+        this.currentPage.show();
+        this.currentPage.loadProjectElements();
+        updateBreadcrums();
+    },
+
     clearObjectFocus: function() {
         this.focusState = {
             isFocusedOnObject: false,
@@ -55,20 +65,83 @@ var viewspace = {
 
     objectLoseFocus: function() {
         if (this.focusState.isFocusedOnObject && this.focusState.focusedObject != null) {
-            handleObjectLoseFocus(this.focusState.focusedObject, this.focusState.callbacks);
+            handleObjectLoseFocus(this.focusState.focusedObject.element, this.focusState.focusedObject.data, this.focusState.callbacks);
         }
         this.clearObjectFocus();
     },
 
     hasFocusedObject: function() {
         return this.focusState.isFocusedOnObject &&
-            this.focusState.focusedObject != null;
+               this.focusState.focusedObject != null;
     },
 
-    setFocusedObject: function(element, callbacks) {
+    setFocusedObject: function(element, data, callbacks) {
         this.focusState.isFocusedOnObject = true;
-        this.focusState.focusedObject = element;
+        this.focusState.focusedObject = {
+            "element": element,
+            "data"   : data
+        };
         this.focusState.callbacks = callbacks;
+    },
+
+    /** Handles when an object/project was actually clicked,
+     *  i.e not just clicked while dragging or cancelling editing for another project.
+     * 
+     *  @param project - The project data object of the element clicked.
+    */
+    handleObjectClick: function(project) {
+        if (this.itemClickTimeoutEnabled) {
+            window.clearTimeout(this.itemClickTimeoutId);
+            this.itemClickTimeoutEnabled = false;
+        } else {
+            if (this.hasFocusedObject()) {
+                this.objectLoseFocus();
+            } else {
+                (function(viewspace) {
+                    viewspace.itemClickTimeoutEnabled = true;
+                    viewspace.itemClickTimeoutId = window.setTimeout(function() {
+                        viewspace.itemClickTimeoutEnabled = false;
+
+                        switch (project.data.type) {
+                        case "group":
+                            // open the clicked project page
+                            var pageBefore = viewspace.currentPage;
+                            pageBefore.unbindEvents();
+                            pageBefore.clearProjectElements();
+
+                            viewspace.currentPage = new Page(
+                                project.data.name,
+                                $("<div class=\"page\">")
+                                    .append("<div class=\"video-wrapper\">"),
+                                project.theme,
+                                project,
+                                project.viewport);
+
+                            viewspace.currentPage.loadProjectsFromDatabase();
+                            viewspace.currentPage.parentPage = pageBefore;
+                            viewspace.currentPage.bindEvents();
+                            viewspace.currentPage.show();
+
+                            updateBreadcrums();
+
+                            break;
+                        case "event":
+                            // show event data
+                            if (!project.eventInfo) {
+                                console.log("Error loading data about the event");
+                            } else {
+                                // TODO
+                            }
+
+                            break;
+                        default:
+                            console.log("Not implemented: ", project.data.type);
+                            break;
+                        }
+                    }, viewspace.projectClickTimeout);
+                })(this);
+            }
+        }
     },
 
     toggleSidebar: function() {

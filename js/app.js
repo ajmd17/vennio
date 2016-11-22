@@ -5,7 +5,7 @@ function updateBreadcrums() {
     var elementsToAdd = [];
     var page = viewspace.currentPage;
 
-    while (page != null && page != undefined) {
+    while (page !== undefined && page !== null) {
         var $li = $("<li>");
         var $a = $("<a href=\"#\">").append(page.name);
 
@@ -15,14 +15,7 @@ function updateBreadcrums() {
             (function(thisPage) {
                 $a.click(function() {
                     // navigate to parent page
-                    viewspace.currentPage.unbindEvents();
-                    viewspace.currentPage.clearProjectElements();
-                    viewspace.currentPage = thisPage;
-                    viewspace.currentPage.bindEvents();
-                    viewspace.currentPage.show();
-                    viewspace.currentPage.loadProjectElements();
-
-                    updateBreadcrums();
+                    viewspace.setCurrentPage(thisPage);
                 });
             })(page);
         }
@@ -38,12 +31,12 @@ function updateBreadcrums() {
     }
 }
 
-function handleObjectLoseFocus(element, callbacks) {
+function handleObjectLoseFocus(element, data, callbacks) {
     var $element = $(element);
     var $txt     = $element.find(".project-circle-text");
     var $edit    = $txt.find("input");
 
-    if ($edit.val().trim().length == 0) {
+    if ($edit.val() == undefined || $edit.val().trim().length == 0) {
         // remove object if you don't enter a value the first time
         if (!element.valueBefore || !element.valueBefore.length) {
             $element.animate({
@@ -64,14 +57,15 @@ function handleObjectLoseFocus(element, callbacks) {
                 "hasBtn": true,
                 "confirmValue": "OK",
                 "confirm": function() {
-                    $(edit).select();
+                    $edit.select();
                 },
                 "callback": function() {
                 }
             });
         }
     } else {
-        element.valueBefore = $edit.val();
+        var value = $edit.val();
+        element.valueBefore = value;
 
         // convert text element to div
         var $replacementDiv = $("<div>")
@@ -91,66 +85,11 @@ function handleObjectLoseFocus(element, callbacks) {
         // allow the action selector to be shown
         $element.find(".project-actions-menu").css("display", "inline");
 
+        // set property on the project 'name'.
+        data.name = value;
+
         if (callbacks.success != undefined) {
-            callbacks.success(element);
-        }
-    }
-}
-
-/** Handles when an object/project was actually clicked,
- *  i.e not just clicked while dragging or cancelling editing for another project.
- * 
- *  @param project - The project data object of the element clicked.
-*/
-function handleObjectClick(project) {
-    if (viewspace.itemClickTimeoutEnabled) {
-        window.clearTimeout(viewspace.itemClickTimeoutId);
-        viewspace.itemClickTimeoutEnabled = false;
-    } else {
-        if (viewspace.hasFocusedObject()) {
-            viewspace.objectLoseFocus();
-        } else {
-            viewspace.itemClickTimeoutEnabled = true;
-            viewspace.itemClickTimeoutId = setTimeout(function() {
-                viewspace.itemClickTimeoutEnabled = false;
-
-                switch (project.projectClass) {
-                case "group":
-                    // open the clicked project page
-                    var pageBefore = viewspace.currentPage;
-                    pageBefore.unbindEvents();
-                    pageBefore.clearProjectElements();
-
-                    viewspace.currentPage = new Page(
-                        project.name,
-                        $("<div class=\"page\">")
-                            .append("<div class=\"video-wrapper\">"),
-                        project.theme,
-                        project,
-                        project.viewport);
-
-                    viewspace.currentPage.loadProjectsFromDatabase();
-                    viewspace.currentPage.parentPage = pageBefore;
-                    viewspace.currentPage.bindEvents();
-                    viewspace.currentPage.show();
-
-                    updateBreadcrums();
-
-                    break;
-                case "event":
-                    // show event data
-                    if (!project.eventInfo) {
-                        console.log("Error loading data about the event");
-                    } else {
-                        // TODO
-                    }
-
-                    break;
-                default:
-                    console.log("Not implemented: ", project.projectClass);
-                    break;
-                }
-            }, viewspace.projectClickTimeout);
+            callbacks.success(element, data);
         }
     }
 }
