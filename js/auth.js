@@ -4,6 +4,7 @@ var auth = null;
 var database = null;
 
 $(document).ready(function() {
+    // initialize firebase
     var config = {
         apiKey: "AIzaSyCf8zuhDihw-N4GEQdY-JvDilqj8iOkds0",
         authDomain: "vixen-a6ff1.firebaseapp.com",
@@ -20,11 +21,11 @@ $(document).ready(function() {
         handleLogin(user);
     });
 
-    $(".social-login-google").click(function() {
+    $('.social-login-google').click(function() {
         signInWithGoogle(auth, database);
     });
 
-    $(".social-login-twitter").click(function() {
+    $('.social-login-twitter').click(function() {
         signInWithTwitter(auth, database);
     });
 });
@@ -46,9 +47,9 @@ function signIn(auth, database, provider) {
 }
 
 function handleLogin(user) {
-    var usersRef = database.ref("/users");
+    var usersRef = database.ref('/users');
 
-    usersRef.once("value").then(function(snapshot) {
+    usersRef.once('value').then(function(snapshot) {
         var foundUser = snapshotHasProperty(snapshot, { "uid": user.uid });
         if (!foundUser) {
             loggedUser = addNewUser(user.uid, user.displayName, usersRef);
@@ -64,7 +65,7 @@ function addNewUser(uid, displayName, ref) {
     var user = {
         "uid":   uid,
         "name":  displayName,
-        "theme": BUILTIN_THEMES["poly"] /* default theme */,
+        "theme": BUILTIN_THEMES.poly_green /* default theme */,
         "projects": { },
         "viewport": {
             zoom: 1.0,

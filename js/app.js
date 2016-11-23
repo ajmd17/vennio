@@ -1,3 +1,15 @@
+$(document).ready(function() {
+    var $menuBtn = $('#menu-btn');
+    var $mainSidebar = $('#main-sidebar');
+    var $pageContent = $('#page-content');
+
+    $menuBtn.click(function() {
+        $menuBtn.toggleClass('active');
+        viewspace.toggleSidebar();
+    });
+});
+
+
 /** Searches all events and finds any that are today.
  *  Those that are on this day, a timeout is created to count down
  *  before showing an alert.
@@ -18,7 +30,7 @@ function findEventsInRange(range) {
                 for (var i = 0; i < keys.length; i++) {
                     (function(key) {
                         var project = snapshotValue[key];
-                        var projectRef = layerRef.child(keys[i]);
+                        var projectDataRef = layerRef.child(keys[i]).child('data');
 
                         var timer;
                         
@@ -26,78 +38,24 @@ function findEventsInRange(range) {
                             var toast = null;
 
                             // check date to see it is in range
-                            var msToEvent = parseInt(project.eventInfo.date) - now.getTime();
-                            console.log('ms to ' + project.data.name + ': ' + msToEvent);
+                            var msToEvent = parseInt(project.data.eventInfo.date) - now.getTime();
                             var remindBeforeMs = globalConfig.events.remindBeforeMinutes * 60 * 1000;
 
                             // check if acknowledged
-                            if (!project.eventInfo.acknowledged) {
+                            if (!project.data.eventInfo.acknowledged) {
                                // console.log('ms to event "' + project.data.name + '" : ', msToEvent);
                                 if (msToEvent >= 0 && msToEvent <= range) {
                                     // set up a timeout to show an alert on the event
                                     window.setTimeout(function() {
                                         // show a toast
-                                        toast = new Toast(project.data.name,
-                                            /* TODO: content (description, location etc) */
-                                            "Click here to view the event.",
-                                            {
-                                                show: function() {
-                                                    // create an interval to update the time overdue each minute
-                                                    timer = window.setInterval(function() {
-                                                        // recalculate ms to event
-                                                        msToEvent = parseInt(project.eventInfo.date) - (Date.now().getTime());
-                                                        toast.getElement()
-                                                            .find(".toast-content")
-                                                            .html(calculateOverdueString());
-                                                    }, 60 * 1000);
-                                                },
-                                                hide: function() {
-                                                    window.clearInterval(timer);
-                                                },
-                                                click: function() {
-                                                    // set to acknowledged and update in database.
-                                                    project.eventInfo.acknowledged = true;
-
-                                                    projectRef.update({
-                                                        "eventInfo": project.eventInfo
-                                                    });
-
-                                                    // TODO bring the user to the event
-                                                }
-                                            });
-
-                                        toast.show();
-                                    }, msToEvent - remindBeforeMs);
-                                } else if (msToEvent < 0) {
-                                    var overdueString = '';
-
-                                    var calculateOverdueString = function() {
-                                        var overdueByDays    = -msToEvent / (24 * 60 * 60 * 1000);
-                                        var overdueByHours   = -msToEvent / (60 * 60 * 1000);
-                                        var overdueByMinutes = -msToEvent / (60 * 1000);
-
-                                        if (overdueByDays >= 1) {
-                                            return Math.floor(overdueByDays).toString() + ' days overdue';
-                                        } else if (overdueByHours >= 1) {
-                                            return Math.floor(overdueByHours).toString() + ' hours overdue';
-                                        } else {
-                                            return Math.floor(overdueByMinutes).toString() + ' minutes overdue';
-                                        }
-                                    };
-                                    
-                                    // not acknowledged and overdue.
-                                    // show a toast that says it's overdue
-                                    toast = new Toast(project.data.name,
-                                        /* TODO: content (description, location etc) */
-                                        calculateOverdueString(),
-                                        {
+                                        toast = new Toast(project.data.name, 'Click here to view the event.', {
                                             show: function() {
                                                 // create an interval to update the time overdue each minute
                                                 timer = window.setInterval(function() {
                                                     // recalculate ms to event
-                                                    msToEvent = parseInt(project.eventInfo.date) - (Date.now().getTime());
+                                                    msToEvent = parseInt(project.data.eventInfo.date) - (new Date().getTime());
                                                     toast.getElement()
-                                                        .find(".toast-content")
+                                                        .find('.toast-content')
                                                         .html(calculateOverdueString());
                                                 }, 60 * 1000);
                                             },
@@ -106,13 +64,63 @@ function findEventsInRange(range) {
                                             },
                                             click: function() {
                                                 // set to acknowledged and update in database.
-                                                project.eventInfo.acknowledged = true;
-                                                projectRef.update({
-                                                    "eventInfo": project.eventInfo
+                                                project.data.eventInfo.acknowledged = true;
+
+                                                projectDataRef.update({
+                                                    eventInfo: project.data.eventInfo
                                                 });
+
                                                 // TODO bring the user to the event
-                                            },
+                                            }
                                         });
+
+                                        toast.show();
+                                    }, msToEvent - remindBeforeMs);
+                                } else if (msToEvent < 0) {
+                                    var overdueString = '';
+
+                                    var calculateOverdueString = function() {
+                                        var overdueByDays    = Math.floor(-msToEvent / (24 * 60 * 60 * 1000));
+                                        var overdueByHours   = Math.floor(-msToEvent / (60 * 60 * 1000));
+                                        var overdueByMinutes = Math.floor(-msToEvent / (60 * 1000));
+
+                                        if (overdueByDays >= 1) {
+                                            return overdueByDays.toString() + ' day' +
+                                                (overdueByDays == 1 ? '' : 's') + ' overdue';
+                                        } else if (overdueByHours >= 1) {
+                                            return overdueByHours.toString() + ' hour' +
+                                                (overdueByHours == 1 ? '' : 's') + ' overdue';
+                                        } else {
+                                            return overdueByMinutes.toString() + ' minute' +
+                                                (overdueByMinutes == 1 ? '' : 's') + ' overdue';
+                                        }
+                                    };
+                                    
+                                    // not acknowledged and overdue.
+                                    // show a toast that says it's overdue
+                                    toast = new Toast(project.data.name, calculateOverdueString(), {
+                                        show: function() {
+                                            // create an interval to update the time overdue each minute
+                                            timer = window.setInterval(function() {
+                                                // recalculate ms to event
+                                                msToEvent = parseInt(project.data.eventInfo.date) - (new Date().getTime());
+                                                toast.getElement()
+                                                    .find('.toast-content')
+                                                    .html(calculateOverdueString());
+                                            }, 60 * 1000);
+                                        },
+                                        hide: function() {
+                                            window.clearInterval(timer);
+                                        },
+                                        click: function() {
+                                            // set to acknowledged and update in database.
+                                            project.data.eventInfo.acknowledged = true;
+                                            projectDataRef.update({
+                                                eventInfo: project.data.eventInfo
+                                            });
+                                            // TODO bring the user to the event
+                                        },
+                                    });
 
                                     toast.show();
                                 }
@@ -131,18 +139,18 @@ function findEventsInRange(range) {
 }
 
 function updateBreadcrums() {
-    var $topBreadcrumbs = $("#top-breadcrums");
+    var $topBreadcrumbs = $('#top-breadcrums');
     $topBreadcrumbs.empty();
 
     var elementsToAdd = [];
     var page = viewspace.currentPage;
 
     while (page !== undefined && page !== null) {
-        var $li = $("<li>");
-        var $a = $("<a href=\"#\">").append(page.name);
+        var $li = $('<li>');
+        var $a  = $('<a href="#">').append(page.name);
 
         if (page == viewspace.currentPage) {
-            $a.addClass("current");
+            $a.addClass('current');
         } else {
             (function(thisPage) {
                 $a.click(function() {
@@ -164,72 +172,22 @@ function updateBreadcrums() {
 }
 
 function handleObjectLoseFocus(element, data, callbacks) {
-    var $element = $(element);
-    var $txt     = $element.find(".project-circle-text");
-    var $edit    = $txt.find("input");
-
-    if ($edit.val() == undefined || $edit.val().trim().length == 0) {
-        // remove object if you don't enter a value the first time
-        if (!element.valueBefore || !element.valueBefore.length) {
-            $element.animate({
-                "left": ($element.position().left + ($element.width() / 2)).toString() + "px",
-                "top" : ($element.position().top  + ($element.width() / 2)).toString() + "px",
-                "width" : 0,
-                "height": 0
-            }, 200, "linear", function() {
-                // remove it after the animation
-                $element.remove();
-            });
+    (function(projectTypeFunctions) {
+        if (projectTypeFunctions !== undefined) {
+            if (projectTypeFunctions.loseFocus !== undefined) {
+                return projectTypeFunctions.loseFocus(element, data, callbacks);
+            }
         } else {
-            // error, must enter a name
-            $("#dialog").dialogBox({
-                "title": "Project Name Empty",
-                "content": "Please enter a name for the project.",
-                "effect": "sign",
-                "hasBtn": true,
-                "confirmValue": "OK",
-                "confirm": function() {
-                    $edit.select();
-                },
-                "callback": function() {
-                }
-            });
+            console.log('No functionality for type: "' + data.type.toString() + '"');
         }
-    } else {
-        var value = $edit.val();
-        element.valueBefore = value;
-
-        // convert text element to div
-        var $replacementDiv = $("<div>")
-            .addClass("project-title-div")
-            .append(element.valueBefore);
-
-        $txt.append($replacementDiv);
-        $edit.remove();
-
-        // remove object type selector after animation
-        $element.find(".circle-container").animate({
-            "opacity": 0
-        }, 150, "linear", function() {
-            $(this).remove();
-        });
-
-        // allow the action selector to be shown
-        $element.find(".project-actions-menu").css("display", "inline");
-
-        // set property on the project 'name'.
-        data.name = value;
-
-        if (callbacks.success != undefined) {
-            callbacks.success(element, data);
-        }
-    }
+        return null;
+    })(projectFunctions[data.type]);
 }
 
 function afterLogin() {
     // show the main content
-    $("#login-window").remove();
-    $("#after-login").show();
+    $('#login-window').remove();
+    $('#after-login').show();
 
     // scan for events that are in range
     var EVENT_DATE_RANGE = 28800000; // 8 hours
@@ -241,7 +199,7 @@ function afterLogin() {
     }, EVENT_DATE_RANGE);
 
     if (loggedUser.currentThemeName == undefined || loggedUser.currentThemeName == null) {
-        loggedUser.currentThemeName = "poly";
+        loggedUser.currentThemeName = 'poly';
     }
 
     viewspace.init();
@@ -249,54 +207,43 @@ function afterLogin() {
     updateBreadcrums();
 
     // to prevent scrolling in on the page
-    $(window).on("wheel mousewheel", function(e) {
+    $(window).on('wheel mousewheel', function(e) {
         if (e.ctrlKey) {
             e.preventDefault();
         }
-    }).click(function(e) {
+    })
+    .click(function(e) {
         var $target = $(e.target);
         
-        if ($target.is(".project-circle") || $(".project-circle").has($target).length != 0) {
-            // let the click callback for the project handle it
-        } else {
+        if (!$target.is('.project-circle') && !$('.project-circle').has($target).length) {
             viewspace.objectLoseFocus();
         }
-    }).on("mouseup", function(e) {
+    })
+    .on('mouseup', function(e) {
         window.clearTimeout(viewspace.mouseHoldId);
 
         if (viewspace.showRipple && viewspace.dragTime == 0) {
-            var $pageContent = $("#page-content");
+            var $pageContent = $('#page-content');
 
-            $(".ripple").remove();
+            $('.ripple').remove();
 
             var posX = $pageContent.offset().left;
             var posY = $pageContent.offset().top;
 
-            $pageContent.prepend($("<span class=\"ripple\">")
+            $pageContent.prepend($('<span class="ripple">')
                 .css({
                     "width":  RIPPLE_SIZE,
                     "height": RIPPLE_SIZE,
-                    "left": (e.pageX - posX - (RIPPLE_SIZE / 2)).toString() + "px",
-                    "top":  (e.pageY - posY - (RIPPLE_SIZE / 2)).toString() + "px"
-                }).addClass("rippleEffect")
+                    "left": (e.pageX - posX - (RIPPLE_SIZE / 2)).toString() + 'px',
+                    "top":  (e.pageY - posY - (RIPPLE_SIZE / 2)).toString() + 'px'
+                }).addClass('rippleEffect')
             );
         }
 
-        $(viewspace.currentPage.element).css("cursor", "auto");
+        $(viewspace.currentPage.element).css('cursor', 'auto');
 
         viewspace.isPanning = false;
         viewspace.dragTime = 0;
         viewspace.showRipple = false;
     });
 }
-
-$(document).ready(function() {
-    var $menuBtn = $("#menu-btn");
-    var $mainSidebar = $("#main-sidebar");
-    var $pageContent = $("#page-content");
-
-    $menuBtn.click(function() {
-        $menuBtn.toggleClass("active");
-        viewspace.toggleSidebar();
-    });
-});

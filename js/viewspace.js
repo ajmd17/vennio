@@ -34,8 +34,8 @@ var viewspace = {
 
     init: function() {
         // create root projects page
-        this.currentPage = new Page("Home", $("<div class=\"page\">")
-            .append("<div class=\"video-wrapper\">"),
+        this.currentPage = new Page('Home', $('<div class="page">')
+            .append('<div class="video-wrapper">'),
             loggedUser.theme, null, loggedUser.viewport);
 
         this.currentPage.loadProjectsFromDatabase();
@@ -103,7 +103,7 @@ var viewspace = {
                         viewspace.itemClickTimeoutEnabled = false;
 
                         switch (project.data.type) {
-                        case "group":
+                        case 'group':
                             // open the clicked project page
                             var pageBefore = viewspace.currentPage;
                             pageBefore.unbindEvents();
@@ -111,11 +111,11 @@ var viewspace = {
 
                             viewspace.currentPage = new Page(
                                 project.data.name,
-                                $("<div class=\"page\">")
-                                    .append("<div class=\"video-wrapper\">"),
-                                project.theme,
+                                $('<div class="page">')
+                                    .append('<div class="video-wrapper">'),
+                                project.data.theme,
                                 project,
-                                project.viewport);
+                                project.data.viewport);
 
                             viewspace.currentPage.loadProjectsFromDatabase();
                             viewspace.currentPage.parentPage = pageBefore;
@@ -125,17 +125,17 @@ var viewspace = {
                             updateBreadcrums();
 
                             break;
-                        case "event":
+                        case 'event':
                             // show event data
-                            if (!project.eventInfo) {
-                                console.log("Error loading data about the event");
+                            if (!project.data.eventInfo) {
+                                console.log('Error loading data about the event');
                             } else {
                                 // TODO
                             }
 
                             break;
                         default:
-                            console.log("Not implemented: ", project.data.type);
+                            console.log('Not implemented: ', project.data.type);
                             break;
                         }
                     }, viewspace.projectClickTimeout);
@@ -147,16 +147,16 @@ var viewspace = {
     toggleSidebar: function() {
         this.isSidebarVisible = !this.isSidebarVisible;
 
-        var sidebarWidth = "0px";
+        var sidebarWidth = '0px';
         if (this.isSidebarVisible) {
-            sidebarWidth = "300px";
+            sidebarWidth = '300px';
             $mainSidebar.show(); 
         } else {
             // hide after the transition
             window.setTimeout(function() { $mainSidebar.hide(); }, 100);
         }
 
-        $mainSidebar.css("width", sidebarWidth);
-        $pageContent.css("margin-left", sidebarWidth);
+        $mainSidebar.css('width', sidebarWidth);
+        $pageContent.css('margin-left', sidebarWidth);
     },
 };

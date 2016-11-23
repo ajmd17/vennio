@@ -1,8 +1,8 @@
 var globalConfig = {
-    "visuals": {
-        "enableAnimations": true
+    visuals: {
+        enableAnimations: true
     },
-    "events": {
-        "remindBeforeMinutes": 15
+    events: {
+        remindBeforeMinutes: 15
     },
 };
