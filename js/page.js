@@ -271,6 +271,12 @@ Page.prototype.bindEvents = function() {
                                                 function(element, data) {
                                                     var $element = $(element);
 
+                                                    var $projectCircleText = $element.find(".project-circle-text");
+                                                    $projectCircleText.css({
+                                                        "top": "35%",
+                                                        "transform": "translate(-50%, -35%)"
+                                                    });
+
                                                     projectToAdd = new Project(
                                                         page.eltSpaceToZoomSpace({
                                                             x: position.x / page.viewport.zoom,
