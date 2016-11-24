@@ -4,5 +4,5 @@ var globalConfig = {
     },
     events: {
         remindBeforeMinutes: 15
-    },
+    }
 };

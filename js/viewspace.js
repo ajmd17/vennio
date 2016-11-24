@@ -23,7 +23,7 @@ var viewspace = {
 
     ZOOM_MIN: 0.5,
     ZOOM_MAX: 10.0,
-    ZOOM_STEP: 0.1,
+    ZOOM_STEP: 0.05,
 
     focusState: {
         isFocusedOnObject: false,

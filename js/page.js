@@ -16,7 +16,7 @@ var ACTION_MENU_ITEMS = [
         imgUrl: 'img/actions/remove.png',
         click: function() {
         }
-    },
+    }
 ];
 
 function Page(name, element, theme, pageProject, viewport) {
@@ -107,8 +107,7 @@ Page.prototype.bindEvents = function() {
             };
 
             if (nextZoom >= viewspace.ZOOM_MIN && nextZoom <= viewspace.ZOOM_MAX) {
-                var sign = Math.sign(nextZoom - page.viewport.zoom);
-                page.viewport.zoomLevel += sign;
+                page.viewport.zoomLevel += Math.sign(nextZoom - page.viewport.zoom);
 
                 var zoomRatio = nextZoom / page.viewport.zoom;
                 page.viewport.zoom = nextZoom;
@@ -127,28 +126,38 @@ Page.prototype.bindEvents = function() {
                 page.viewport.left += viewportOffset.x;
                 page.viewport.top  += viewportOffset.y;
 
-                // update each project element immediately
-                $('.project-circle').each(function() {
-                    var $this = $(this);
+                // update zoom for all projects in this page immediately
+                for (var i = 0; i < page.projects.length; i++) {
+                    (function(project) {
+                        var $projElement = $(project.element);
 
-                    var currentLeft   = $this.position().left;
-                    var currentTop    = $this.position().top;
-                    var currentWidth  = $this.width();
-                    var currentHeight = $this.height();
-                    var newWidth  = Math.ceil(currentWidth  / oldZoom) * page.viewport.zoom;
-                    var newHeight = Math.ceil(currentHeight / oldZoom) * page.viewport.zoom;
+                        var currentLeft   = $projElement.position().left;
+                        var currentTop    = $projElement.position().top;
+                        var currentWidth  = $projElement.width();
+                        var currentHeight = $projElement.height();
+                        var newWidth  = Math.ceil(currentWidth  / oldZoom) * page.viewport.zoom;
+                        var newHeight = Math.ceil(currentHeight / oldZoom) * page.viewport.zoom;
 
-                    $this.css({
-                        "width" : newWidth.toString(),
-                        "height": newHeight.toString(),
-                        "left": (((currentLeft + (currentWidth / 2)) / oldZoom - viewportOffset.x) * page.viewport.zoom - (newWidth  / 2)).toString() + 'px',
-                        "top" : (((currentTop  + (currentWidth / 2)) / oldZoom - viewportOffset.y) * page.viewport.zoom - (newHeight / 2)).toString() + 'px',
-                        "font-size": roundTo(newWidth / 10, 1).toString() + 'px'
-                    });
-                });
+                        $projElement.css({
+                            "width" : newWidth.toString(),
+                            "height": newHeight.toString(),
+                            "left": (((currentLeft + (currentWidth / 2)) / oldZoom - viewportOffset.x) * page.viewport.zoom - (newWidth  / 2)).toString() + 'px',
+                            "top" : (((currentTop  + (currentWidth / 2)) / oldZoom - viewportOffset.y) * page.viewport.zoom - (newHeight / 2)).toString() + 'px',
+                        });
+
+                        // call the dedicated updateZoom function
+                        (function(projectTypeFunctions) {
+                            if (projectTypeFunctions !== undefined) {
+                                if (projectTypeFunctions.updateZoom !== undefined) {
+                                    projectTypeFunctions.updateZoom($projElement, newWidth, newHeight);
+                                }
+                            }
+                        })(projectFunctions[project.data.type]);
+                    })(page.projects[i]);
+                }
 
                 // update database with the viewport data
-                if (page.pageProject !== null && page.pageProject !== undefined) {
+                if (page.pageProject !== undefined && page.pageProject !== null) {
                     page.pageProject.data.viewport = page.viewport;
                     page.pageProject.ref
                         .child('data')
@@ -253,7 +262,7 @@ Page.prototype.bindEvents = function() {
                                     location: '',
                                     description: '',
                                     acknowledged: false
-                                },
+                                }
                             };
 
                             var validateInput = function() {
@@ -330,14 +339,12 @@ Page.prototype.bindEvents = function() {
                         type: 'sticky',
                         theme: BUILTIN_THEMES.poly_2,
                         noteInfo: {
-                            text: '',
-                        },
+                            text: ''
+                        }
                     };
 
                     page.addCircle(position, projectData, {
-                    success: function(element, data) {
-                            var $element = $(element);
-                            
+                        success: function(element, data) {
                             projectToAdd = new Project(
                                 page.eltSpaceToZoomSpace({
                                     x: position.x / page.viewport.zoom,
@@ -348,7 +355,7 @@ Page.prototype.bindEvents = function() {
                             
                             page.addProject(projectToAdd);
                         },
-                    click: function() {
+                        click: function() {
                             if (projectToAdd != null) {
                                 viewspace.handleObjectClick(projectToAdd);
                             }
@@ -438,7 +445,7 @@ Page.prototype.bindEvents = function() {
                     })
                     .append($('<h2>')
                         .addClass('radial-menu-title')
-                        .append('Create'))
+                        .append('Create'));
 
                 var degrees = 0;
 
@@ -589,8 +596,13 @@ Page.prototype.addProject = function(project) {
             .child('projects');
     }
 
-    var projectObject = project;
-    delete projectObject.element;
+    // copy object and push it to the database
+    var projectObject = {};
+    for (attrib in project) {
+        if (project.hasOwnProperty(attrib) && attrib != 'element' && typeof project[attrib] !== 'function') {
+            projectObject[attrib] = project[attrib];
+        }
+    }
     project.ref = projectsRef.push(projectObject);
     this.projects.push(project);
 };
@@ -619,8 +631,8 @@ Page.prototype.loadProjectElement = function(project, animationTime) {
     var absPosition = this.zoomSpaceToEltSpace(project.position);
 
     var $projImg = SVG_OBJECTS[PROJECT_CLASS_SVG_NAMES[project.data.type]]
-                .clone()
-                .css('fill', project.data.color);
+        .clone()
+        .css('fill', project.data.color);
 
     var $projectCircleElement = $('<div>')
         .addClass('project-circle')
@@ -629,7 +641,6 @@ Page.prototype.loadProjectElement = function(project, animationTime) {
             "top" : (absPosition.y * ZOOM - HALF_SIZE).toString() + 'px',
             "width" : SIZE_ZOOMED.toString() + 'px',
             "height": SIZE_ZOOMED.toString() + 'px',
-            "font-size": roundTo(SIZE_ZOOMED / 10, 1).toString() + 'px',
             "opacity": 0
         })
         .append(createActionsMenu())
@@ -637,7 +648,7 @@ Page.prototype.loadProjectElement = function(project, animationTime) {
         .append($('<div>')
             .addClass('project-image')
             .append($projImg))
-        .append(createProjectContent(project.data, false));
+        .append(createProjectContent(project.data, this.viewport, false));
 
     // bind click, double click, lose focus events
     bindProjectElementEvents($projectCircleElement, project.data, {
@@ -647,7 +658,7 @@ Page.prototype.loadProjectElement = function(project, animationTime) {
         },
         click: function() {
             viewspace.handleObjectClick(project);
-        },
+        }
     });
 
     // set element properties
@@ -660,8 +671,9 @@ Page.prototype.loadProjectElement = function(project, animationTime) {
 Page.prototype.loadProjectElements = function() {
     var $element = $(this.element);
     for (var i = 0; i < this.projects.length; i++) {
-        $element.append(this.loadProjectElement(this.projects[i], 
-            Math.min(250 + ((i / this.projects.length) * 100), 500)));
+        this.projects[i].element = this.loadProjectElement(this.projects[i], 
+            Math.min(250 + ((i / this.projects.length) * 100), 500));
+        $element.append(this.projects[i].element);
     }
 };
 
@@ -725,7 +737,7 @@ Page.prototype.addCircle = function(position, data, callbacks) {
             "background-color": 'transparent',
             "left": position.x,
             "top" : position.y,
-            "font-size": FONT_SIZE.toString() + 'px',
+            "font-size": FONT_SIZE.toString() + 'px'
         })
         .animate({
              "left": position.x - HALF_SIZE,
@@ -734,10 +746,20 @@ Page.prototype.addCircle = function(position, data, callbacks) {
              "height": SIZE_ZOOMED.toString() + 'px'
             },
             400, 'easeOutBounce', function() {
-                var $input = $(this).find('input');
+                var $this  = $(this);
+                var $input = $this.find('input');
                 if ($input.length != 0) {
                     $input.select();
                 }
+
+                // call the dedicated updateZoom function after animation is finished
+                (function(projectTypeFunctions) {
+                    if (projectTypeFunctions !== undefined) {
+                        if (projectTypeFunctions.updateZoom !== undefined) {
+                            projectTypeFunctions.updateZoom($this, SIZE_ZOOMED, SIZE_ZOOMED);
+                        }
+                    }
+                })(projectFunctions[data.type]);
             })
         .append(createActionsMenu().css('display', 'none'))
         .append($('<div>')
@@ -746,6 +768,8 @@ Page.prototype.addCircle = function(position, data, callbacks) {
                 .clone()
                 .css('fill', data.color)))
         .append(createProjectContent(data, true));
+
+    
 
     // set element properties
     $projectCircleElement.nameBefore = data.name;
@@ -811,15 +835,15 @@ function createActionsMenu() {
     return $actionsMenu;
 }
 
-function createProjectContent(data, isNewlyCreated) {
+function createProjectContent(data, viewport, isNewlyCreated) {
     return (function(projectTypeFunctions) {
         if (projectTypeFunctions !== undefined) {
             if (projectTypeFunctions.createContent !== undefined) {
-                return projectTypeFunctions.createContent(data, isNewlyCreated);
+                return projectTypeFunctions.createContent(data, viewport, isNewlyCreated);
             }
         } else {
             console.log('No functionality for type: "' + data.type.toString() + '"');
         }
         return null;
     })(projectFunctions[data.type]);
-};
+}

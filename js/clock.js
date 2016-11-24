@@ -228,9 +228,9 @@ Clock.prototype.updateData = function() {
                             // set clock.date's hour
                             var pmSelected = $pm.hasClass("active");
                             if (pmSelected) {
-                                clock.date.setHours(itemHour + 12);
+                                clock.date.setHours(((itemHour !== 12) ? itemHour : 0) + 12);
                             } else {
-                                clock.date.setHours(itemHour);
+                                clock.date.setHours((itemHour !== 12) ? itemHour : 0);
                             }
 
                             // trigger callback

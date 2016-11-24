@@ -50,7 +50,7 @@ function handleLogin(user) {
     var usersRef = database.ref('/users');
 
     usersRef.once('value').then(function(snapshot) {
-        var foundUser = snapshotHasProperty(snapshot, { "uid": user.uid });
+        var foundUser = snapshotHasProperty(snapshot, { uid: user.uid });
         if (!foundUser) {
             loggedUser = addNewUser(user.uid, user.displayName, usersRef);
         } else {
@@ -63,11 +63,11 @@ function handleLogin(user) {
 
 function addNewUser(uid, displayName, ref) {
     var user = {
-        "uid":   uid,
-        "name":  displayName,
-        "theme": BUILTIN_THEMES.poly_green /* default theme */,
-        "projects": { },
-        "viewport": {
+        uid:   uid,
+        name:  displayName,
+        theme: BUILTIN_THEMES.poly_green /* default theme */,
+        projects: { },
+        viewport: {
             zoom: 1.0,
             zoomLevel: 0,
             left: 0,
@@ -80,32 +80,3 @@ function addNewUser(uid, displayName, ref) {
     return user;
 }
 
-// attrib is an object containing the key and value
-// of what to search for like so
-// { "email": "blahblah@blah.com" }
-function snapshotHasProperty(snapshot, attrib) {
-    if (!snapshot) {
-        return null;
-    }
-
-    var snapshotValue = snapshot.val();
-    if ((snapshotValue !== undefined && snapshotValue !== null) &&
-            Object.keys(snapshotValue).length != 0) {
-
-        var attribKeys = Object.keys(attrib);
-        var attribKey = attribKeys[0].toString();
-        var attribVal = attrib[attribKey];
-
-        var snapshotKeys = Object.keys(snapshotValue);
-
-        for (var i = 0; i < snapshotKeys.length; i++) {
-            var curObject = snapshotValue[snapshotKeys[i]];
-            if (curObject[attribKey] == attribVal) {
-                curObject.key = snapshotKeys[i];
-                return curObject;
-            }
-        }
-    }
-
-    return null;
-}

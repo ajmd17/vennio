@@ -166,11 +166,16 @@ body {
     word-wrap: break-word;
 }
 .project-circle-text .project-title-div {
-    -webkit-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
-    user-select: none !important;
+    -ms-user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -ms-user-drag: none;
+    -moz-user-drag: none;
+    -webkit-user-drag: none;
+    user-drag: none;
     pointer-events: none;
+    user-
     cursor: default;
     text-align: center;
     vertical-align: middle;

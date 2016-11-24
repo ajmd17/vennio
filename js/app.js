@@ -1,10 +1,6 @@
 $(document).ready(function() {
-    var $menuBtn = $('#menu-btn');
-    var $mainSidebar = $('#main-sidebar');
-    var $pageContent = $('#page-content');
-
-    $menuBtn.click(function() {
-        $menuBtn.toggleClass('active');
+    $('#menu-btn').click(function() {
+        $(this).toggleClass('active');
         viewspace.toggleSidebar();
     });
 });
@@ -77,8 +73,6 @@ function findEventsInRange(range) {
                                         toast.show();
                                     }, msToEvent - remindBeforeMs);
                                 } else if (msToEvent < 0) {
-                                    var overdueString = '';
-
                                     var calculateOverdueString = function() {
                                         var overdueByDays    = Math.floor(-msToEvent / (24 * 60 * 60 * 1000));
                                         var overdueByHours   = Math.floor(-msToEvent / (60 * 60 * 1000));
@@ -119,7 +113,7 @@ function findEventsInRange(range) {
                                                 eventInfo: project.data.eventInfo
                                             });
                                             // TODO bring the user to the event
-                                        },
+                                        }
                                     });
 
                                     toast.show();

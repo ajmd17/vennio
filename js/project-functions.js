@@ -1,13 +1,20 @@
 // functions project types can have include:
-// 'createContent', 'doubleClick', 'loseFocus'
+// 'createContent', 'doubleClick', 'loseFocus', 'updateZoom'
 var projectFunctions = {
     group: {
-        createContent: function(data, isNewlyCreated) {
+        createContent: function(data, viewport, isNewlyCreated) {
+            var SIZE = (data.size != undefined) ? data.size : 200;
+            var ZOOM = viewport.zoom;
+            var SIZE_ZOOMED = SIZE * ZOOM;
+
             if (isNewlyCreated) {
                 return $('<div>')
                     .addClass('project-circle-text')
                     .append($('<input type="text">')
                         .addClass('project-circle-text-edit')
+                        .css({
+                            "font-size": roundTo(SIZE_ZOOMED / 10, 1).toString() + 'px'
+                        })
                         .val(!data.name ? '' : data.name)
                         .on('keyup', function(e) {
                             if (e.keyCode == 13) {
@@ -21,6 +28,9 @@ var projectFunctions = {
                     .addClass('project-circle-text')
                     .append($('<div>')
                         .addClass('project-title-div')
+                        .css({
+                            "font-size": roundTo(SIZE_ZOOMED / 10, 1).toString() + 'px'
+                        })
                         .append(data.name));
             }
         },
@@ -83,20 +93,44 @@ var projectFunctions = {
                     callbacks.success(element, data);
                 }
             }
+        },
+
+        updateZoom: function($element, newWidth, newHeight) {
+            $element.find('.project-title-div').css({
+                "font-size": roundTo(newWidth / 10, 1).toString() + 'px'
+            });
         }
     },
 
     event: {
-        createContent: function(data, isNewlyCreated) {
+        createContent: function(data, viewport, isNewlyCreated) {
+            var SIZE = (data.size != undefined) ? data.size : 200;
+            var ZOOM = viewport.zoom;
+            var SIZE_ZOOMED = SIZE * ZOOM;
+            var HALF_SIZE = SIZE_ZOOMED / 2;
+
+            var date       = new Date(data.eventInfo.date);
+            var dateString = MONTH_NAMES_SHORT[date.getMonth()] + ' ' + date.getDate().toString() + ', ' + date.getFullYear().toString();
+
             return $('<div>')
                 .addClass('project-circle-text')
                 .css({
-                    "top": '35%',
-                    "transform": 'translateX(-50%) translateY(-35%)'
+                    "top": '40%',
+                    "transform": 'translateX(-50%) translateY(-40%)'
                 })
                 .append($('<div>')
                     .addClass('project-title-div')
-                    .append(data.name));
+                    .css({
+                        "font-size": roundTo(SIZE_ZOOMED / 8, 1).toString() + 'px'
+                    })
+                    .append(data.name)
+                    .append($('<div>')
+                        .addClass('project-title-event-date')
+                        .css({
+                            "margin-top": roundTo(SIZE_ZOOMED / 28, 1).toString() + 'px',
+                            "font-size" : roundTo(SIZE_ZOOMED / 14, 1).toString() + 'px'
+                        })
+                        .append(dateString)));
         },
 
         doubleClick: function(element, data, callbacks) {
@@ -107,6 +141,15 @@ var projectFunctions = {
             if (callbacks.success != undefined) {
                 callbacks.success(element, data);
             }
+        },
+
+        updateZoom: function($element, newWidth, newHeight) {
+            $element.find('.project-title-div').css({
+                "font-size": roundTo(newWidth / 8, 1).toString() + 'px'
+            });
+            $element.find('.project-title-event-date').css({
+                "font-size": roundTo(newWidth / 14, 1).toString() + 'px'
+            });
         }
-    },
+    }
 };

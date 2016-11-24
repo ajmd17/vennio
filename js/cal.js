@@ -5,6 +5,10 @@ var MONTH_NAMES = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
 ];
+var MONTH_NAMES_SHORT = [
+    "Jan", "Feb", "Mar", "Apr", "May", "June",
+    "July", "August", "Sept", "Oct", "Nov", "Dec"
+];
 
 function Calendar(date, dateChangedCallback) {
     if (date != undefined) {
