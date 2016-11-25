@@ -1,3 +1,28 @@
+Array.prototype.contains = function(obj) {
+    var i = this.length;
+
+    while (i--) {
+        if (this[i] === obj) {
+            return true;
+        }
+    }
+
+    return false;
+};
+
+function copyProperties(dst, src) {
+    for (attrib in src) {
+        if (src.hasOwnProperty(attrib)) {
+            if (typeof src[attrib] === 'object') {
+                dst[attrib] = {};
+                copyProperties(dst[attrib], src[attrib]);
+            } else if (typeof src[attrib] !== 'function') {
+                dst[attrib] = src[attrib];
+            }
+        }
+    }
+}
+
 function randRange(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }

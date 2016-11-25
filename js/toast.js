@@ -1,4 +1,5 @@
 var totalToastHeight = 0;
+var toasts = [];
 
 function Toast(title, content, callbacks) {
     this.title   = title;
@@ -45,6 +46,9 @@ Toast.prototype.show = function() {
     this.toastHeight = this.$toastElement.height();
     totalToastHeight += this.toastHeight;
 
+    this.index = toasts.length;
+    toasts.push(this);
+
     if (this.callbacks.show !== undefined) {
         this.callbacks.show();
     }
@@ -65,21 +69,19 @@ Toast.prototype.hide = function() {
 
     if (this.toastHeight !== undefined && this.toastHeight !== null) {
         // modify all other toasts
-        var $toastWrapper = $(".toast-wrapper");
-        var change = {
-            "top": "-=" + this.toastHeight.toString() + "px"
-        };
+        if (toasts.length - 1 > this.index) {
+            var change = {
+                "top": "-=" + this.toastHeight.toString() + "px"
+            };
 
-        $toastWrapper.each(function() {
-            var $this = $(this);
-            if ($this.position().top > 0) {
+            for (var i = this.index; i < toasts.length; i++) {
                 if (globalConfig.visuals.enableAnimations) {
-                    $this.animate(change, 200);
+                    toasts[i].$toastElement.animate(change, 200);
                 } else {
-                    $this.css(change);
+                    toasts[i].$toastElement.css(change);
                 }
             }
-        });
+        }
 
         totalToastHeight -= this.toastHeight;
     }

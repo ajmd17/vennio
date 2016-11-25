@@ -102,8 +102,8 @@ var viewspace = {
                     viewspace.itemClickTimeoutId = window.setTimeout(function() {
                         viewspace.itemClickTimeoutEnabled = false;
 
-                        switch (project.data.type) {
-                        case 'group':
+                        // TODO move this to project-functions.js
+                        if (project.data.type === 'group' || project.data.type === 'project' || project.data.type === 'event') {
                             // open the clicked project page
                             var pageBefore = viewspace.currentPage;
                             pageBefore.unbindEvents();
@@ -123,20 +123,8 @@ var viewspace = {
                             viewspace.currentPage.show();
 
                             updateBreadcrums();
-
-                            break;
-                        case 'event':
-                            // show event data
-                            if (!project.data.eventInfo) {
-                                console.log('Error loading data about the event');
-                            } else {
-                                // TODO
-                            }
-
-                            break;
-                        default:
-                            console.log('Not implemented: ', project.data.type);
-                            break;
+                        } else {
+                            console.log('Not implemented for type ' + project.data.type);
                         }
                     }, viewspace.projectClickTimeout);
                 })(this);

@@ -6,8 +6,6 @@
         <title>Vennio</title>
         <link href="favicon.ico" rel="icon" type="image/x-icon"/>
         <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
-        <link rel="stylesheet" href="css/jquery.dialogbox.css">
-        <link rel="stylesheet" href="css/jquery.modal.css">
         <link rel="stylesheet" href="css/font-awesome.min.css">
         <link rel="stylesheet" href="css/btn.css">
         <link rel="stylesheet" href="css/modal.css">
@@ -20,9 +18,7 @@
         <link rel="stylesheet" href="css/shapes.css">
     </head>
     <body>
-    	<div id="dialog"></div>
-
-        <div id="login-window" class="remodal-bg">
+        <div id="login-window">
             <img class="video-bg" src="img/poly.png">
 
             <div class="login-window">
@@ -58,8 +54,10 @@
                     </li>
                     <li class="titlebar-li right">
                         <a id="settings-btn" class="fa fa-cog" href="#" aria-hidden="true"></a>
-                        <ul id="settings-menu" class="dropdown-content">
-                            <li>Account Settings</li>
+                        <ul id="settings-menu" class="dropdown-menu" style="display: none;">
+                            <li id='preferences-menu-item'>Preferences...</li>
+                            <li><hr></li>
+                            <li>Log Out</li>
                         </ul>
                     </li>
                 </ul>
@@ -72,6 +70,15 @@
                     </div>
                 </div>
                 <div id="page-content" class="modal-background-blurred"></div>
+
+                <div class="floating-btn-wrapper">
+                    <div class="floating-btn">
+                        <i class="fa fa-bell" aria-hidden="true"></i>
+                    </div>
+                    <div class="floating-btn">
+                        <i class="fa fa-paint-brush" aria-hidden="true"></i>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -86,11 +93,12 @@
               integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
               crossorigin="anonymous"></script>
         <script src="https://www.gstatic.com/firebasejs/3.5.3/firebase.js"></script>
-        <script src="js/external/jquery.dialogBox.js"></script>
         <script src="js/external/randomColor.js"></script>
+        <script src="js/external/angular.min.js"></script>
+        <script src="js/external/angular-route.min.js"></script>
+
         <script src="js/global-config.js"></script>
         <script src="js/util.js"></script>
-        <script src="js/jquery.modal.min.js"></script>
         <script src="js/svg_objects.js"></script>
         <script src="js/modal.js"></script>
         <script src="js/tooltip.js"></script>

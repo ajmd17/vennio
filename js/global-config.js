@@ -3,6 +3,6 @@ var globalConfig = {
         enableAnimations: true
     },
     events: {
-        remindBeforeMinutes: 15
+        remindBeforeMinutes: 30
     }
 };

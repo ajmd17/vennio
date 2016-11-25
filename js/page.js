@@ -231,6 +231,37 @@ Page.prototype.bindEvents = function() {
                     clock.getElement()
                         .css('width', '180px');
 
+                    var possibleDays = {
+                        "Monday": 1,
+                        "Tuesday": 2,
+                        "Wednesday": 3,
+                        "Thursday": 4,
+                        "Friday": 5,
+                        "Saturday": 6,
+                        "Sunday": 0
+                    };
+
+                    var chosenRepetitionDays = [];
+
+                    var $repeatDays = $('<div>')
+                        .append($('<h3>')
+                            .css({
+                                "margin": '4px',
+                                "padding": 0
+                            })
+                            .append('Repeat every:'));
+
+                    
+
+                    for (day in possibleDays) {
+                        $repeatDays.append($('<div>')
+                            .addClass('checklist-item')
+                            .append('<i class="checkbox-icon fa fa-square-o">')
+                            .append($('<div>')
+                                .addClass('day-checkbox-text')
+                                .append(day)))
+                    }
+
                     var $eventModalContent = $('<ul>')
                         .addClass('form-list')
                         .append($('<li>')
@@ -247,7 +278,35 @@ Page.prototype.bindEvents = function() {
                                 .addClass('split split-left')
                                 .append($('<i>')
                                     .addClass('fa fa-clock-o list-item-icon'))
-                                .append($timeInput)));
+                                .append($timeInput)))
+                        .append($repeatDays);
+
+                    $eventModalContent.find('.checklist-item').click(function() {
+                        var $this = $(this);
+                        $this.toggleClass('checked');
+                        $this.find('.checkbox-icon')
+                            .toggleClass('fa-square-o')
+                            .toggleClass('fa-check-square-o');
+
+                        var day = $this.find('.day-checkbox-text').text();
+                        var dayNumber = possibleDays[day];
+
+                        var removeIndices = [];
+                        for (var i = 0; i < chosenRepetitionDays.length; i++) {
+                            if (chosenRepetitionDays[i] == dayNumber) {
+                                // remove from array
+                                removeIndices.push(i);
+                            }
+                        }
+                        for (var i = 0; i < removeIndices.length; i++) {
+                            chosenRepetitionDays.splice(i, 1);
+                        }
+
+                        if ($this.hasClass('checked')) {
+                            // add element
+                            chosenRepetitionDays.push(dayNumber);
+                        }
+                    });
 
                     var modal = new Modal('Create Event', $eventModalContent, [{
                         text: 'Create',
@@ -257,11 +316,19 @@ Page.prototype.bindEvents = function() {
                                 name: $nameInput.val().trim(),
                                 type: 'event',
                                 theme: BUILTIN_THEMES['poly_2'],
+                                viewport: {
+                                    zoom: 1.0,
+                                    zoomLevel: 0,
+                                    left: 0,
+                                    top : 0
+                                },
                                 eventInfo: {
                                     date: null,
                                     location: '',
                                     description: '',
-                                    acknowledged: false
+                                    recurringDays: chosenRepetitionDays, 
+                                    acknowledged: false,
+                                    lastAcknowledged: 0
                                 }
                             };
 
@@ -275,7 +342,7 @@ Page.prototype.bindEvents = function() {
                                 // verify date is legal
                                 var timestamp = Date.parse($dateInput.val() + ' ' + $timeInput.val());
                                 if (!Number.isNaN(timestamp)) {
-                                    projectData.eventInfo.date = new Date(timestamp).getTime();
+                                    projectData.eventInfo.date = new Date(timestamp).setSeconds(0);
                                 } else {
                                     // TODO show error for invalid date.
                                     return false;
@@ -298,6 +365,12 @@ Page.prototype.bindEvents = function() {
                                             data);
 
                                         page.addProject(projectToAdd);
+
+                                        // create the event reminder
+                                        setupEvent({
+                                            position: projectToAdd.position,
+                                            data: projectToAdd.data
+                                        }, projectToAdd.ref, EVENT_SEARCH_RANGE);
 
                                         // hide modal once project is created
                                         modal.hide();
@@ -653,8 +726,10 @@ Page.prototype.loadProjectElement = function(project, animationTime) {
     // bind click, double click, lose focus events
     bindProjectElementEvents($projectCircleElement, project.data, {
         success: function(element, data) {
-            // TODO change project name in db?
-            console.log('Success editing element: ', element, 'data: ', data);
+            // update project name in db
+            project.ref.child('data').update({ 
+                name: data.name 
+            });
         },
         click: function() {
             viewspace.handleObjectClick(project);
@@ -698,6 +773,7 @@ Page.prototype.loadProjectsFromDatabase = function() {
                 for (var i = 0; i < keys.length; i++) {
                     (function(key) {
                         var project = snapshotValue[key];
+                        project.key = key;
                         project.ref = projectsRef.child(key);
                         page.projects.push(project);
                     })(keys[i]);
@@ -747,7 +823,7 @@ Page.prototype.addCircle = function(position, data, callbacks) {
             },
             400, 'easeOutBounce', function() {
                 var $this  = $(this);
-                var $input = $this.find('input');
+                var $input = $this.find('.project-circle-text-edit');
                 if ($input.length != 0) {
                     $input.select();
                 }
@@ -767,7 +843,7 @@ Page.prototype.addCircle = function(position, data, callbacks) {
             .append(SVG_OBJECTS[PROJECT_CLASS_SVG_NAMES[data.type]]
                 .clone()
                 .css('fill', data.color)))
-        .append(createProjectContent(data, true));
+        .append(createProjectContent(data, this.viewport, true));
 
     
 

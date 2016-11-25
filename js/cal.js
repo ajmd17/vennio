@@ -6,8 +6,8 @@ var MONTH_NAMES = [
     "July", "August", "September", "October", "November", "December"
 ];
 var MONTH_NAMES_SHORT = [
-    "Jan", "Feb", "Mar", "Apr", "May", "June",
-    "July", "August", "Sept", "Oct", "Nov", "Dec"
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 ];
 
 function Calendar(date, dateChangedCallback) {

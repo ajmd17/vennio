@@ -42,7 +42,14 @@ var projectFunctions = {
                 var name  = $holder.find('.project-title-div').text();
                 var $edit = $('<input type="text">')
                     .addClass('project-circle-text-edit')
-                    .val(name);
+                    .val(name)
+                    .on('keyup', function(e) {
+                        if (e.keyCode == 13) {
+                            // enter key pressed, lose focus
+                            // to signal finished editing
+                            viewspace.objectLoseFocus();
+                        }
+                    });
 
                 $holder.html($edit);
                 $edit.select();
@@ -110,13 +117,46 @@ var projectFunctions = {
             var HALF_SIZE = SIZE_ZOOMED / 2;
 
             var date       = new Date(data.eventInfo.date);
-            var dateString = MONTH_NAMES_SHORT[date.getMonth()] + ' ' + date.getDate().toString() + ', ' + date.getFullYear().toString();
+            var dateString = '';
+
+            if (data.eventInfo.recurringDays === undefined || data.eventInfo.recurringDays.length == 0) {
+                dateString = MONTH_NAMES_SHORT[date.getMonth()] + ' ' + 
+                             date.getDate().toString() + ', ' + 
+                             date.getFullYear().toString();
+            } else {
+                dateString = 'Every ';
+                if (data.eventInfo.recurringDays.length == 1) {
+                    dateString += WEEKDAY_NAMES[data.eventInfo.recurringDays[0]];
+                } else if (data.eventInfo.recurringDays.length == 2) {
+                    dateString += WEEKDAY_NAMES[data.eventInfo.recurringDays[0]];
+                    dateString += ' and ' + WEEKDAY_NAMES[data.eventInfo.recurringDays[1]];
+                } else if (data.eventInfo.recurringDays.length == 7) {
+                    dateString += 'day';
+                } else {
+                    for (var i = 0; i < data.eventInfo.recurringDays.length; i++) {
+                        dateString += WEEKDAY_NAMES[data.eventInfo.recurringDays[i]];
+                        if (i != data.eventInfo.recurringDays.length - 1) {
+                            dateString += ', ';
+                        }
+                    }
+                }
+            }
+
+            var hour   = date.getHours();
+            var minute = date.getMinutes();
+            var isPm   = hour >= 12;
+
+            hour = hour % 12;
+            hour = hour != 0 ? hour : 12;
+
+            var timeString = hour + ':' + ('0' + minute).slice(-2) + 
+                (isPm ? ' PM' : ' AM');
 
             return $('<div>')
                 .addClass('project-circle-text')
                 .css({
-                    "top": '40%',
-                    "transform": 'translateX(-50%) translateY(-40%)'
+                    "top": '45%',
+                    "transform": 'translateX(-50%) translateY(-45%)'
                 })
                 .append($('<div>')
                     .addClass('project-title-div')
@@ -127,10 +167,13 @@ var projectFunctions = {
                     .append($('<div>')
                         .addClass('project-title-event-date')
                         .css({
-                            "margin-top": roundTo(SIZE_ZOOMED / 28, 1).toString() + 'px',
+                            "margin-top": '5%',
                             "font-size" : roundTo(SIZE_ZOOMED / 14, 1).toString() + 'px'
                         })
-                        .append(dateString)));
+                        .append($('<div>')
+                            .append(dateString))
+                        .append($('<div>')
+                            .append(timeString))));
         },
 
         doubleClick: function(element, data, callbacks) {
