@@ -1,4 +1,4 @@
-var loggedUser = {};
+var loggedUser = null;
 
 var auth = null;
 var database = null;
@@ -50,6 +50,8 @@ function handleLogin(user) {
     var usersRef = database.ref('/users');
 
     usersRef.once('value').then(function(snapshot) {
+        var firstLogin = loggedUser === null;
+
         var foundUser = snapshotHasProperty(snapshot, { uid: user.uid });
         if (!foundUser) {
             loggedUser = addNewUser(user.uid, user.displayName, usersRef);
@@ -57,7 +59,9 @@ function handleLogin(user) {
             loggedUser = foundUser;
         }
 
-        afterLogin();
+        if (firstLogin) {
+            afterLogin();
+        }
     });
 }
 

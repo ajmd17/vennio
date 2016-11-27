@@ -6,13 +6,6 @@ body {
     font-family: "Montserrat", sans-serif;
 }
 
-#bg-canvas {
-    /*-ms-filter    : blur(1px);
-    -moz-filter   : blur(1px);
-    -webkit-filter: blur(1px);
-    filter        : blur(1px);*/
-}
-
 #landing-bg {
     background-color: #3E454C;
     position: fixed;
@@ -54,6 +47,7 @@ body {
     border-radius: 4px;
     border: 1px solid #8E9398;
     transition: border 0.4s ease, color 0.4s ease;
+    cursor: pointer;
 }
 #top-bar .nav-link:hover {
     color: #FE8067;

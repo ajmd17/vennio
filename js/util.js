@@ -10,6 +10,15 @@ Array.prototype.contains = function(obj) {
     return false;
 };
 
+Math.lerp = function(a, b, amt) {
+    return (1 - amt) * a + amt * b;
+};
+
+function calculateZoomedSize(data, viewport) {
+    var size = (data.size != undefined) ? data.size : 200;
+    return size * viewport.zoom;
+}
+
 function copyProperties(dst, src) {
     for (attrib in src) {
         if (src.hasOwnProperty(attrib)) {

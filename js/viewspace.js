@@ -32,6 +32,13 @@ var viewspace = {
         }
     },
 
+    draggingState: {
+        isDraggingObject: false,
+        draggingObject: null,
+        callbacks: {
+        }
+    },
+
     init: function() {
         // create root projects page
         this.currentPage = new Page('Home', $('<div class="page">')
@@ -82,6 +89,24 @@ var viewspace = {
             "data"   : data
         };
         this.focusState.callbacks = callbacks;
+    },
+
+    clearObjectDrag: function() {
+        this.draggingState = {
+            isDraggingObject: false,
+            draggingObject: null,
+            callbacks: {
+            }
+        };
+    },
+
+    setDraggingObject: function(element, data, callbacks) {
+        this.draggingState.isDraggingObject = true;
+        this.draggingState.draggingObject = {
+            "element": element,
+            "data"   : data
+        };
+        this.draggingState.callbacks = callbacks;
     },
 
     /** Handles when an object/project was actually clicked,

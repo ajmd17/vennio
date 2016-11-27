@@ -328,7 +328,7 @@ Page.prototype.bindEvents = function() {
                                     description: '',
                                     recurringDays: chosenRepetitionDays, 
                                     acknowledged: false,
-                                    lastAcknowledged: 0
+                                    lastAcknowledged: new Date().getTime()
                                 }
                             };
 
@@ -378,9 +378,28 @@ Page.prototype.bindEvents = function() {
                                         // set 'nameBefore' property, so it doesn't act like we need to enter the name
                                         element.nameBefore = data.name;
                                     },
+                                    update: function(element, data) {
+                                        // update project name in db
+                                        if (projectToAdd != null) {
+                                            projectToAdd.ref.child('data').update({ 
+                                                name: data.name 
+                                            });
+                                        }
+                                    },
                                     click: function() {
                                         if (projectToAdd != null) {
                                             viewspace.handleObjectClick(projectToAdd);
+                                        }
+                                    },
+                                    finishedDragging: function() {
+                                        if (projectToAdd != null) {
+                                            projectToAdd.position = page.eltSpaceToZoomSpace({
+                                                x: viewspace.mousePosition.x / page.viewport.zoom,
+                                                y: viewspace.mousePosition.y / page.viewport.zoom
+                                            });
+                                            projectToAdd.ref.update({
+                                                position: projectToAdd.position
+                                            });
                                         }
                                     }
                                 });
@@ -398,10 +417,6 @@ Page.prototype.bindEvents = function() {
                     modal.show();
                     $nameInput.select();
                 }
-            },
-            {
-                title: 'Pin',
-                url  : 'img/shapes/pin.png'
             },
             {
                 title: 'Sticky',
@@ -428,9 +443,28 @@ Page.prototype.bindEvents = function() {
                             
                             page.addProject(projectToAdd);
                         },
+                        update: function(element, data) {
+                            // update project name in db
+                            if (projectToAdd != null) {
+                                projectToAdd.ref.child('data').update({ 
+                                    name: data.name 
+                                });
+                            }
+                        },
                         click: function() {
                             if (projectToAdd != null) {
                                 viewspace.handleObjectClick(projectToAdd);
+                            }
+                        },
+                        finishedDragging: function() {
+                            if (projectToAdd != null) {
+                                projectToAdd.position = page.eltSpaceToZoomSpace({
+                                    x: viewspace.mousePosition.x / page.viewport.zoom,
+                                    y: viewspace.mousePosition.y / page.viewport.zoom
+                                });
+                                projectToAdd.ref.update({
+                                    position: projectToAdd.position
+                                });
                             }
                         }
                     });
@@ -453,8 +487,7 @@ Page.prototype.bindEvents = function() {
                     };
 
                     page.addCircle(position, projectData, {
-                    success:
-                        function(element, data) {
+                        success: function(element, data) {
                             projectToAdd = new Project(
                                 page.eltSpaceToZoomSpace({
                                     x: position.x / page.viewport.zoom,
@@ -465,10 +498,28 @@ Page.prototype.bindEvents = function() {
                             
                             page.addProject(projectToAdd);
                         },
-                    click:
-                        function() {
+                        update: function(element, data) {
+                            // update project name in db
+                            if (projectToAdd != null) {
+                                projectToAdd.ref.child('data').update({ 
+                                    name: data.name 
+                                });
+                            }
+                        },
+                        click: function() {
                             if (projectToAdd != null) {
                                 viewspace.handleObjectClick(projectToAdd);
+                            }
+                        },
+                        finishedDragging: function() {
+                            if (projectToAdd != null) {
+                                projectToAdd.position = page.eltSpaceToZoomSpace({
+                                    x: viewspace.mousePosition.x / page.viewport.zoom,
+                                    y: viewspace.mousePosition.y / page.viewport.zoom
+                                });
+                                projectToAdd.ref.update({
+                                    position: projectToAdd.position
+                                });
                             }
                         }
                     });
@@ -577,6 +628,10 @@ Page.prototype.bindEvents = function() {
         }
     })
     .on('mousedown touchstart', function(e) {
+        // preventDefault() avoids dragging text in divs,
+        // messing everything up
+        e.preventDefault();
+
         var $this = $(this);
         var $offset = $this.offset();
         var $target = $(e.target);
@@ -595,6 +650,7 @@ Page.prototype.bindEvents = function() {
 
             $this.css('cursor', 'move');
             viewspace.isPanning = true;
+            console.log('panning');
         }
     })
     .on('mousemove touchmove', function(e) {
@@ -618,6 +674,12 @@ Page.prototype.bindEvents = function() {
 
         if (viewspace.isPanning) {
             page.handlePanning(newPos);
+        } else if (viewspace.draggingState.isDraggingObject) {
+            var halfSize = calculateZoomedSize(viewspace.draggingState.draggingObject.data, page.viewport)/2;
+            $(viewspace.draggingState.draggingObject.element).css({
+                "top" : (newPos.y - halfSize).toString() + 'px',
+                "left": (newPos.x - halfSize).toString() + 'px',
+            });
         }
 
         viewspace.mousePosition = newPos;
@@ -723,9 +785,10 @@ Page.prototype.loadProjectElement = function(project, animationTime) {
             .append($projImg))
         .append(createProjectContent(project.data, this.viewport, false));
 
+    var page = this;
     // bind click, double click, lose focus events
     bindProjectElementEvents($projectCircleElement, project.data, {
-        success: function(element, data) {
+        update: function(element, data) {
             // update project name in db
             project.ref.child('data').update({ 
                 name: data.name 
@@ -733,6 +796,15 @@ Page.prototype.loadProjectElement = function(project, animationTime) {
         },
         click: function() {
             viewspace.handleObjectClick(project);
+        },
+        finishedDragging: function() {
+            project.position = page.eltSpaceToZoomSpace({
+                x: viewspace.mousePosition.x / page.viewport.zoom,
+                y: viewspace.mousePosition.y / page.viewport.zoom
+            });
+            project.ref.update({
+                position: project.position
+            });
         }
     });
 
@@ -861,12 +933,41 @@ Page.prototype.addCircle = function(position, data, callbacks) {
 
 function bindProjectElementEvents(element, data, callbacks) {
     var $element = $(element);
+    
+    var itemHoldTimeoutId = null;
 
-    $element.click(function() {
+    $element.mousedown(function() {
+        console.log('mousedown on project');
+        itemHoldTimeoutId = window.setTimeout(function() {
+            viewspace.setDraggingObject(element, data, {
+            });
+        }, 300);
+    }).mouseup(function() {
+        console.log('mouseup on project');
+        if (!viewspace.draggingState.isDraggingObject) {
+            if (itemHoldTimeoutId !== null) {
+                window.clearTimeout(itemHoldTimeoutId);
+                if (callbacks.click != undefined) {
+                    callbacks.click();
+                }
+                itemHoldTimeoutId = null;
+            }
+        } else {
+            viewspace.clearObjectDrag();
+            if (itemHoldTimeoutId !== null) {
+                // update project position in db??
+                if (callbacks.finishedDragging != undefined) {
+                    callbacks.finishedDragging();
+                }
+            }
+        }
+    })
+
+    /*$element.click(function() {
         if (callbacks.click != undefined) {
             callbacks.click();
         }
-    }).on("dblclick", function() {
+    })*/.on("dblclick", function() {
         if (viewspace.itemClickTimeoutEnabled) {
             window.clearTimeout(viewspace.itemClickTimeoutId);
             viewspace.itemClickTimeoutEnabled = false;

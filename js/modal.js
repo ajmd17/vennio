@@ -12,13 +12,37 @@ function Modal(title, content, buttons) {
             "opacity": 0
         });
 
-    var $modalBottom = $("<div>")
-        .addClass("bottom");
+    var $modalTop = $("<div>");
 
-    var $modalButtons = $("<div>")
-        .addClass("buttons");
-    
+    if (title !== undefined && title !== null && title.length != 0) {
+        $modalTop.addClass("modal-top")
+            .append($("<i>")
+                .addClass("fa fa-times")
+                .css({
+                    "font-size": "20px",
+                    "float": "left",
+                    "position": "absolute",
+                    "margin-left": "12px",
+                    "cursor": "pointer",
+                    "vertical-align": "middle",
+                    "line-height": "40px"
+                })
+                .click(function() {
+                    modal.hide();
+                }))
+            .append($("<h3>")
+                .addClass("modal-title")
+                .append(this.title));
+    }
+
+    var $modalBottom = $("<div>");
+
     if (buttons !== undefined && buttons.length != 0) {
+        $modalBottom.addClass("bottom");
+
+        var $modalButtons = $("<div>")
+            .addClass("buttons");
+
         for (var i = 0; i < buttons.length; i++) {
             (function(index) {
                 var buttonObject = buttons[index];
@@ -54,25 +78,7 @@ function Modal(title, content, buttons) {
         })
         .append($("<div>")
             .addClass("modal")
-            .append($("<div>")
-                .addClass("modal-top")
-                .append($("<i>")
-                    .addClass("fa fa-times")
-                    .css({
-                        "font-size": "20px",
-                        "float": "left",
-                        "position": "absolute",
-                        "margin-left": "12px",
-                        "cursor": "pointer",
-                        "vertical-align": "middle",
-                        "line-height": "40px"
-                    })
-                    .click(function() {
-                        modal.hide();
-                    }))
-                .append($("<h3>")
-                    .addClass("modal-title")
-                    .append(this.title)))
+            .append($modalTop)
             .append($("<hr>"))
             .append($("<div>")
                 .addClass("modal-body")

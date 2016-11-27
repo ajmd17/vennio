@@ -170,11 +170,6 @@ body {
     -moz-user-select: none;
     -webkit-user-select: none;
     user-select: none;
-    -ms-user-drag: none;
-    -moz-user-drag: none;
-    -webkit-user-drag: none;
-    user-drag: none;
-    pointer-events: none;
     cursor: default;
     text-align: center;
     vertical-align: middle;
@@ -659,6 +654,45 @@ body {
 }
 .checklist-item.checked .checkbox-icon {
     color: #2DB2EA;
+}
+
+.theme-selection-content h3 {
+    margin: 0;
+    padding: 4px 0;
+}
+.theme-selection-content hr {
+    margin: 8px 0;
+    padding: 0;
+    border: none;
+    border-bottom: 1px solid #D0D0D0;
+}
+.theme-selection {
+    list-style: none;
+    padding: 0;
+    margin: 0 auto;
+    display: table;
+}
+.theme-selection li {
+    display: inline-block;
+    border-radius: 50%;
+    margin: 4px;
+    width: 64px;
+    height: 64px;
+    overflow: hidden;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.2);
+    transition: box-shadow 0.5s ease-in-out;
+    cursor: pointer;
+}
+.theme-selection li:hover {
+    box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.4);
+}
+.theme-selection img {
+    width: 100%;
+    height: 100%;
+}
+.theme-selection a {
+    text-decoration: none;
+    color: #000;
 }
 
 

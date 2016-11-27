@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="UTF-8">
+        <title>Vennio</title>
+        <link href="favicon.ico" rel="icon" type="image/x-icon"/>
+        <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+        <link rel="stylesheet" href="css/font-awesome.min.css">
+        <link rel="stylesheet" href="css/btn.css">
+        <link rel="stylesheet" href="css/modal.css">
+        <link rel="stylesheet" href="css/tooltip.css">
+        <link rel="stylesheet" href="css/cal.css">
+        <link rel="stylesheet" href="css/clock.css">
+        <link rel="stylesheet" href="css/radial-menu.css">
+        <link rel="stylesheet" href="css/toast.css">
+        <link rel="stylesheet" href="css/styles.css">
+        <link rel="stylesheet" href="css/shapes.css">
+    </head>
+    <body>
+        <div id="login-window">
+            <img class="video-bg" src="img/poly.png">
+
+            <div class="login-window">
+                <h3>Login</h3>
+                <hr>
+                <div id="social-btns">
+                    <div class="social-login social-login-google">
+                        <i class="fa fa-google" aria-hidden="true" style="margin-right:4px;"></i>
+                        <span class="vr"></span>
+                        <div style="margin-left: 14px;display:inline;">Login using Google</div>
+                    </div>
+                    <div class="social-login social-login-facebook">
+                        <i class="fa fa-facebook" aria-hidden="true" style="margin-right:4px;"></i>
+                        <span class="vr"></span>
+                        <div style="margin-left: 14px;display:inline;">Login using Facebook</div>
+                    </div>
+                    <div class="social-login social-login-twitter">
+                        <i class="fa fa-twitter" aria-hidden="true" style="margin-right:4px;"></i>
+                        <span class="vr"></span>
+                        <div style="margin-left: 14px;display:inline;">Login using Twitter</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="after-login" style="display: none;">
+            <div class="titlebar">
+                <ul class="titlebar-ul">
+                    <li class="titlebar-li" id="brand">vennio</li>
+                    <!--<li class="titlebar-li"> <a id="menu-btn" href="#" class="fa fa-bars"></a> </li>-->
+                    <li class="titlebar-li">
+                        <ul id="top-breadcrums" class="breadcrum"></ul>
+                    </li>
+                    <li class="titlebar-li right">
+                        <a id="btn-view-alerts" class="fa fa-bell" href="#" aria-hidden="true"></a>
+                        <a id="settings-btn" class="fa fa-cog" href="#" aria-hidden="true"></a>
+                        <ul id="settings-menu" class="dropdown-menu" style="display: none;">
+                            <li id='preferences-menu-item'>Preferences...</li>
+                            <li><hr></li>
+                            <li>Log Out</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div id="main-container">
+                <div id="main-sidebar" class="sidebar" style="display: none; width: 0;">
+                    <div class="sidebar-title">
+                        Sidebar Title
+                    </div>
+                </div>
+                <div id="page-content" class="modal-background-blurred"></div>
+
+                <div class="floating-btn-wrapper">
+                    <!--<div class="floating-btn" id="btn-share-page">
+                        <i class="fa fa-share" aria-hidden="true"></i>
+                    </div>-->
+                    <div class="floating-btn" id="btn-select-theme">
+                        <i class="fa fa-paint-brush" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="js/external/jquery.min.js"></script>
+        <script>
+            if (!window.$) {
+                window.$ = window.jQuery = require("./js/external/jquery.min.js");
+            }
+        </script>
+        <script
+              src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+              integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+              crossorigin="anonymous"></script>
+        <script src="https://www.gstatic.com/firebasejs/3.5.3/firebase.js"></script>
+        <script src="js/external/randomColor.js"></script>
+        <script src="js/external/angular.min.js"></script>
+        <script src="js/external/angular-route.min.js"></script>
+
+        <script src="js/global-config.js"></script>
+        <script src="js/util.js"></script>
+        <script src="js/svg_objects.js"></script>
+        <script src="js/modal.js"></script>
+        <script src="js/tooltip.js"></script>
+        <script src="js/cal.js"></script>
+        <script src="js/clock.js"></script>
+        <script src="js/toast.js"></script>
+        <script src="js/theme.js"></script>
+        <script src="js/auth.js"></script>
+        <script src="js/project.js"></script>
+        <script src="js/project-functions.js"></script>
+        <script src="js/viewspace.js"></script>
+        <script src="js/page.js"></script>
+        <script src="js/app.js"></script>
+    </body>
+</html>

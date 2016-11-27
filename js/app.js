@@ -5,36 +5,9 @@ $(document).ready(function() {
         $(this).toggleClass('active');
         viewspace.toggleSidebar();
     });
-
-    $('#settings-btn').click(function() {
-        $(this).toggleClass('active');
-        $('#settings-menu').toggle();
-    });
-
-    $('#preferences-menu-item').click(function() {
-        $('#settings-btn').removeClass('active');
-        $('#settings-menu').hide();
-
-        var modal = new Modal('Preferences', '', [{
-            text: 'Apply',
-            type: 'primary',
-            click: function() {
-                modal.hide();
-            }
-        },
-        {
-            text: 'Cancel',
-            click: function() {
-                // hide the modal
-                modal.hide();
-            }
-        }]);
-
-        modal.show();
-    });
 });
 
-function setupEvent(project, projectDataRef, range) {
+function setupEvent(project, projectRef, range) {
     var isRecurring = (project.data.eventInfo.recurringDays !== undefined && 
         project.data.eventInfo.recurringDays.length !== 0);
     // check date to see it is in range
@@ -46,7 +19,7 @@ function setupEvent(project, projectDataRef, range) {
     if (!isRecurring && !project.data.eventInfo.acknowledged) {
         // simple one-time event
         if (msToEvent <= range) {
-            createEventReminder(project, projectDataRef);
+            createEventReminder(project, projectRef);
         }
     } else if (isRecurring) {
         // check for recurring days and set up events for them
@@ -73,7 +46,7 @@ function setupEvent(project, projectDataRef, range) {
                             var overdueDate = new Date(projectDate.getTime());
                             overdueDate.setDate(nowCounter.getDate());
                             projectOverdue.data.eventInfo.date = overdueDate.getTime();
-                            createEventReminder(projectOverdue, projectDataRef);
+                            createEventReminder(projectOverdue, projectRef);
                         })();
                         
                         // break after 1 occurance of the event
@@ -101,7 +74,7 @@ function setupEvent(project, projectDataRef, range) {
                         var futureProject = {};
                         copyProperties(futureProject, project);
                         futureProject.data.eventInfo.date = futureDate.getTime();
-                        createEventReminder(futureProject, projectDataRef);
+                        createEventReminder(futureProject, projectRef);
                     }
                 }
             });
@@ -178,7 +151,7 @@ function createEventReminder(project, ref) {
                     project.data.eventInfo.acknowledged = true;
                     // set last acknowledged day to be the timestamp
                     project.data.eventInfo.lastAcknowledged = new Date().getTime();
-                    ref.update({
+                    ref.child('data').update({
                         eventInfo: project.data.eventInfo
                     });
 
@@ -288,9 +261,132 @@ function handleObjectLoseFocus(element, data, callbacks) {
 }
 
 function afterLogin() {
+    console.log('afterLogin()');
+
+    // set up an interval to change the titlebar color based on the time of day
+    window.setInterval(function() {
+        /*var amt;
+        $('.titlebar').css({
+            "background-color": randomColor()
+        });*/
+    }, 1000 * 5 /* every 5 seconds */);
+
     // show the main content
     $('#login-window').remove();
     $('#after-login').show();
+
+    $('#btn-view-alerts').click(function() {
+
+    });
+
+    $('#settings-btn').click(function() {
+        $(this).toggleClass('active');
+        $('#settings-menu').toggle();
+    });
+
+    $('#preferences-menu-item').click(function() {
+        $('#settings-btn').removeClass('active');
+        $('#settings-menu').hide();
+
+        var modal = new Modal('Preferences', '', [{
+            text: 'Apply',
+            type: 'primary',
+            click: function() {
+                modal.hide();
+            }
+        },
+        {
+            text: 'Cancel',
+            click: function() {
+                // hide the modal
+                modal.hide();
+            }
+        }]);
+
+        modal.show();
+    });
+
+    $('#btn-select-theme').click(function() {
+
+        var modal = null;
+
+        var $themeSelectionContent = $('<div>')
+            .addClass('theme-selection-content');
+        var $staticThemeList = $('<ul>')
+            .addClass('theme-selection');
+        var $dynamicThemeList = $('<ul>')
+            .addClass('theme-selection');
+
+        var staticThemes = [];
+        var dynamicThemes = [];
+
+        for (theme in BUILTIN_THEMES) {
+            var previousTheme = viewspace.currentPage.theme;
+            (function(thisTheme) {
+                if (thisTheme.previewUrl !== undefined && thisTheme.previewUrl !== null && thisTheme.previewUrl.length !== 0) {
+                    if (thisTheme.backgroundType == BackgroundType.IMAGE) {
+                        staticThemes.push(thisTheme);
+                    } else if (thisTheme.backgroundType == BackgroundType.VIDEO) {
+                        dynamicThemes.push(thisTheme);
+                    }
+                }
+            })(BUILTIN_THEMES[theme]);
+        }
+
+        var appendThemePreview = function(thisTheme, $themeListElement) {
+            $themeListElement.append($('<li>')
+                .addClass('theme-selection-item')
+                .append($('<img src="' + thisTheme.previewUrl + '">'))
+                .hover(function() {
+                    viewspace.currentPage.setTheme(thisTheme);
+                }, function() {
+                    viewspace.currentPage.setTheme(previousTheme);
+                })
+                .click(function() {
+                    viewspace.currentPage.setTheme(thisTheme);
+                    previousTheme = thisTheme;
+                    modal.hide();
+
+                    // update in database
+                    var dataRef = null;
+                    if (viewspace.currentPage.pageProject !== undefined && viewspace.currentPage.pageProject !== null) {
+                        dataRef = viewspace.currentPage.pageProject.ref
+                            .child('data');
+                    } else {
+                        dataRef = database.ref('users')
+                            .child(loggedUser.key);
+                    }
+                    dataRef.update({
+                        theme: thisTheme
+                    });
+                }));
+        };
+
+        staticThemes.forEach(function(thisTheme) {
+            appendThemePreview(thisTheme, $staticThemeList);
+        });
+
+        dynamicThemes.forEach(function(thisTheme) {
+            appendThemePreview(thisTheme, $dynamicThemeList);
+        });
+
+        $themeSelectionContent
+            .append($('<h3>')
+                .append('Static Themes'))
+            .append($('<hr>'))
+            .append($staticThemeList);
+
+        if (dynamicThemes.length != 0) {
+            $themeSelectionContent.append(
+                $('<h3>')
+                    .append('Dynamic Themes'))
+                .append($('<hr>'))
+                .append($dynamicThemeList);
+        }
+
+        modal = new Modal('', $themeSelectionContent);
+        modal.show();
+    });
 
     // scan for events that are in range
     findEventsInRange(EVENT_SEARCH_RANGE);
@@ -311,12 +407,12 @@ function afterLogin() {
     })
     .click(function(e) {
         var $target = $(e.target);
-        
         if (!$target.is('.project-circle') && !$('.project-circle').has($target).length) {
             viewspace.objectLoseFocus();
         }
     })
     .on('mouseup', function(e) {
+        console.log('mouseup on document');
         window.clearTimeout(viewspace.mouseHoldId);
 
         if (viewspace.showRipple && viewspace.dragTime == 0) {
@@ -339,6 +435,8 @@ function afterLogin() {
 
         $(viewspace.currentPage.element).css('cursor', 'auto');
 
+        // clear dragging, panning, etc.
+        viewspace.clearObjectDrag();
         viewspace.isPanning = false;
         viewspace.dragTime = 0;
         viewspace.showRipple = false;

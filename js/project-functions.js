@@ -3,9 +3,7 @@
 var projectFunctions = {
     group: {
         createContent: function(data, viewport, isNewlyCreated) {
-            var SIZE = (data.size != undefined) ? data.size : 200;
-            var ZOOM = viewport.zoom;
-            var SIZE_ZOOMED = SIZE * ZOOM;
+            var sizeZoomed = calculateZoomedSize(data, viewport);
 
             if (isNewlyCreated) {
                 return $('<div>')
@@ -13,7 +11,7 @@ var projectFunctions = {
                     .append($('<input type="text">')
                         .addClass('project-circle-text-edit')
                         .css({
-                            "font-size": roundTo(SIZE_ZOOMED / 10, 1).toString() + 'px'
+                            "font-size": roundTo(sizeZoomed / 10, 1).toString() + 'px'
                         })
                         .val(!data.name ? '' : data.name)
                         .on('keyup', function(e) {
@@ -29,7 +27,7 @@ var projectFunctions = {
                     .append($('<div>')
                         .addClass('project-title-div')
                         .css({
-                            "font-size": roundTo(SIZE_ZOOMED / 10, 1).toString() + 'px'
+                            "font-size": roundTo(sizeZoomed / 10, 1).toString() + 'px'
                         })
                         .append(data.name));
             }
@@ -39,9 +37,13 @@ var projectFunctions = {
             var $element = $(element);
             var $holder  = $element.find('.project-circle-text');
             if ($holder.length != 0) {
-                var name  = $holder.find('.project-title-div').text();
+                var $projectTitleDiv = $holder.find('.project-title-div');
+                var name = $projectTitleDiv.text();
                 var $edit = $('<input type="text">')
                     .addClass('project-circle-text-edit')
+                    .css({
+                        "font-size": $projectTitleDiv.css('font-size')
+                    })
                     .val(name)
                     .on('keyup', function(e) {
                         if (e.keyCode == 13) {
@@ -60,6 +62,8 @@ var projectFunctions = {
             var $element = $(element);
             var $txt     = $element.find('.project-circle-text');
             var $edit    = $txt.find('input');
+
+            var fontSize = $edit.css('font-size');
 
             if ($edit.val() == undefined || $edit.val().trim().length == 0) {
                 // remove object if you don't enter a value the first time
@@ -80,11 +84,15 @@ var projectFunctions = {
                 }
             } else {
                 var value = $edit.val();
+                var isNewElement = (element.nameBefore == undefined) || (element.nameBefore.length == 0);
                 element.nameBefore = value;
 
                 // convert text element to div
                 var $replacementDiv = $('<div>')
                     .addClass('project-title-div')
+                    .css({
+                        "font-size": fontSize
+                    })
                     .append(element.nameBefore);
 
                 $txt.append($replacementDiv);
@@ -95,9 +103,15 @@ var projectFunctions = {
 
                 // set property on the project 'name'.
                 data.name = value;
-
-                if (callbacks.success != undefined) {
-                    callbacks.success(element, data);
+                
+                if (isNewElement) {
+                    if (callbacks.success != undefined) {
+                        callbacks.success(element, data);
+                    }
+                } else {
+                    if (callbacks.update != undefined) {
+                        callbacks.update(element, data);
+                    }
                 }
             }
         },
