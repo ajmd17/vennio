@@ -54,7 +54,7 @@ body {
     border-color: #FE8067;
 }
 
-.right {
+#top-bar-content .right {
     float: right;
     display: inline-block;
     clear: both;
@@ -81,7 +81,7 @@ body {
     width: 100%;
 }
 
-#landing-page-hero {
+.landing-page-hero {
     z-index: 2;
     position: absolute;
     width: 600px;
@@ -99,48 +99,50 @@ body {
     background-color: rgba(255, 255, 255, 0.8);
     box-shadow: 1px 2px 10px 1px rgba(63, 32, 25, 0.3);
 }
-#landing-page-hero h3 {
+.landing-page-hero h3 {
     color: #FE8067;
     text-align: center;
     text-shadow: 1px 2px 2px rgba(0, 0, 0, 0.2);
     font-size: 40px;
     margin: 25px 10px;
 }
-#landing-page-hero hr {
+.landing-page-hero hr {
     border: none;
     border-bottom: 2px solid #FE8067;
     margin: 0 25px;
 }
-#landing-page-hero p {
+.landing-page-hero p {
     text-align: center;
     font-size: 20px;
     margin: 25px 10px;
 }
-#landing-page-hero p br {
+.landing-page-hero p br {
     line-height: 30px;
 }
-#landing-page-hero #hero-bottom {
-    position: relative;
-    padding: 8px;
+.landing-page-hero .hero-bottom {
+    position: absolute;
     display: block;
+    width: 100%;
+    bottom: 0;
+    padding: 8px 0;
 }
-#landing-page-hero #hero-bottom .buttons {
+.landing-page-hero .hero-bottom .buttons {
     display: table;
     margin: 0 auto;
 }
 
 @media (max-width: 600px) {
-    #landing-page-hero {
+    .landing-page-hero {
         width : 85%;
         height: 320px;
     }
-    #landing-page-hero h3 {
+    .landing-page-hero h3 {
         font-size: 20px;
     }
-    #landing-page-hero p {
+    .landing-page-hero p {
         font-size: 18px;
     }
-    #landing-page-hero p br {
+    .landing-page-hero p br {
         line-height: 40px;
     }
 

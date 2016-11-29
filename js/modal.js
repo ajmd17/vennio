@@ -1,7 +1,13 @@
-function Modal(title, content, buttons) {
+function Modal(title, content, buttons, callbacks) {
     this.title = title;
     this.content = content;
     this.buttons = buttons;
+
+    if (callbacks !== undefined) {
+        this.callbacks = callbacks;
+    } else {
+        this.callbacks = {};
+    }
 
     var modal = this;
 
@@ -109,10 +115,16 @@ Modal.prototype.show = function() {
     $body.append(this.$modalWindowElement);
     this.$modalWindowElement.animate({
         "opacity": 1
-    }, 200);
+    }, 200, function() {
+        if (modal.callbacks.show !== undefined) {
+            modal.callbacks.show();
+        }
+    });
 };
 
 Modal.prototype.hide = function() {
+    var modal = this;
+
     $(".modal-background-blurred").css("filter", "");
 
     this.$backgroundElement.unbind();
@@ -126,6 +138,9 @@ Modal.prototype.hide = function() {
     this.$modalWindowElement.animate({
         "opacity": 0
     }, 200, function() {
+        if (modal.callbacks.hide !== undefined) {
+            modal.callbacks.hide();
+        }
         $(this).remove();
     });
 };

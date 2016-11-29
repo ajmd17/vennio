@@ -1,0 +1,49 @@
+<div class="titlebar">
+    <ul class="titlebar-ul">
+        <li class="titlebar-li" id="brand">vennio</li>
+        <!--<li class="titlebar-li"> <a id="menu-btn" href="#" class="fa fa-bars"></a> </li>-->
+        <li class="titlebar-li">
+            <ul id="top-breadcrums" class="breadcrum"></ul>
+        </li>
+        <li class="titlebar-li right">
+            <a id="btn-view-alerts" class="fa fa-bell" href="#" aria-hidden="true"></a>
+            <a id="settings-btn" class="fa fa-cog" href="#" aria-hidden="true"></a>
+            <ul id="settings-menu" class="dropdown-menu" style="display: none;">
+                <li id='preferences-menu-item'>Preferences...</li>
+                <li><hr></li>
+                <li>Log Out</li>
+            </ul>
+        </li>
+    </ul>
+</div>
+
+<div id="main-container">
+    
+    <div id="page-content" class="modal-background-blurred">
+        <div ng-show="isSignedIn" ng-include="'page-content.html'"></div>
+        <!--<div ng-hide="isSignedIn">
+            <div class="landing-page-hero modal-background-blurred">
+                <h3>You are not logged in in</h3>
+                <hr>
+                <p>
+                    You must be logged in to view this page.
+                </p>
+
+                <div class="hero-bottom">
+                    <div class="buttons">
+                        <button class="btn primary" ng-click="redirectToLoginPage()">Log in</button>
+                    </div>
+                </div>
+            </div>
+        </div>-->
+    </div>
+
+    <div class="floating-btn-wrapper">
+        <!--<div class="floating-btn" id="btn-share-page">
+            <i class="fa fa-share" aria-hidden="true"></i>
+        </div>-->
+        <div class="floating-btn" id="btn-select-theme">
+            <i class="fa fa-paint-brush" aria-hidden="true"></i>
+        </div>
+    </div>
+</div>

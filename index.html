@@ -6,15 +6,16 @@
         <link rel="stylesheet" href="css/font-awesome.min.css">
         <link rel="stylesheet" href="css/btn.css">
         <link rel="stylesheet" href="css/modal.css">
+        <link rel="stylesheet" href="css/tooltip.css">
+        <link rel="stylesheet" href="css/cal.css">
+        <link rel="stylesheet" href="css/clock.css">
+        <link rel="stylesheet" href="css/radial-menu.css">
+        <link rel="stylesheet" href="css/toast.css">
         <link rel="stylesheet" href="css/landing.css">
         <link rel="stylesheet" href="css/styles.css">
 
-        <script src="js/external/angular.min.js"></script>
-        <script src="js/external/angular-route.min.js"></script>
-    </head>
+        <title>Vennio</title>
 
-    <body ng-controller="MainController">
-        <div ng-view></div>
 
         <script src="js/external/jquery.min.js"></script>
         <script>
@@ -22,16 +23,58 @@
                 window.$ = window.jQuery = require("./js/external/jquery.min.js");
             }
         </script>
-        <script
-              src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
-              integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
-              crossorigin="anonymous"></script>
+        <script src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+                integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+                crossorigin="anonymous">
+        </script>
+        <script src="js/external/angular.min.js"></script>
+        <script src="js/external/angular-route.min.js"></script>
         <script src="https://www.gstatic.com/firebasejs/3.5.3/firebase.js"></script>
+		<script src="https://cdn.firebase.com/libs/angularfire/2.1.0/angularfire.min.js"></script>
+    </head>
+
+    <body ng-controller="MainController">
+        <div ng-view></div>
+
+    
+
+        
+        <script>
+            // initialize firebase
+            var config = {
+                apiKey: "AIzaSyCf8zuhDihw-N4GEQdY-JvDilqj8iOkds0",
+                authDomain: "vixen-a6ff1.firebaseapp.com",
+                databaseURL: "https://vixen-a6ff1.firebaseio.com",
+                storageBucket: "",
+                messagingSenderId: "277084801664"
+            };
+            firebase.initializeApp(config);
+        </script>
+        
         <script src="js/external/randomColor.js"></script>
 
         <script src="js/util.js"></script>
         <script src="js/modal.js"></script>
+        <script src="js/global-config.js"></script>
+        <script src="js/svg_objects.js"></script>
+        <script src="js/tooltip.js"></script>
+        <script src="js/cal.js"></script>
+        <script src="js/clock.js"></script>
+        <script src="js/toast.js"></script>
 
         <script src="route.js"></script>
+
+        <!-- Services -->
+        <script src="services/Extensions.js"></script>
+        <script src="services/Auth.js"></script>
+        <script src="services/ProjectFunctions.js"></script>
+        <script src="services/Breadcrumbs.js"></script>
+        <script src="services/Event.js"></script>
+        <script src="services/RadialMenu.js"></script>
+        <script src="services/Viewspace.js"></script>
+
+        <!-- Controllers -->
+        <script src="controllers/HomeController.js"></script>
+        <script src="controllers/LandingPageController.js"></script>
     </body>
 </html>

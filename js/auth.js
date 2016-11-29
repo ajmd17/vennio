@@ -4,16 +4,6 @@ var auth = null;
 var database = null;
 
 $(document).ready(function() {
-    // initialize firebase
-    var config = {
-        apiKey: "AIzaSyCf8zuhDihw-N4GEQdY-JvDilqj8iOkds0",
-        authDomain: "vixen-a6ff1.firebaseapp.com",
-        databaseURL: "https://vixen-a6ff1.firebaseio.com",
-        storageBucket: "",
-        messagingSenderId: "277084801664"
-    };
-    firebase.initializeApp(config);
-
     auth = new firebase.auth();
     database = new firebase.database();
 

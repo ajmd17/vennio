@@ -9,6 +9,20 @@
     </head>
 
     <body>-->
+        <div id="login-modal-content" style="display: none">
+            <div ng-click="loginWithGoogle()" class="social-login social-login-google">
+                <i class="fa fa-google" aria-hidden="true" style="margin-right:4px;"></i>
+                <span class="vr"></span>
+                <div style="margin-left:14px;display:inline;">Log in with Google</div>
+            </div>
+            <div ng-click="loginWithFacebook()" class="social-login social-login-facebook">
+                <i class="fa fa-facebook" aria-hidden="true" style="margin-right:4px;"></i>
+                <span class="vr"></span>
+                <div style="margin-left:14px;display:inline">Log in with Facebook</div>
+            </div>
+        </div>
+
+
         <div id="landing-bg" class="modal-background-blurred">
             <canvas id="bg-canvas" width="200" height="200">
                 <!-- no HTML5 canvas support -->
@@ -24,7 +38,7 @@
             </div>
         </div>
 
-        <div id="landing-page-hero" class="modal-background-blurred">
+        <div class="landing-page-hero modal-background-blurred">
             <h3>Welcome to your world.</h3>
             <hr>
             <p>
@@ -32,7 +46,7 @@
                 It's versatile, elegant and natural.
             </p>
 
-            <div id="hero-bottom">
+            <div class="hero-bottom">
                 <div class="buttons">
                     <button class="btn primary">Learn More</button>
                 </div>

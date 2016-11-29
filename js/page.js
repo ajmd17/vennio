@@ -697,14 +697,11 @@ Page.prototype.loadTheme = function() {
     var $background = null;
 
     if ($videoWrapper.length > 0) {
-        switch (this.theme.backgroundType) {
-        case BackgroundType.VIDEO:
+        if (this.theme.isVideo) {
             $background = $('<video playsinline autoplay muted loop>')
                 .append($('<source src="' + this.theme.backgroundUrl + '" type="video/mp4">'));
-            break;
-        case BackgroundType.IMAGE:
+        } else {
             $background = $('<img src="' + this.theme.backgroundUrl + '">');
-            break;
         }
 
         $background.addClass('video-bg');

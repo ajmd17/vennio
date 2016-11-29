@@ -324,10 +324,10 @@ function afterLogin() {
             var previousTheme = viewspace.currentPage.theme;
             (function(thisTheme) {
                 if (thisTheme.previewUrl !== undefined && thisTheme.previewUrl !== null && thisTheme.previewUrl.length !== 0) {
-                    if (thisTheme.backgroundType == BackgroundType.IMAGE) {
-                        staticThemes.push(thisTheme);
-                    } else if (thisTheme.backgroundType == BackgroundType.VIDEO) {
+                    if (thisTheme.isVideo) {
                         dynamicThemes.push(thisTheme);
+                    } else {
+                        staticThemes.push(thisTheme);
                     }
                 }
             })(BUILTIN_THEMES[theme]);
