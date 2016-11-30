@@ -1,4 +1,4 @@
-app.factory('Breadcrumbs', function() {
+app.factory('Breadcrumbs', function($rootScope, $location) {
     var Breadcrumbs = {
         update: function(viewspace) {
             var $topBreadcrumbs = $('#top-breadcrums');
@@ -17,7 +17,28 @@ app.factory('Breadcrumbs', function() {
                     (function(thisPage) {
                         $a.click(function() {
                             // navigate to parent page
-                            viewspace.setCurrentPage(thisPage);
+                            //viewspace.setCurrentPage(thisPage);
+
+                            if (thisPage.pageProject !== undefined && thisPage.pageProject !== null) {
+                                var pathParts = [project.key];
+                                var page = viewspace.getCurrentPage();
+                                while (page !== undefined && page !== null) {
+                                    if (page.pageProject !== undefined && page.pageProject !== null) {
+                                        // add firebase key
+                                        pathParts.push(page.pageProject.key);
+                                    }
+                                    page = page.parentPage;
+                                }
+
+                                console.log('pathParts = ', pathParts);
+                                var path = '/home';
+                                for (var i = pathParts.length - 1; i >= 0; i--) {
+                                    path += '/' + pathParts[i].toString();
+                                }
+                                
+                                $location.path(path);
+                                $rootScope.$apply();
+                            }
                         });
                     })(page);
                 }

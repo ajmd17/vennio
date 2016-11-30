@@ -1,4 +1,4 @@
-app.factory('Viewspace', function(Auth, ProjectFunctions, Breadcrumbs, Extensions, RadialMenu) {
+app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions, Breadcrumbs, Extensions, RadialMenu) {
 
     /** page.js */
     var ACTION_MENU_ITEMS = [
@@ -684,28 +684,17 @@ app.factory('Viewspace', function(Auth, ProjectFunctions, Breadcrumbs, Extension
         },
 
         init: function(page) {
-            // create root projects page
-            var $pageContent = $('<div class="page">')
-                .append('<div class="video-wrapper">');
-
             if (page !== undefined && page !== null) {
-
                 this.currentPage = page;
-                console.log('page = ', page);
-
-                this.currentPage.loadProjectsFromDatabase(true);
-                this.currentPage.bindEvents();
-                this.currentPage.show();
             } else {
-                
-                this.currentPage = new Page('Home', $pageContent,
-                    Auth.getUser().theme, pageProject, Auth.getUser().viewport);
-
+                // create root projects page
+                this.currentPage = this.createHomePage();
                 this.currentPage.parentPage = null;
-                this.currentPage.loadProjectsFromDatabase(true);
-                this.currentPage.bindEvents();
-                this.currentPage.show();
             }
+
+            this.currentPage.loadProjectsFromDatabase(true);
+            this.currentPage.bindEvents();
+            this.currentPage.show();
 
             // update breadcrumbs
             Breadcrumbs.update(this);
@@ -813,7 +802,30 @@ app.factory('Viewspace', function(Auth, ProjectFunctions, Breadcrumbs, Extension
 
                             // TODO move this to project-functions.js
                             if (project.data.type === 'group' || project.data.type === 'project' || project.data.type === 'event') {
-                                // open the clicked project page
+                                // now that I have dynamic routing I will just change the route.
+                                // the other way was probably more efficient, but this is how it has to be 
+                                // in order to change the url.
+                                var pathParts = [project.key];
+                                var page = viewspace.getCurrentPage();
+                                while (page !== undefined && page !== null) {
+                                    if (page.pageProject !== undefined && page.pageProject !== null) {
+                                        // add firebase key
+                                        pathParts.push(page.pageProject.key);
+                                    }
+                                    page = page.parentPage;
+                                }
+
+                                console.log('pathParts = ', pathParts);
+                                var path = '/home';
+                                for (var i = pathParts.length - 1; i >= 0; i--) {
+                                    path += '/' + pathParts[i].toString();
+                                }
+                                
+                                $location.path(path);
+                                $rootScope.$apply();
+
+
+                               /* // open the clicked project page
                                 var pageBefore = viewspace.currentPage;
                                 pageBefore.unbindEvents();
                                 pageBefore.clearProjectElements();
@@ -831,7 +843,7 @@ app.factory('Viewspace', function(Auth, ProjectFunctions, Breadcrumbs, Extension
                                 viewspace.currentPage.bindEvents();
                                 viewspace.currentPage.show();
 
-                                Breadcrumbs.update(viewspace);
+                                Breadcrumbs.update(viewspace);*/
                             } else {
                                 console.log('Not implemented for type ' + project.data.type);
                             }

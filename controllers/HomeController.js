@@ -176,14 +176,13 @@ app.controller('HomeController', function($scope, $location, $routeParams, Auth,
                 // use the breadcrumbs to go back
                 projectPage.loadProjectsFromDatabase(false);
 
-                (function loadPage(i) {
+                (function loadPageFromUrl(i) {
                     projectRef = projectRef.child(i == 0 ? 'projects' : 'subnodes')
                         .child(projectKeyArray[i]);
 
                     projectRef.once('value', function(snapshot) {
-                        var snapshotValue = snapshot.val();
-                        if (snapshotValue !== undefined && snapshotValue !== null) {
-                            var loadedProject = snapshotValue;
+                        var loadedProject = snapshot.val();
+                        if (loadedProject !== undefined && loadedProject !== null) {
                             // set up the ties back to the database
                             loadedProject.ref = projectRef;
                             loadedProject.key = projectRef.key;
@@ -195,14 +194,12 @@ app.controller('HomeController', function($scope, $location, $routeParams, Auth,
                                 // use the breadcrumbs to go back
                                 projectPage.loadProjectsFromDatabase(false);
                                 // do next
-                                loadPage(i + 1);
+                                loadPageFromUrl(i + 1);
                             } else {
                                 // no more projects to load
                                 // now load the project on the Viewspace service.
                                 Viewspace.init(projectPage);
                             }
-                            
-                            console.log('snapshotValue: ', snapshotValue);
                         } else {
                             console.log('could not load snapshotValue for projectRef: ', projectRef);
                         }
@@ -256,6 +253,4 @@ app.controller('HomeController', function($scope, $location, $routeParams, Auth,
             Viewspace.showRipple = false;
         });
     }
-
-    
 });
