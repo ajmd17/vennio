@@ -22,6 +22,12 @@ app.factory('Viewspace', function(Auth, ProjectFunctions, Breadcrumbs, Extension
         }
     ];
 
+    /** 
+     * Page class.
+     * Holds the projects in a local array, as well as other 
+     * info such as theme and viewport. Also, the element object 
+     * is a data member.
+     */
     function Page(name, element, theme, pageProject, viewport) {
         this.name = name;
         this.element = element;
@@ -406,6 +412,15 @@ app.factory('Viewspace', function(Auth, ProjectFunctions, Breadcrumbs, Extension
     };
 
     /** 
+     * Adds a project object to the local list of projects.
+     * Does not update in the database because it is assumed that it is already
+     * loaded from the database.
+     */
+    Page.prototype.addLoadedProject = function(project) {
+        this.projects.push(project);
+    };
+
+    /** 
      * Adds a project object to the local list of projects, as well as
      * updates the database with the project object
      */
@@ -495,7 +510,8 @@ app.factory('Viewspace', function(Auth, ProjectFunctions, Breadcrumbs, Extension
                 project.ref.update({
                     position: project.position
                 });
-            }
+            },
+            loseFocus: function() { Viewspace.objectLoseFocus(); }
         });
 
         // set element properties
@@ -515,7 +531,7 @@ app.factory('Viewspace', function(Auth, ProjectFunctions, Breadcrumbs, Extension
     };
 
     /** Load projects from database into the array */
-    Page.prototype.loadProjectsFromDatabase = function() {
+    Page.prototype.loadProjectsFromDatabase = function(loadElements) {
         var projectsRef = null;
         if (this.pageProject !== undefined && this.pageProject !== null) {
             projectsRef = this.pageProject.ref
@@ -535,13 +551,16 @@ app.factory('Viewspace', function(Auth, ProjectFunctions, Breadcrumbs, Extension
                     for (var i = 0; i < keys.length; i++) {
                         (function(key) {
                             var project = snapshotValue[key];
-                            project.key = key;
+                            project.key = key; // store the firebase key in the object
                             project.ref = projectsRef.child(key);
                             page.projects.push(project);
                         })(keys[i]);
                     }
                 }
-                page.loadProjectElements();
+
+                if (loadElements) {
+                    page.loadProjectElements();
+                }
             });
         })(this);
     };
@@ -621,106 +640,6 @@ app.factory('Viewspace', function(Auth, ProjectFunctions, Breadcrumbs, Extension
         $projectCircleElement.attr('tabindex', -1).focus();
     };
 
-    function bindProjectElementEvents(element, data, callbacks) {
-        var $element = $(element);
-        
-        var itemHoldTimeoutId = null;
-
-        $element.mousedown(function() {
-            itemHoldTimeoutId = window.setTimeout(function() {
-                Viewspace.setDraggingObject(element, data, {
-                });
-            }, 300);
-        }).mouseup(function() {
-            if (!Viewspace.draggingState.isDraggingObject) {
-                if (itemHoldTimeoutId !== null) {
-                    window.clearTimeout(itemHoldTimeoutId);
-                    if (callbacks.click != undefined) {
-                        callbacks.click();
-                    }
-                    itemHoldTimeoutId = null;
-                }
-            } else {
-                Viewspace.clearObjectDrag();
-                if (itemHoldTimeoutId !== null) {
-                    // update project position in db??
-                    if (callbacks.finishedDragging != undefined) {
-                        callbacks.finishedDragging();
-                    }
-                }
-            }
-        }).on("dblclick", function() {
-            if (Viewspace.itemClickTimeoutEnabled) {
-                window.clearTimeout(Viewspace.itemClickTimeoutId);
-                Viewspace.itemClickTimeoutEnabled = false;
-            }
-            // re-focus this object for editing.
-            Viewspace.setFocusedObject(element, data, callbacks);
-
-            // call the dedicated doubleClick function for this
-            // project type (if it exists)
-            (function(projectTypeFunctions) {
-                if (projectTypeFunctions !== undefined) {
-                    if (projectTypeFunctions.doubleClick !== undefined) {
-                        projectTypeFunctions.doubleClick(element, data, callbacks);
-                    }
-                } else {
-                    console.log('No functionality for type: "' + data.type.toString() + '"');
-                }
-            })(ProjectFunctions[data.type]);
-        });
-    }
-
-    function createActionsMenu() {
-        var $actionsMenu = $('<div>')
-            .addClass('project-actions-menu');
-        var $actionsMenuItems = $('<ul>');
-
-        for (var i = 0; i < ACTION_MENU_ITEMS.length; i++) {
-            (function(menuItem) {
-                $actionsMenuItems.append($('<li>')
-                    .append('<img src="' + menuItem.imgUrl + '">')
-                    .click(function(e) {
-                        // do not bubble up the DOM
-                        e.stopPropagation();
-
-                        menuItem.click(/* ... */);
-                    }));
-            })(ACTION_MENU_ITEMS[i]);
-        }
-
-        $actionsMenu.append($actionsMenuItems);
-
-        return $actionsMenu;
-    }
-
-    function createProjectContent(data, viewport, isNewlyCreated) {
-        return (function(projectTypeFunctions) {
-            if (projectTypeFunctions !== undefined) {
-                if (projectTypeFunctions.createContent !== undefined) {
-                    return projectTypeFunctions.createContent(data, viewport, isNewlyCreated);
-                }
-            } else {
-                console.log('No functionality for type: "' + data.type.toString() + '"');
-            }
-            return null;
-        })(ProjectFunctions[data.type]);
-    }
-
-
-    function handleObjectLoseFocus(element, data, callbacks) {
-        (function(projectTypeFunctions) {
-            if (projectTypeFunctions !== undefined) {
-                if (projectTypeFunctions.loseFocus !== undefined) {
-                    return projectTypeFunctions.loseFocus(element, data, callbacks);
-                }
-            } else {
-                console.log('No functionality for type: "' + data.type.toString() + '"');
-            }
-            return null;
-        })(ProjectFunctions[data.type]);
-    }
-
 
     /** viewspace.js */
     var Viewspace = {
@@ -764,21 +683,50 @@ app.factory('Viewspace', function(Auth, ProjectFunctions, Breadcrumbs, Extension
             }
         },
 
-        init: function() {
+        init: function(page) {
             // create root projects page
             var $pageContent = $('<div class="page">')
                 .append('<div class="video-wrapper">');
-                
-            this.currentPage = new Page('Home', $pageContent,
-                Auth.getUser().theme, null, Auth.getUser().viewport);
 
-            this.currentPage.loadProjectsFromDatabase();
-            this.currentPage.parentPage = null;
-            this.currentPage.bindEvents();
-            this.currentPage.show();
+            if (page !== undefined && page !== null) {
+
+                this.currentPage = page;
+                console.log('page = ', page);
+
+                this.currentPage.loadProjectsFromDatabase(true);
+                this.currentPage.bindEvents();
+                this.currentPage.show();
+            } else {
+                
+                this.currentPage = new Page('Home', $pageContent,
+                    Auth.getUser().theme, pageProject, Auth.getUser().viewport);
+
+                this.currentPage.parentPage = null;
+                this.currentPage.loadProjectsFromDatabase(true);
+                this.currentPage.bindEvents();
+                this.currentPage.show();
+            }
 
             // update breadcrumbs
             Breadcrumbs.update(this);
+        },
+
+        createPage: function(project, parentPage) {
+            var page = new Page(
+                project.data.name,
+                $('<div class="page">')
+                    .append('<div class="video-wrapper">'),
+                project.data.theme,
+                project,
+                project.data.viewport);
+
+            page.parentPage = parentPage;
+            return page;
+        },
+
+        createHomePage: function() {
+            return new Page('Home', $('<div class="page">').append('<div class="video-wrapper">'),
+                Auth.getUser().theme, null, Auth.getUser().viewport)
         },
 
         getCurrentPage: function() {
@@ -788,6 +736,7 @@ app.factory('Viewspace', function(Auth, ProjectFunctions, Breadcrumbs, Extension
         setCurrentPage: function(newPage) {
             this.currentPage.unbindEvents();
             this.currentPage.clearProjectElements();
+            this.currentPage = null;
             this.currentPage = newPage;
             this.currentPage.bindEvents();
             this.currentPage.show();
@@ -877,7 +826,7 @@ app.factory('Viewspace', function(Auth, ProjectFunctions, Breadcrumbs, Extension
                                     project,
                                     project.data.viewport);
 
-                                viewspace.currentPage.loadProjectsFromDatabase();
+                                viewspace.currentPage.loadProjectsFromDatabase(true);
                                 viewspace.currentPage.parentPage = pageBefore;
                                 viewspace.currentPage.bindEvents();
                                 viewspace.currentPage.show();
@@ -908,6 +857,109 @@ app.factory('Viewspace', function(Auth, ProjectFunctions, Breadcrumbs, Extension
             $pageContent.css('margin-left', sidebarWidth);
         },
     };
+
+    function bindProjectElementEvents(element, data, callbacks) {
+        var $element = $(element);
+        
+        var itemHoldTimeoutId = null;
+
+        $element.mousedown(function() {
+            itemHoldTimeoutId = window.setTimeout(function() {
+                Viewspace.setDraggingObject(element, data, {
+                });
+            }, 300);
+        }).mouseup(function() {
+            if (!Viewspace.draggingState.isDraggingObject) {
+                if (itemHoldTimeoutId !== null) {
+                    window.clearTimeout(itemHoldTimeoutId);
+                    if (callbacks.click != undefined) {
+                        callbacks.click();
+                    }
+                    itemHoldTimeoutId = null;
+                }
+            } else {
+                Viewspace.clearObjectDrag();
+                if (itemHoldTimeoutId !== null) {
+                    // update project position in db??
+                    if (callbacks.finishedDragging != undefined) {
+                        callbacks.finishedDragging();
+                    }
+                }
+            }
+        }).on("dblclick", function() {
+            if (Viewspace.itemClickTimeoutEnabled) {
+                window.clearTimeout(Viewspace.itemClickTimeoutId);
+                Viewspace.itemClickTimeoutEnabled = false;
+            }
+            // re-focus this object for editing.
+            Viewspace.setFocusedObject(element, data, callbacks);
+
+            // call the dedicated doubleClick function for this
+            // project type (if it exists)
+            (function(projectTypeFunctions) {
+                if (projectTypeFunctions !== undefined) {
+                    if (projectTypeFunctions.doubleClick !== undefined) {
+                        projectTypeFunctions.doubleClick(element, data, callbacks);
+                    }
+                } else {
+                    console.log('No functionality for type: "' + data.type.toString() + '"');
+                }
+            })(ProjectFunctions[data.type]);
+        });
+    }
+
+    function createActionsMenu() {
+        var $actionsMenu = $('<div>')
+            .addClass('project-actions-menu');
+        var $actionsMenuItems = $('<ul>');
+
+        for (var i = 0; i < ACTION_MENU_ITEMS.length; i++) {
+            (function(menuItem) {
+                $actionsMenuItems.append($('<li>')
+                    .append('<img src="' + menuItem.imgUrl + '">')
+                    .click(function(e) {
+                        // do not bubble up the DOM
+                        e.stopPropagation();
+
+                        menuItem.click(/* ... */);
+                    }));
+            })(ACTION_MENU_ITEMS[i]);
+        }
+
+        $actionsMenu.append($actionsMenuItems);
+
+        return $actionsMenu;
+    }
+
+    function createProjectContent(data, viewport, isNewlyCreated) {
+        return (function(projectTypeFunctions) {
+            if (projectTypeFunctions !== undefined) {
+                if (projectTypeFunctions.createContent !== undefined) {
+                    return projectTypeFunctions.createContent(data, viewport, isNewlyCreated, {
+                        loseFocus: function() { Viewspace.objectLoseFocus(); }
+                    });
+                }
+            } else {
+                console.log('No functionality for type: "' + data.type.toString() + '"');
+            }
+            return null;
+        })(ProjectFunctions[data.type]);
+    }
+
+
+    function handleObjectLoseFocus(element, data, callbacks) {
+        (function(projectTypeFunctions) {
+            if (projectTypeFunctions !== undefined) {
+                if (projectTypeFunctions.loseFocus !== undefined) {
+                    return projectTypeFunctions.loseFocus(element, data, callbacks);
+                }
+            } else {
+                console.log('No functionality for type: "' + data.type.toString() + '"');
+            }
+            return null;
+        })(ProjectFunctions[data.type]);
+    }
+
 
     return Viewspace;
 });

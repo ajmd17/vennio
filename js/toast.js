@@ -1,6 +1,3 @@
-var totalToastHeight = 0;
-var toasts = [];
-
 function Toast(title, content, callbacks) {
     this.title   = title;
     this.content = content;
@@ -32,22 +29,25 @@ function Toast(title, content, callbacks) {
     })(this);
 }
 
+Toast.totalToastHeight = 0;
+Toast.toasts = [];
+
 Toast.prototype.getElement = function() {
     return this.$toastElement;
 };
 
 Toast.prototype.show = function() {
     this.$toastElement.css({
-        "top": totalToastHeight.toString() + "px"
+        "top": Toast.totalToastHeight.toString() + "px"
     });
     
     $("body").append(this.$toastElement);
 
     this.toastHeight = this.$toastElement.height();
-    totalToastHeight += this.toastHeight;
+    Toast.totalToastHeight += this.toastHeight;
 
-    this.index = toasts.length;
-    toasts.push(this);
+    this.index = Toast.toasts.length;
+    Toast.toasts.push(this);
 
     if (this.callbacks.show !== undefined) {
         this.callbacks.show();
@@ -69,21 +69,21 @@ Toast.prototype.hide = function() {
 
     if (this.toastHeight !== undefined && this.toastHeight !== null) {
         // modify all other toasts
-        if (toasts.length - 1 > this.index) {
+        if (Toast.toasts.length - 1 > this.index) {
             var change = {
                 "top": "-=" + this.toastHeight.toString() + "px"
             };
 
-            for (var i = this.index; i < toasts.length; i++) {
+            for (var i = this.index; i < Toast.toasts.length; i++) {
                 if (globalConfig.visuals.enableAnimations) {
-                    toasts[i].$toastElement.animate(change, 200);
+                    Toast.toasts[i].$toastElement.animate(change, 200);
                 } else {
-                    toasts[i].$toastElement.css(change);
+                    Toast.toasts[i].$toastElement.css(change);
                 }
             }
         }
 
-        totalToastHeight -= this.toastHeight;
+        Toast.totalToastHeight -= this.toastHeight;
     }
 
     if (this.callbacks.hide !== undefined) {

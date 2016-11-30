@@ -1,4 +1,8 @@
-app.controller('HomeController', function($scope, $location, Auth, AuthWaitForSignIn, Viewspace, Extensions, Event) {
+app.controller('HomeController', function($scope, $location, $routeParams, Auth, AuthWaitForSignIn, Viewspace, Extensions, Event) {
+    // reset toast height
+    Toast.totalToastHeight = 0;
+    console.log('$routeParams = ', $routeParams);
+    
     if (Auth.getUser() === null) {
         $scope.isSignedIn = false;
         Auth.handleLogin(AuthWaitForSignIn, function() {
@@ -26,6 +30,7 @@ app.controller('HomeController', function($scope, $location, Auth, AuthWaitForSi
 
     // main entry point for when login is verified
     function afterLogin() {
+        console.log('afterLogin()');
         $('#btn-view-alerts').click(function() {
 
         });
@@ -55,6 +60,17 @@ app.controller('HomeController', function($scope, $location, Auth, AuthWaitForSi
             }]);
 
             modal.show();
+        });
+
+        $('#log-out-btn').click(function() {
+            console.log('log out clicked');
+            // sign out firebase
+            Auth.getAuth().$signOut().then(function() {
+                $location.path('/');
+            }, function(err) {
+                // something happened
+                alert(err.toString());
+            })
         });
 
         $('#btn-select-theme').click(function() {
@@ -146,22 +162,71 @@ app.controller('HomeController', function($scope, $location, Auth, AuthWaitForSi
             Auth.getUser().currentThemeName = 'poly';
         }
 
-        Viewspace.init();
+        // parse $routeParams
+        if ($routeParams.project !== undefined) {
+            // $routeParams has been defined to we know
+            // that the user is loading a project via url
+            (function(projectKeyArray) {
+                var projectRef = Auth.getDatabase().ref('users')
+                .child(Auth.getUser().key);
+
+                // create root projects page
+                var projectPage = Viewspace.createHomePage();
+                // load projects from db so we can
+                // use the breadcrumbs to go back
+                projectPage.loadProjectsFromDatabase(false);
+
+                (function loadPage(i) {
+                    projectRef = projectRef.child(i == 0 ? 'projects' : 'subnodes')
+                        .child(projectKeyArray[i]);
+
+                    projectRef.once('value', function(snapshot) {
+                        var snapshotValue = snapshot.val();
+                        if (snapshotValue !== undefined && snapshotValue !== null) {
+                            var loadedProject = snapshotValue;
+                            // set up the ties back to the database
+                            loadedProject.ref = projectRef;
+                            loadedProject.key = projectRef.key;
+
+                            projectPage = Viewspace.createPage(loadedProject, projectPage);
+
+                            if (i + 1 < projectKeyArray.length) {
+                                // load projects from db so we can
+                                // use the breadcrumbs to go back
+                                projectPage.loadProjectsFromDatabase(false);
+                                // do next
+                                loadPage(i + 1);
+                            } else {
+                                // no more projects to load
+                                // now load the project on the Viewspace service.
+                                Viewspace.init(projectPage);
+                            }
+                            
+                            console.log('snapshotValue: ', snapshotValue);
+                        } else {
+                            console.log('could not load snapshotValue for projectRef: ', projectRef);
+                        }
+                    });
+                })(0);
+                
+
+            })($routeParams.project.split('/'));
+        } else {
+            // init Viewspace with no loaded project
+            Viewspace.init(null);
+        }
 
         // to prevent scrolling in on the page
         $(window).on('wheel mousewheel', function(e) {
             if (e.ctrlKey) {
                 e.preventDefault();
             }
-        })
-        .click(function(e) {
+        }).click(function(e) {
             var $target = $(e.target);
             if (!$target.is('.project-circle') && !$('.project-circle').has($target).length) {
                 Viewspace.objectLoseFocus();
             }
-        })
-        .on('mouseup', function(e) {
-            console.log('mouseup on document');
+        }).on('mouseup', function(e) {
             window.clearTimeout(Viewspace.mouseHoldId);
 
             if (Viewspace.showRipple && Viewspace.dragTime == 0) {

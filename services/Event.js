@@ -1,6 +1,7 @@
 app.factory('Event', function(Auth) {
     var Event = {
         EVENT_SEARCH_RANGE: 28800000, // 8 hours
+
         setupEvent: function(project, projectRef, range) {
             var isRecurring = (project.data.eventInfo.recurringDays !== undefined && 
                 project.data.eventInfo.recurringDays.length !== 0);
@@ -40,6 +41,7 @@ app.factory('Event', function(Auth) {
                                     var overdueDate = new Date(projectDate.getTime());
                                     overdueDate.setDate(nowCounter.getDate());
                                     projectOverdue.data.eventInfo.date = overdueDate.getTime();
+
                                     Event.createEventReminder(projectOverdue, projectRef);
                                 })();
                                 
@@ -122,7 +124,7 @@ app.factory('Event', function(Auth) {
                             // create an interval to update the time overdue each minute
                             var showEventString = function() {
                                 // recalculate ms to event
-                                var msToEvent = parseInt(project.data.eventInfo.date) - (new Date().getTime());
+                                var msToEvent = Number.parseInt(project.data.eventInfo.date) - (new Date().getTime());
                                 toast.getElement()
                                     .find('.toast-content')
                                     .html(createEventString(msToEvent));
@@ -145,11 +147,9 @@ app.factory('Event', function(Auth) {
                             project.data.eventInfo.acknowledged = true;
                             // set last acknowledged day to be the timestamp
                             project.data.eventInfo.lastAcknowledged = new Date().getTime();
-                            ref.child('data').update({
-                                eventInfo: project.data.eventInfo
-                            });
+                            ref.child('data').child('eventInfo').set(project.data.eventInfo);
 
-                            // TODO bring the user to the event
+                            // TODO bring the user to the event??
                         }
                     });
                     toast.show();
@@ -163,8 +163,8 @@ app.factory('Event', function(Auth) {
          */
         findEventsInRange: function(range) {
             $('.toast-wrapper').remove();
-            if (toasts !== undefined) {
-                toasts = [];
+            if (Toast.toasts !== undefined) {
+                Toast.toasts = [];
             }
 
             // start with global projects ref from datebase
@@ -181,7 +181,7 @@ app.factory('Event', function(Auth) {
                             (function(key) {
                                 var project = snapshotValue[key];
                                 if (project.data.type === 'event') {
-                                    Event.setupEvent(project, layerRef.child(keys[i]).child('data'), range);
+                                    Event.setupEvent(project, layerRef.child(keys[i]), range);
 
                                     if (project.subnodes != undefined && project.subnodes.length != 0) {
                                         // scan for subnodes of the event

@@ -11,7 +11,7 @@ var app = angular.module('vennio', [
                 return Auth.loggedUser;
             }
         }
-    }).when('/home', {
+    }).when('/home/:project*?', {
         templateUrl: 'main.html',
         controller: 'HomeController',
         resolve: {
@@ -19,7 +19,9 @@ var app = angular.module('vennio', [
                 return Auth.getAuth().$waitForSignIn();
             }
         }
-    }).otherwise('/');
+    }).otherwise({
+        templateUrl: '404.html'
+    });
 })
 .controller('MainController', function($scope) {
 

@@ -244,7 +244,8 @@ app.factory('RadialMenu', function(Extensions, Event) {
                                                     position: projectToAdd.position
                                                 });
                                             }
-                                        }
+                                        },
+                                        loseFocus: function() { viewspace.objectLoseFocus(); }
                                     });
                                 }
                             }
@@ -309,7 +310,8 @@ app.factory('RadialMenu', function(Extensions, Event) {
                                         position: projectToAdd.position
                                     });
                                 }
-                            }
+                            },
+                            loseFocus: function() { viewspace.objectLoseFocus(); }
                         });
                     }
                 },
@@ -364,7 +366,8 @@ app.factory('RadialMenu', function(Extensions, Event) {
                                         position: projectToAdd.position
                                     });
                                 }
-                            }
+                            },
+                            loseFocus: function() { viewspace.objectLoseFocus(); }
                         });
                     }
                 },

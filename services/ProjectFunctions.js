@@ -4,7 +4,7 @@ app.factory('ProjectFunctions', function() {
        'createContent', 'doubleClick', 'loseFocus', 'updateZoom' */
     var ProjectFunctions = {
         group: {
-            createContent: function(data, viewport, isNewlyCreated) {
+            createContent: function(data, viewport, isNewlyCreated, callbacks) {
                 var sizeZoomed = calculateZoomedSize(data, viewport);
 
                 if (isNewlyCreated) {
@@ -20,7 +20,9 @@ app.factory('ProjectFunctions', function() {
                                 if (e.keyCode == 13) {
                                     // enter key pressed, lose focus
                                     // to signal finished editing
-                                    Viewspace.objectLoseFocus();
+                                    if (callbacks.loseFocus !== undefined) {
+                                        callbacks.loseFocus();
+                                    }
                                 }
                             }));
                 } else {
@@ -51,7 +53,9 @@ app.factory('ProjectFunctions', function() {
                             if (e.keyCode == 13) {
                                 // enter key pressed, lose focus
                                 // to signal finished editing
-                                Viewspace.objectLoseFocus();
+                                if (callbacks.loseFocus !== undefined) {
+                                    callbacks.loseFocus();
+                                }
                             }
                         });
 
@@ -126,7 +130,7 @@ app.factory('ProjectFunctions', function() {
         },
 
         event: {
-            createContent: function(data, viewport, isNewlyCreated) {
+            createContent: function(data, viewport, isNewlyCreated, callbacks) {
                 var SIZE = (data.size != undefined) ? data.size : 200;
                 var ZOOM = viewport.zoom;
                 var SIZE_ZOOMED = SIZE * ZOOM;
