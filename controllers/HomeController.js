@@ -1,4 +1,4 @@
-app.controller('HomeController', function($scope, $location, $routeParams, Auth, AuthWaitForSignIn, Viewspace, Extensions, Event) {
+app.controller('HomeController', function($scope, $location, $routeParams, Auth, AuthWaitForSignIn, Viewspace, Breadcrumbs, Extensions, Event) {
     // reset toast height
     Toast.totalToastHeight = 0;
     console.log('$routeParams = ', $routeParams);
@@ -30,9 +30,55 @@ app.controller('HomeController', function($scope, $location, $routeParams, Auth,
 
     // main entry point for when login is verified
     function afterLogin() {
-        console.log('afterLogin()');
-        $('#btn-view-alerts').click(function() {
+        $('#share-btn').click(function() {
+            var pageStr = '';
 
+            if (Breadcrumbs.parts.length == 1) {
+                pageStr = 'all';
+            } else {
+                pageStr = '"';
+                var start = Breadcrumbs.parts.length - 2;
+                if (Breadcrumbs.parts.length > 3) {
+                    start = 2;
+                    pageStr += '...';
+                }
+                for (var i = start; i >= 0; i--) {
+                    if (i == start) {
+                        // remove leading '/'
+                        pageStr += Breadcrumbs.parts[i].slice(1);
+                    } else {
+                        pageStr += Breadcrumbs.parts[i];
+                    }
+                }
+                pageStr += '"';
+            }
+
+            var $shareUrlInput = $('<input type="text" class="share-url-input">')
+                .addClass()
+                .css({
+                    "max-width": '100%',
+                    "margin": 0
+                })
+                .val(window.location.href);
+
+            var $shareContent = $('<ul>')
+                .addClass('form-list')
+                .append($('<li>')
+                    .append($shareUrlInput));
+
+            var modal = new Modal('Share ' + pageStr, $shareContent,  [{
+                text: 'OK',
+                type: 'primary',
+                click: function() {
+                    modal.hide();
+                }
+            }], {
+                show: function() {
+                    $shareUrlInput.attr('tabindex', -1).select();
+                }
+            });
+
+            modal.show();
         });
 
         $('#settings-btn').click(function() {
@@ -44,10 +90,66 @@ app.controller('HomeController', function($scope, $location, $routeParams, Auth,
             $('#settings-btn').removeClass('active');
             $('#settings-menu').hide();
 
-            var modal = new Modal('Preferences', '', [{
+            var userRef = Auth.getDatabase().ref('users')
+                .child(Auth.getUser().key);
+
+            var preferencesItems = null;
+            if (Auth.getUser().preferences !== undefined && Auth.getUser().preferences !== null) {
+                preferencesItems = Auth.getUser().preferences;
+            } else {
+                preferencesItems = {
+                    "enableAnimations": {
+                        "pretty": "Enable Animations",
+                        "enabled": true
+                    },
+                }; // default prefs
+                userRef.update({
+                    "preferences": preferencesItems
+                });
+            }
+
+            var $preferencesContent = $('<div>')
+            
+            Object.keys(preferencesItems).forEach(function(it) {
+                var $item = $('<div>')
+                .addClass('checklist-item')
+                .append('<i class="checkbox-icon fa fa-square-o">')
+                .append($('<div>')
+                    .addClass('day-checkbox-text')
+                    .append(preferencesItems[it].pretty));
+
+                $item[0].prefItemId = it;
+
+                if (preferencesItems[it].enabled) {
+                    $item.addClass('checked');
+                    $item.find('.checkbox-icon')
+                        .toggleClass('fa-square-o')
+                        .toggleClass('fa-check-square-o');
+                }
+
+                $preferencesContent.append($item);
+            });
+
+            $preferencesContent.find('.checklist-item').click(function() {
+                var $this = $(this);
+                $this.toggleClass('checked');
+                $this.find('.checkbox-icon')
+                    .toggleClass('fa-square-o')
+                    .toggleClass('fa-check-square-o');
+
+                preferencesItems[$this[0].prefItemId].enabled = $this.hasClass('checked');
+
+            });
+
+            var modal = new Modal('Preferences', $preferencesContent, [{
                 text: 'Apply',
                 type: 'primary',
                 click: function() {
+                    // update preferences
+                    userRef.update({
+                        "preferences": preferencesItems
+                    });
+
                     modal.hide();
                 }
             },
@@ -73,87 +175,7 @@ app.controller('HomeController', function($scope, $location, $routeParams, Auth,
             })
         });
 
-        $('#btn-select-theme').click(function() {
-
-            var modal = null;
-
-            var $themeSelectionContent = $('<div>')
-                .addClass('theme-selection-content');
-            var $staticThemeList = $('<ul>')
-                .addClass('theme-selection');
-            var $dynamicThemeList = $('<ul>')
-                .addClass('theme-selection');
-
-            var staticThemes = [];
-            var dynamicThemes = [];
-
-            for (theme in Extensions.builtinThemes) {
-                var previousTheme = Viewspace.getCurrentPage().getTheme();
-                (function(thisTheme) {
-                    if (thisTheme.previewUrl !== undefined && thisTheme.previewUrl !== null && thisTheme.previewUrl.length !== 0) {
-                        if (thisTheme.isVideo) {
-                            dynamicThemes.push(thisTheme);
-                        } else {
-                            staticThemes.push(thisTheme);
-                        }
-                    }
-                })(Extensions.builtinThemes[theme]);
-            }
-
-            var appendThemePreview = function(thisTheme, $themeListElement) {
-                $themeListElement.append($('<li>')
-                    .addClass('theme-selection-item')
-                    .append($('<img src="' + thisTheme.previewUrl + '">'))
-                    .hover(function() {
-                        Viewspace.getCurrentPage().setTheme(thisTheme);
-                    }, function() {
-                        Viewspace.getCurrentPage().setTheme(previousTheme);
-                    })
-                    .click(function() {
-                        Viewspace.getCurrentPage().setTheme(thisTheme);
-                        previousTheme = thisTheme;
-                        modal.hide();
-
-                        // update in database
-                        var dataRef = null;
-                        if (Viewspace.getCurrentPage().pageProject !== undefined && Viewspace.getCurrentPage().pageProject !== null) {
-                            dataRef = Viewspace.getCurrentPage().pageProject.ref
-                                .child('data');
-                        } else {
-                            dataRef = Auth.getDatabase().ref('users')
-                                .child(Auth.getUser().key);
-                        }
-                        dataRef.update({
-                            theme: thisTheme
-                        });
-                    }));
-            };
-
-            staticThemes.forEach(function(thisTheme) {
-                appendThemePreview(thisTheme, $staticThemeList);
-            });
-
-            dynamicThemes.forEach(function(thisTheme) {
-                appendThemePreview(thisTheme, $dynamicThemeList);
-            });
-
-            $themeSelectionContent
-                .append($('<h3>')
-                    .append('Static Themes'))
-                .append($('<hr>'))
-                .append($staticThemeList);
-
-            if (dynamicThemes.length != 0) {
-                $themeSelectionContent.append(
-                    $('<h3>')
-                        .append('Dynamic Themes'))
-                    .append($('<hr>'))
-                    .append($dynamicThemeList);
-            }
-
-            modal = new Modal('', $themeSelectionContent);
-            modal.show();
-        });
+        
 
         // scan for events that are in range
         Event.findEventsInRange(Event.EVENT_SEARCH_RANGE);
@@ -162,95 +184,221 @@ app.controller('HomeController', function($scope, $location, $routeParams, Auth,
             Auth.getUser().currentThemeName = 'poly';
         }
 
+        console.log('$routeParams = ', $routeParams);
+
         // parse $routeParams
         if ($routeParams.project !== undefined) {
             // $routeParams has been defined to we know
             // that the user is loading a project via url
             (function(projectKeyArray) {
+                // 1st parameter of routeparams should be the user id
+                // if there are no paramters then assume Auth.getUser().key
+                var userKey = projectKeyArray.length === 0 ? Auth.getUser().key : projectKeyArray[0];
                 var projectRef = Auth.getDatabase().ref('users')
-                .child(Auth.getUser().key);
+                    .child(userKey);
 
-                // create root projects page
-                var projectPage = Viewspace.createHomePage();
-                // load projects from db so we can
-                // use the breadcrumbs to go back
-                projectPage.loadProjectsFromDatabase(false);
+                console.log('projectRef = ', projectRef);
 
-                (function loadPageFromUrl(i) {
-                    projectRef = projectRef.child(i == 0 ? 'projects' : 'subnodes')
-                        .child(projectKeyArray[i]);
+                loadUser(userKey, projectRef, function(user) {
 
-                    projectRef.once('value', function(snapshot) {
-                        var loadedProject = snapshot.val();
-                        if (loadedProject !== undefined && loadedProject !== null) {
-                            // set up the ties back to the database
-                            loadedProject.ref = projectRef;
-                            loadedProject.key = projectRef.key;
+                    // create root projects page
+                    var projectPage = Viewspace.createHomePage(user);
 
-                            projectPage = Viewspace.createPage(loadedProject, projectPage);
+                    if (projectKeyArray.length == 1) {
+                        // load the homepage right away, no other sub projects
+                        // init viewspace for user
+                        Viewspace.init(user, projectPage);
+                        afterViewspaceInit(user.key);
+                        
+                    } else {
 
-                            if (i + 1 < projectKeyArray.length) {
-                                // load projects from db so we can
-                                // use the breadcrumbs to go back
-                                projectPage.loadProjectsFromDatabase(false);
-                                // do next
-                                loadPageFromUrl(i + 1);
-                            } else {
-                                // no more projects to load
-                                // now load the project on the Viewspace service.
-                                Viewspace.init(projectPage);
-                            }
-                        } else {
-                            console.log('could not load snapshotValue for projectRef: ', projectRef);
-                        }
-                    });
-                })(0);
-                
+                        // load projects from db so we can
+                        // use the breadcrumbs to go back
+                        projectPage.loadProjectsFromDatabase(userKey, false);
+
+                        (function loadPageFromUrl(i) {
+                            projectRef = projectRef.child(i == 1 ? 'projects' : 'data/subnodes')
+                                .child(projectKeyArray[i]);
+
+                            projectRef.once('value', function(snapshot) {
+                                var loadedProject = snapshot.val();
+                                if (loadedProject !== undefined && loadedProject !== null) {
+                                    // set up the ties back to the database
+                                    loadedProject.ref = projectRef;
+                                    loadedProject.key = projectRef.key;
+
+                                    projectPage = Viewspace.createPage(loadedProject, projectPage);
+
+                                    if (i + 1 < projectKeyArray.length) {
+                                        // load projects from db so we can
+                                        // use the breadcrumbs to go back
+                                        projectPage.loadProjectsFromDatabase(userKey, false);
+                                        // do next
+                                        loadPageFromUrl(i + 1);
+                                    } else {
+                                        // no more projects to load
+                                        // now load the project on the Viewspace service.
+
+                                        // init viewspace for user
+                                        Viewspace.init(user, projectPage);
+                                        afterViewspaceInit(user.key);
+                                    }
+                                } else {
+                                    console.log('could not load snapshotValue for projectRef: ', projectRef);
+                                }
+                            });
+                        })(1);
+                    }
+
+                });
 
             })($routeParams.project.split('/'));
         } else {
             // init Viewspace with no loaded project
-            Viewspace.init(null);
+            // no key has been provided so assume it's the logged in user's id
+            Viewspace.init(Auth.getUser(), null);
+            afterViewspaceInit(Auth.getUser().key);
         }
 
-        // to prevent scrolling in on the page
-        $(window).on('wheel mousewheel', function(e) {
-            if (e.ctrlKey) {
-                e.preventDefault();
+        function loadUser(userKey, projectRef, after) {
+            if (userKey != Auth.getUser().key) {
+                // another user other than the logged in one.
+                // have to load the info from firebase
+                projectRef.once('value').then(function(snapshot) {
+                    var otherUser = snapshot.val();
+                    otherUser.key = userKey;
+
+                    after(otherUser);
+                }).catch(function(err) {
+                    window.alert(err);
+                });
+            } else {
+                after(Auth.getUser());
             }
-        }).click(function(e) {
-            var $target = $(e.target);
-            if (!$target.is('.project-circle') && !$('.project-circle').has($target).length) {
-                Viewspace.objectLoseFocus();
-            }
-        }).on('mouseup', function(e) {
-            window.clearTimeout(Viewspace.mouseHoldId);
+        }
 
-            if (Viewspace.showRipple && Viewspace.dragTime == 0) {
-                var $pageContent = $('#page-content');
+        function afterViewspaceInit(userKey) {
+            $('#btn-select-theme').click(function() {
 
-                $('.ripple').remove();
+                var modal = null;
 
-                var posX = $pageContent.offset().left;
-                var posY = $pageContent.offset().top;
+                var $themeSelectionContent = $('<div>')
+                    .addClass('theme-selection-content');
+                var $staticThemeList = $('<ul>')
+                    .addClass('theme-selection');
+                var $dynamicThemeList = $('<ul>')
+                    .addClass('theme-selection');
 
-                $pageContent.prepend($('<span class="ripple">')
-                    .css({
-                        "width":  RIPPLE_SIZE,
-                        "height": RIPPLE_SIZE,
-                        "left": (e.pageX - posX - (RIPPLE_SIZE / 2)).toString() + 'px',
-                        "top":  (e.pageY - posY - (RIPPLE_SIZE / 2)).toString() + 'px'
-                    }).addClass('rippleEffect')
-                );
-            }
+                var staticThemes = [];
+                var dynamicThemes = [];
 
-            $(Viewspace.getCurrentPage().getElement()).css('cursor', 'auto');
+                for (theme in Extensions.builtinThemes) {
+                    var previousTheme = Viewspace.getCurrentPage().getTheme();
+                    (function(thisTheme) {
+                        if (thisTheme.previewUrl !== undefined && thisTheme.previewUrl !== null && thisTheme.previewUrl.length !== 0) {
+                            if (thisTheme.isVideo) {
+                                dynamicThemes.push(thisTheme);
+                            } else {
+                                staticThemes.push(thisTheme);
+                            }
+                        }
+                    })(Extensions.builtinThemes[theme]);
+                }
 
-            // clear dragging, panning, etc.
-            Viewspace.clearObjectDrag();
-            Viewspace.isPanning = false;
-            Viewspace.dragTime = 0;
-            Viewspace.showRipple = false;
-        });
+                var appendThemePreview = function(thisTheme, $themeListElement) {
+                    $themeListElement.append($('<li>')
+                        .addClass('theme-selection-item')
+                        .append($('<img src="' + thisTheme.previewUrl + '">'))
+                        .hover(function() {
+                            Viewspace.getCurrentPage().setTheme(thisTheme);
+                        }, function() {
+                            Viewspace.getCurrentPage().setTheme(previousTheme);
+                        })
+                        .click(function() {
+                            Viewspace.getCurrentPage().setTheme(thisTheme);
+                            previousTheme = thisTheme;
+                            modal.hide();
+
+                            // update in database
+                            var dataRef = null;
+                            if (Viewspace.getCurrentPage().pageProject !== undefined && Viewspace.getCurrentPage().pageProject !== null) {
+                                dataRef = Viewspace.getCurrentPage().pageProject.ref
+                                    .child('data');
+                            } else {
+                                dataRef = Auth.getDatabase().ref('users')
+                                    .child(userKey);
+                            }
+                            dataRef.update({
+                                theme: thisTheme
+                            });
+                        }));
+                };
+
+                staticThemes.forEach(function(thisTheme) {
+                    appendThemePreview(thisTheme, $staticThemeList);
+                });
+
+                dynamicThemes.forEach(function(thisTheme) {
+                    appendThemePreview(thisTheme, $dynamicThemeList);
+                });
+
+                $themeSelectionContent
+                    .append($('<h3>')
+                        .append('Static Themes'))
+                    .append($('<hr>'))
+                    .append($staticThemeList);
+
+                if (dynamicThemes.length != 0) {
+                    $themeSelectionContent.append(
+                        $('<h3>')
+                            .append('Dynamic Themes'))
+                        .append($('<hr>'))
+                        .append($dynamicThemeList);
+                }
+
+                modal = new Modal('', $themeSelectionContent);
+                modal.show();
+            });
+
+            // to prevent scrolling in on the page
+            $(window).on('wheel mousewheel', function(e) {
+                if (e.ctrlKey) {
+                    e.preventDefault();
+                }
+            }).click(function(e) {
+                var $target = $(e.target);
+                if (!$target.is('.project-circle') && !$('.project-circle').has($target).length) {
+                    Viewspace.objectLoseFocus();
+                }
+            }).on('mouseup', function(e) {
+                window.clearTimeout(Viewspace.mouseHoldId);
+
+                if (Viewspace.showRipple && Viewspace.dragTime == 0) {
+                    var $pageContent = $('#page-content');
+
+                    $('.ripple').remove();
+
+                    var posX = $pageContent.offset().left;
+                    var posY = $pageContent.offset().top;
+
+                    $pageContent.prepend($('<span class="ripple">')
+                        .css({
+                            "width":  RIPPLE_SIZE,
+                            "height": RIPPLE_SIZE,
+                            "left": (e.pageX - posX - (RIPPLE_SIZE / 2)).toString() + 'px',
+                            "top":  (e.pageY - posY - (RIPPLE_SIZE / 2)).toString() + 'px'
+                        }).addClass('rippleEffect')
+                    );
+                }
+
+                $(Viewspace.getCurrentPage().getElement()).css('cursor', 'auto');
+
+                // clear dragging, panning, etc.
+                Viewspace.clearObjectDrag();
+                Viewspace.isPanning = false;
+                Viewspace.dragTime = 0;
+                Viewspace.showRipple = false;
+            });
+        };
     }
 });

@@ -9,15 +9,17 @@ app.controller('LandingPageController', function($scope, $location, Auth, Logged
     });
 
     Auth.getAuth().$onAuthStateChanged(function(user) {
-        Auth.handleLogin(user, function() {
-            // hide the login modal
-            loginModal.hide();
+        if (user !== undefined && user !== null) {
+            Auth.handleLogin(user, function() {
+                // hide the login modal
+                loginModal.hide();
 
-            // redirect to home page
-            $location.path('/home');
-            $scope.isSignedIn = true;
-            $scope.$apply();
-        });
+                // redirect to home page
+                $location.path('/home');
+                $scope.isSignedIn = true;
+                $scope.$apply();
+            });
+        }
     });
 
     $scope.loginWithGoogle = function() {
@@ -29,7 +31,7 @@ app.controller('LandingPageController', function($scope, $location, Auth, Logged
 
                     // redirect to home
                     $scope.isSignedIn = true;
-                    $location.path('/home');
+                    $location.path('/home/' + Auth.getUser().key);
                 });
             }).catch(function(err) {
                 window.alert(err.toString());
@@ -37,7 +39,19 @@ app.controller('LandingPageController', function($scope, $location, Auth, Logged
     };
 
     $scope.loginWithFacebook = function() {
-        console.log('loginWithFacebook() called');
+        Auth.getAuth().$signInWithPopup(new firebase.auth.FacebookAuthProvider())
+            .then(function(res) {
+                Auth.handleLogin(res.user, function() {
+                    // hide the login modal
+                    loginModal.hide();
+
+                    // redirect to home
+                    $scope.isSignedIn = true;
+                    $location.path('/home/' + Auth.getUser().key);
+                });
+            }).catch(function(err) {
+                window.alert(err.toString());
+            });
     };
 
     $scope.showLoginModal = function() {

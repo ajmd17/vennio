@@ -5,19 +5,20 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
         {
             text: 'Flag',
             imgUrl: 'img/actions/flag.png',
-            click: function() {
+            click: function(menuItem) {
             }
         },
         {
             text: 'Archive',
             imgUrl: 'img/actions/archive.png',
-            click: function() {
+            click: function(menuItem) {
             }
         },
         {
             text: 'Remove',
             imgUrl: 'img/actions/remove.png',
-            click: function() {
+            click: function(menuItem) {
+                console.log('menuItem: ', menuItem);
             }
         }
     ];
@@ -110,7 +111,7 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
     /**
      * Sets up all the events of the page.
      */
-    Page.prototype.bindEvents = function() {
+    Page.prototype.bindEvents = function(userKey) {
         var $element = $(this.element);
         var page = this;
 
@@ -203,7 +204,7 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
                 // add project item
                 var position = { x: event.pageX, y: event.pageY };
 
-                var radialMenuItems = RadialMenu.getRadialMenuItems(Viewspace, page, position);
+                var radialMenuItems = RadialMenu.getRadialMenuItems(userKey, Viewspace, page, position);
 
                 var showRadialMenu = function($element, position) {
                     var SELECTOR_SIZE = 250;
@@ -378,6 +379,7 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
      * as well as calls loadTheme() to update the element.
      */
     Page.prototype.setTheme = function(theme) {
+        this.theme = null;
         this.theme = theme;
         this.loadTheme();
     };
@@ -406,6 +408,7 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
                 $background.css('filter', '');
             }
 
+            $videoWrapper.empty();
             $videoWrapper.html($background);
         }
     };
@@ -428,7 +431,7 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
         var projectsRef = null;
         if (this.pageProject !== undefined && this.pageProject !== null) {
             projectsRef = this.pageProject.ref
-                .child('subnodes');
+                .child('data/subnodes');
         } else {
             projectsRef = Auth.getDatabase().ref('users')
                 .child(Auth.getUser().key)
@@ -443,14 +446,22 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
             }
         }
         project.ref = projectsRef.push(projectObject);
+        project.key = project.ref.key;
         this.projects.push(project);
     };
 
     Page.prototype.show = function() {
-        $('#page-content').html(this.element);
-        if (this.theme !== undefined && this.theme !== null) {
-            this.loadTheme();
+        var page = this;
+        var $element = $(this.element);
+        $element.css({
+            "opacity": 0
+        });
+        if (page.theme !== undefined && page.theme !== null) {
+            page.loadTheme();
         }
+        var $pageContent = $('#page-content');
+        $pageContent.html($element);
+        $element.animate({"opacity": 1}, 300);
     };
 
     Page.prototype.clearProjectElements = function() {
@@ -461,7 +472,7 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
             });
     };
 
-    Page.prototype.loadProjectElement = function(project, animationTime) {
+    Page.prototype.loadProjectElement = function(userKey, project, animationTime) {
         var SIZE = (project.data.size != undefined) ? project.data.size : 200;
         var ZOOM = this.viewport.zoom;
         var SIZE_ZOOMED = SIZE * ZOOM;
@@ -482,7 +493,7 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
                 "height": SIZE_ZOOMED.toString() + 'px',
                 "opacity": 0
             })
-            .append(createActionsMenu())
+            //.append(createActionsMenu(project))
             .animate({ opacity: 1 }, animationTime)
             .append($('<div>')
                 .addClass('project-image')
@@ -499,7 +510,7 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
                 });
             },
             click: function() {
-                Viewspace.handleObjectClick(project);
+                Viewspace.handleObjectClick(userKey, project);
             },
             finishedDragging: function() {
                 project.position = page.eltSpaceToZoomSpace({
@@ -520,24 +531,25 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
     };
 
     /** Create visual elements for all objects in projects array */
-    Page.prototype.loadProjectElements = function() {
+    Page.prototype.loadProjectElements = function(userKey) {
         var $element = $(this.element);
         for (var i = 0; i < this.projects.length; i++) {
-            this.projects[i].element = this.loadProjectElement(this.projects[i], 
+            this.projects[i].element = this.loadProjectElement(userKey, this.projects[i], 
                 Math.min(250 + ((i / this.projects.length) * 100), 500));
             $element.append(this.projects[i].element);
+            console.log('this.project[' + i + '].element = ', this.projects[i].element);
         }
     };
 
     /** Load projects from database into the array */
-    Page.prototype.loadProjectsFromDatabase = function(loadElements) {
+    Page.prototype.loadProjectsFromDatabase = function(userKey, loadElements) {
         var projectsRef = null;
         if (this.pageProject !== undefined && this.pageProject !== null) {
             projectsRef = this.pageProject.ref
-                .child('subnodes');
+                .child('data/subnodes');
         } else {
             projectsRef = Auth.getDatabase().ref('users')
-                .child(Auth.getUser().key)
+                .child(userKey)
                 .child('projects');
         }
 
@@ -558,7 +570,7 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
                 }
 
                 if (loadElements) {
-                    page.loadProjectElements();
+                    page.loadProjectElements(userKey);
                 }
             });
         })(this);
@@ -617,7 +629,7 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
                         }
                     })(ProjectFunctions[data.type]);
                 })
-            .append(createActionsMenu().css('display', 'none'))
+            //.append(createActionsMenu().css('display', 'none'))
             .append($('<div>')
                 .addClass('project-image')
                 .append(SVG_OBJECTS[PROJECT_CLASS_SVG_NAMES[data.type]]
@@ -682,24 +694,24 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
             }
         },
 
-        init: function(page) {
+        init: function(user, page) {
             if (page !== undefined && page !== null) {
                 this.currentPage = page;
             } else {
                 // create root projects page
-                this.currentPage = this.createHomePage();
+                this.currentPage = this.createHomePage(user);
                 this.currentPage.parentPage = null;
             }
 
-            this.currentPage.loadProjectsFromDatabase(true);
-            this.currentPage.bindEvents();
+            this.currentPage.loadProjectsFromDatabase(user.key, true);
+            this.currentPage.bindEvents(user.key);
             this.currentPage.show();
 
             // update breadcrumbs
-            Breadcrumbs.update(this);
+            Breadcrumbs.update(user.key, Viewspace);
         },
 
-        goToProjectUrl: function(current, next) {
+        createProjectUrl: function(userKey, current, next) {
             var pathParts = (next !== undefined && next !== null) ? [next.key] : [];
             var page = current;
             while (page !== undefined && page !== null) {
@@ -710,13 +722,24 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
                 page = page.parentPage;
             }
 
-            var path = '/home';
+            var path = '/home/' + userKey;
             for (var i = pathParts.length - 1; i >= 0; i--) {
                 path += '/' + pathParts[i].toString();
             }
-            
-            $location.path(path);
-            $rootScope.$apply();
+            return path;
+        },
+
+        goToProjectUrl: function(userKey, current, next) {
+            if (globalConfig.visuals.enableAnimations) {
+                // remove items with animation
+                $('#top-breadcrums, .video-wrapper, .project-circle').animate({"opacity": 0}, 350, () => {
+                    $location.path(this.createProjectUrl(userKey, current, next));
+                    $rootScope.$apply();
+                });
+            } else {
+                $location.path(this.createProjectUrl(userKey, current, next));
+                $rootScope.$apply();
+            }
         },
 
         createPage: function(project, parentPage) {
@@ -732,16 +755,16 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
             return page;
         },
 
-        createHomePage: function() {
+        createHomePage: function(user) {
             return new Page('Home', $('<div class="page">').append('<div class="video-wrapper">'),
-                Auth.getUser().theme, null, Auth.getUser().viewport)
+                user.theme, null, user.viewport)
         },
 
         getCurrentPage: function() {
             return this.currentPage;
         },
 
-        setCurrentPage: function(newPage) {
+        setCurrentPage: function(userKey, newPage) {
             this.currentPage.unbindEvents();
             this.currentPage.clearProjectElements();
             this.currentPage = null;
@@ -750,7 +773,7 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
             this.currentPage.show();
             this.currentPage.loadProjectElements();
 
-            Breadcrumbs.update(this);
+            Breadcrumbs.update(userKey, this);
         },
 
         clearObjectFocus: function() {
@@ -806,7 +829,7 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
          * 
          *  @param project - The project data object of the element clicked.
         */
-        handleObjectClick: function(project) {
+        handleObjectClick: function(userKey, project) {
             if (this.itemClickTimeoutEnabled) {
                 window.clearTimeout(this.itemClickTimeoutId);
                 this.itemClickTimeoutEnabled = false;
@@ -822,9 +845,9 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
                             // now that I have dynamic routing I will just change the route.
                             // the other way was probably more efficient, but this is how it has to be 
                             // in order to change the url.
-
+                            
                             // Bring the user to the nested project element
-                            viewspace.goToProjectUrl(viewspace.getCurrentPage(), project);
+                            viewspace.goToProjectUrl(userKey, viewspace.getCurrentPage(), project);
 
                         }, viewspace.projectClickTimeout);
                     })(this);
@@ -912,7 +935,7 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
                         // do not bubble up the DOM
                         e.stopPropagation();
 
-                        menuItem.click(/* ... */);
+                        menuItem.click(menuItem);
                     }));
             })(ACTION_MENU_ITEMS[i]);
         }

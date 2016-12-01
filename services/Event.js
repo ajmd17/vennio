@@ -183,14 +183,14 @@ app.factory('Event', function(Auth) {
                                 if (project.data.type === 'event') {
                                     Event.setupEvent(project, layerRef.child(keys[i]), range);
 
-                                    if (project.subnodes != undefined && project.subnodes.length != 0) {
+                                    if (project.data.subnodes != undefined && project.data.subnodes.length != 0) {
                                         // scan for subnodes of the event
-                                        scanLayer(layerRef.child('subnodes'));
+                                        scanLayer(layerRef.child('data/subnodes'));
                                     }
                                 } else if (project.data.type === 'group') {
-                                    if (project.subnodes != undefined && project.subnodes.length != 0) {
+                                    if (project.data.subnodes != undefined && project.data.subnodes.length != 0) {
                                         // scan for subnodes of the group
-                                        scanLayer(layerRef.child('subnodes'));
+                                        scanLayer(layerRef.child('data/subnodes'));
                                     }
                                 }
                             })(keys[i]);

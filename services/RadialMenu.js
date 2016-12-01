@@ -20,7 +20,7 @@ app.factory('RadialMenu', function(Extensions, Event) {
     };
 
     var RadialMenu = {
-        getRadialMenuItems: function(viewspace, page, position) {
+        getRadialMenuItems: function(userKey, viewspace, page, position) {
             // project that will be added upon success
             var projectToAdd = null;
 
@@ -97,15 +97,13 @@ app.factory('RadialMenu', function(Extensions, Event) {
                                 })
                                 .append('Repeat every:'));
 
-                        
-
                         for (day in possibleDays) {
                             $repeatDays.append($('<div>')
                                 .addClass('checklist-item')
                                 .append('<i class="checkbox-icon fa fa-square-o">')
                                 .append($('<div>')
                                     .addClass('day-checkbox-text')
-                                    .append(day)))
+                                    .append(day)));
                         }
 
                         var $eventModalContent = $('<ul>')
@@ -234,7 +232,7 @@ app.factory('RadialMenu', function(Extensions, Event) {
                                         },
                                         click: function() {
                                             if (projectToAdd != null) {
-                                                viewspace.handleObjectClick(projectToAdd);
+                                                viewspace.handleObjectClick(userKey, projectToAdd);
                                             }
                                         },
                                         finishedDragging: function() {
@@ -275,6 +273,12 @@ app.factory('RadialMenu', function(Extensions, Event) {
                             theme: Extensions.builtinThemes['poly_2'],
                             noteInfo: {
                                 text: ''
+                            },
+                            viewport: {
+                                zoom: 1.0,
+                                zoomLevel: 0,
+                                left: 0,
+                                top : 0
                             }
                         };
 
@@ -300,7 +304,7 @@ app.factory('RadialMenu', function(Extensions, Event) {
                             },
                             click: function() {
                                 if (projectToAdd != null) {
-                                    viewspace.handleObjectClick(projectToAdd);
+                                    viewspace.handleObjectClick(userKey, projectToAdd);
                                 }
                             },
                             finishedDragging: function() {
@@ -356,7 +360,7 @@ app.factory('RadialMenu', function(Extensions, Event) {
                             },
                             click: function() {
                                 if (projectToAdd != null) {
-                                    viewspace.handleObjectClick(projectToAdd);
+                                    viewspace.handleObjectClick(userKey, projectToAdd);
                                 }
                             },
                             finishedDragging: function() {
@@ -419,7 +423,7 @@ app.factory('RadialMenu', function(Extensions, Event) {
                             },
                             click: function() {
                                 if (projectToAdd != null) {
-                                    viewspace.handleObjectClick(projectToAdd);
+                                    viewspace.handleObjectClick(userKey, projectToAdd);
                                 }
                             },
                             finishedDragging: function() {

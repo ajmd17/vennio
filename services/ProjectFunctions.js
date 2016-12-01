@@ -104,7 +104,8 @@ app.factory('ProjectFunctions', function() {
                     $edit.remove();
 
                     // allow the action selector to be shown
-                    $element.find('.project-actions-menu').css('display', 'inline');
+                   // $element.find('.project-actions-menu').css('display', 'inline');
+                   // removed, because incomplete
 
                     // set property on the project 'name'.
                     data.name = value;
@@ -363,16 +364,16 @@ app.factory('ProjectFunctions', function() {
                         "font-size": roundTo(sizeZoomed / 12, 1).toString() + 'px'
                     });
 
-                if (data.todoInfo !== undefined && data.todoInfo !== null && 
-                    data.todoInfo.todos !== undefined && data.todoInfo.todos !== null) {
-                    data.todoInfo.todos.forEach(function(it) {
+                if (data.subnodes !== undefined && data.subnodes !== null) {
+                    for (key in data.subnodes) {
+                        var subnode = data.subnodes[key];
                         $todoList.append($('<li>')
-                            .append(it.toString())
+                            .append(subnode.data.name)
                             .click(function(e) {
                                 e.stopPropagation();
                                 console.log('todo clicked');
-                            }))
-                    });
+                            }));
+                    }
                 }
 
                 var overrideCss = {
@@ -429,6 +430,7 @@ app.factory('ProjectFunctions', function() {
                     var $edit = $('<input type="text">')
                         .addClass('project-circle-text-edit')
                         .css({
+                            "word-break": 'break-word',
                             "font-size": $projectTitleDiv.css('font-size')
                         })
                         .val(name)
