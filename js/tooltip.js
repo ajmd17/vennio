@@ -16,8 +16,8 @@ function Tooltip($element, title, content, callbacks) {
 
     if (this.title != "") {
         $tooltipContent.append($("<div>")
-                .addClass("banner")
-                .append(title));
+            .addClass("banner")
+            .append(title));
     }
     
     $tooltipContent.append($("<div>")
