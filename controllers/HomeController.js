@@ -30,6 +30,9 @@ app.controller('HomeController', function($scope, $location, $routeParams, Auth,
 
     /** Load the preferences */
     function loadPreferences() {
+        var userRef = Auth.getDatabase().ref('users')
+            .child(Auth.getUser().key);
+
         var preferencesItems = null;
         if (Auth.getUser().preferences !== undefined && Auth.getUser().preferences !== null) {
             preferencesItems = Auth.getUser().preferences;
