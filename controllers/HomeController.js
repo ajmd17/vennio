@@ -30,7 +30,23 @@ app.controller('HomeController', function($scope, $location, $routeParams, Auth,
 
     /** Load the preferences */
     function loadPreferences() {
-        Toast.animations = Auth.getUser().preferences.enableAnimations.enabled;
+        var preferencesItems = null;
+        if (Auth.getUser().preferences !== undefined && Auth.getUser().preferences !== null) {
+            preferencesItems = Auth.getUser().preferences;
+        } else {
+            preferencesItems = {
+                "enableAnimations": {
+                    "pretty": "Enable Animations",
+                    "enabled": true
+                },
+            }; // default prefs
+            userRef.update({
+                "preferences": preferencesItems
+            });
+            loadPreferences();
+        }
+
+        Toast.animations = preferencesItems.enableAnimations.enabled;
     }
 
     // main entry point for when login is verified
@@ -100,35 +116,19 @@ app.controller('HomeController', function($scope, $location, $routeParams, Auth,
             var userRef = Auth.getDatabase().ref('users')
                 .child(Auth.getUser().key);
 
-            var preferencesItems = null;
-            if (Auth.getUser().preferences !== undefined && Auth.getUser().preferences !== null) {
-                preferencesItems = Auth.getUser().preferences;
-            } else {
-                preferencesItems = {
-                    "enableAnimations": {
-                        "pretty": "Enable Animations",
-                        "enabled": true
-                    },
-                }; // default prefs
-                userRef.update({
-                    "preferences": preferencesItems
-                });
-                loadPreferences();
-            }
-
             var $preferencesContent = $('<div>')
             
-            Object.keys(preferencesItems).forEach(function(it) {
+            Object.keys(Auth.getUser().preferences).forEach(function(it) {
                 var $item = $('<div>')
                 .addClass('checklist-item')
                 .append('<i class="checkbox-icon fa fa-square-o">')
                 .append($('<div>')
                     .addClass('day-checkbox-text')
-                    .append(preferencesItems[it].pretty));
+                    .append(Auth.getUser().preferences[it].pretty));
 
                 $item[0].prefItemId = it;
 
-                if (preferencesItems[it].enabled) {
+                if (Auth.getUser().preferences[it].enabled) {
                     $item.addClass('checked');
                     $item.find('.checkbox-icon')
                         .toggleClass('fa-square-o')
@@ -145,7 +145,7 @@ app.controller('HomeController', function($scope, $location, $routeParams, Auth,
                     .toggleClass('fa-square-o')
                     .toggleClass('fa-check-square-o');
 
-                preferencesItems[$this[0].prefItemId].enabled = $this.hasClass('checked');
+                Auth.getUser().preferences[$this[0].prefItemId].enabled = $this.hasClass('checked');
 
             });
 
@@ -155,7 +155,7 @@ app.controller('HomeController', function($scope, $location, $routeParams, Auth,
                 click: function() {
                     // update preferences
                     userRef.update({
-                        "preferences": preferencesItems
+                        "preferences": Auth.getUser().preferences
                     });
                     // reload prefs
                     loadPreferences();
