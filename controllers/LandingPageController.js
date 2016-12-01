@@ -117,7 +117,7 @@ app.controller('LandingPageController', function($scope, $location, Auth, Logged
         ctx    = canvas.getContext('2d');
 
         background = new Image();
-        background.src = '../img/poly-green.png';
+        background.src = 'img/poly-green.png';
 
         resizeCanvas();
 
