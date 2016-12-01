@@ -526,7 +526,7 @@ Page.prototype.bindEvents = function() {
                 }
             },
             {
-                title: 'Task',
+                title: 'Todo',
                 url  : 'img/shapes/todo.png'
             }];
 

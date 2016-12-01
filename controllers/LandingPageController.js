@@ -13,6 +13,7 @@ app.controller('LandingPageController', function($scope, $location, Auth, Logged
             // hide the login modal
             loginModal.hide();
 
+            // redirect to home page
             $location.path('/home');
             $scope.isSignedIn = true;
             $scope.$apply();
@@ -26,6 +27,7 @@ app.controller('LandingPageController', function($scope, $location, Auth, Logged
                     // hide the login modal
                     loginModal.hide();
 
+                    // redirect to home
                     $scope.isSignedIn = true;
                     $location.path('/home');
                 });

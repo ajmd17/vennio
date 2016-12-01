@@ -127,7 +127,6 @@ var viewspace = {
                     viewspace.itemClickTimeoutId = window.setTimeout(function() {
                         viewspace.itemClickTimeoutEnabled = false;
 
-                        // TODO move this to project-functions.js
                         if (project.data.type === 'group' || project.data.type === 'project' || project.data.type === 'event') {
                             // open the clicked project page
                             var pageBefore = viewspace.currentPage;

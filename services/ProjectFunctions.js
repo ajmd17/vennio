@@ -1,5 +1,4 @@
 app.factory('ProjectFunctions', function() {
-    /** project-functions.js */
     /** functions project types can have include:
        'createContent', 'doubleClick', 'loseFocus', 'updateZoom' */
     var ProjectFunctions = {
@@ -214,7 +213,310 @@ app.factory('ProjectFunctions', function() {
                     "font-size": roundTo(newWidth / 14, 1).toString() + 'px'
                 });
             }
-        }
+        },
+
+        sticky: {
+            createContent: function(data, viewport, isNewlyCreated, callbacks) {
+                var sizeZoomed = calculateZoomedSize(data, viewport);
+
+                var overrideCss = {
+                    "top": '15%',
+                    "transform": 'translate(-50%, -15%)',
+                };
+
+                if (isNewlyCreated) {
+                    return $('<div>')
+                        .addClass('project-circle-text')
+                        .css(overrideCss)
+                        .append($('<input type="text">')
+                            .addClass('project-circle-text-edit')
+                            .css({
+                                "text-align": 'left',
+                                "font-size": roundTo(sizeZoomed / 10, 1).toString() + 'px'
+                            })
+                            .val(!data.name ? '' : data.name)
+                            .on('keyup', function(e) {
+                                if (e.keyCode == 13) {
+                                    // enter key pressed, lose focus
+                                    // to signal finished editing
+                                    if (callbacks.loseFocus !== undefined) {
+                                        callbacks.loseFocus();
+                                    }
+                                }
+                            }));
+                } else {
+                    return $('<div>')
+                        .addClass('project-circle-text')
+                        .css(overrideCss)
+                        .append($('<div>')
+                            .addClass('project-title-div')
+                            .css({
+                                "text-align": 'left',
+                                "font-size": roundTo(sizeZoomed / 10, 1).toString() + 'px'
+                            })
+                            .append(data.name));
+                }
+            },
+            
+            doubleClick: function(element, data, callbacks) {
+                var $element = $(element);
+                var $holder  = $element.find('.project-circle-text');
+                if ($holder.length != 0) {
+                    var $projectTitleDiv = $holder.find('.project-title-div');
+                    var name = $projectTitleDiv.text();
+                    var $edit = $('<input type="text">')
+                        .addClass('project-circle-text-edit')
+                        .css({
+                            "text-align": 'left',
+                            "font-size": $projectTitleDiv.css('font-size')
+                        })
+                        .val(name)
+                        .on('keyup', function(e) {
+                            if (e.keyCode == 13) {
+                                // enter key pressed, lose focus
+                                // to signal finished editing
+                                if (callbacks.loseFocus !== undefined) {
+                                    callbacks.loseFocus();
+                                }
+                            }
+                        });
+
+                    $holder.html($edit);
+                    $edit.select();
+                }
+            },
+
+            loseFocus: function(element, data, callbacks) {
+                var $element = $(element);
+                var $txt     = $element.find('.project-circle-text');
+                var $edit    = $txt.find('input');
+
+                var fontSize = $edit.css('font-size');
+
+                if ($edit.val() == undefined || $edit.val().trim().length == 0) {
+                    // remove object if you don't enter a value the first time
+                    if (!element.nameBefore || !element.nameBefore.length) {
+                        $element.animate({
+                            "left": ($element.position().left + ($element.width() / 2)).toString() + 'px',
+                            "top" : ($element.position().top  + ($element.width() / 2)).toString() + 'px',
+                            "width" : 0,
+                            "height": 0
+                        }, 200, 'linear', function() {
+                            // remove it after the animation
+                            $element.remove();
+                        });
+                    } else {
+                        // error, must enter a name for a project.
+                        // revert to previous text
+                        $edit.val(element.nameBefore);
+                    }
+                } else {
+                    var value = $edit.val();
+                    var isNewElement = (element.nameBefore == undefined) || (element.nameBefore.length == 0);
+                    element.nameBefore = value;
+
+                    // convert text element to div
+                    var $replacementDiv = $('<div>')
+                        .addClass('project-title-div')
+                        .css({
+                            "text-align": 'left',
+                            "font-size": fontSize
+                        })
+                        .append(element.nameBefore);
+
+                    $txt.append($replacementDiv);
+                    $edit.remove();
+
+                    // allow the action selector to be shown
+                    $element.find('.project-actions-menu').css('display', 'inline');
+
+                    // set property on the project 'name'.
+                    data.name = value;
+                    
+                    if (isNewElement) {
+                        if (callbacks.success != undefined) {
+                            callbacks.success(element, data);
+                        }
+                    } else {
+                        if (callbacks.update != undefined) {
+                            callbacks.update(element, data);
+                        }
+                    }
+                }
+            },
+
+            updateZoom: function($element, newWidth, newHeight) {
+                $element.find('.project-title-div').css({
+                    "font-size": roundTo(newWidth / 10, 1).toString() + 'px'
+                });
+            }
+        },
+
+
+        todo: {
+            createContent: function(data, viewport, isNewlyCreated, callbacks) {
+                var sizeZoomed = calculateZoomedSize(data, viewport);
+
+                var $todoList = $('<ul>')
+                    .addClass('todo-list')
+                    .css({
+                        "font-size": roundTo(sizeZoomed / 12, 1).toString() + 'px'
+                    });
+
+                if (data.todoInfo !== undefined && data.todoInfo !== null && 
+                    data.todoInfo.todos !== undefined && data.todoInfo.todos !== null) {
+                    data.todoInfo.todos.forEach(function(it) {
+                        $todoList.append($('<li>')
+                            .append(it.toString())
+                            .click(function(e) {
+                                e.stopPropagation();
+                                console.log('todo clicked');
+                            }))
+                    });
+                }
+
+                var overrideCss = {
+                    "top": '28%',
+                    "transform": 'translate(-50%, -28%)',
+                };
+
+                if (isNewlyCreated) {
+                    return $('<div>')
+                        .addClass('project-circle-text')
+                        .css(overrideCss)
+                        .append($('<input type="text">')
+                            .addClass('project-circle-text-edit')
+                            .css({
+                                "font-size": roundTo(sizeZoomed / 10, 1).toString() + 'px'
+                            })
+                            .val(!data.name ? '' : data.name)
+                            .on('keyup', function(e) {
+                                if (e.keyCode == 13) {
+                                    // enter key pressed, lose focus
+                                    // to signal finished editing
+                                    if (callbacks.loseFocus !== undefined) {
+                                        callbacks.loseFocus();
+                                    }
+                                }
+                            }))
+                        .append($todoList);
+                } else {
+                    return $('<div>')
+                        .addClass('project-circle-text')
+                        .css(overrideCss)
+                        .append($('<div>')
+                            .addClass('project-title-div')
+                            .css({
+                                "font-size": roundTo(sizeZoomed / 10, 1).toString() + 'px'
+                            })
+                            .append(data.name))
+                            
+                        .append($todoList);
+                }
+            },
+            
+            doubleClick: function(element, data, callbacks) {
+                var $element = $(element);
+                var $holder  = $element.find('.project-circle-text');
+                if ($holder.length != 0) {
+                    var $projectTitleDiv = $holder.find('.project-title-div');
+
+                    var $todoList = $holder.find('.todo-list');
+                    $todoList.append($('<li>')
+                        .append('Blah'));
+
+                    var name = $projectTitleDiv.text();
+                    var $edit = $('<input type="text">')
+                        .addClass('project-circle-text-edit')
+                        .css({
+                            "font-size": $projectTitleDiv.css('font-size')
+                        })
+                        .val(name)
+                        .on('keyup', function(e) {
+                            if (e.keyCode == 13) {
+                                // enter key pressed, lose focus
+                                // to signal finished editing
+                                if (callbacks.loseFocus !== undefined) {
+                                    callbacks.loseFocus();
+                                }
+                            }
+                        });
+
+                    $projectTitleDiv.remove();
+                    $edit.insertBefore($todoList);
+                    $edit.select();
+                }
+            },
+
+            loseFocus: function(element, data, callbacks) {
+                var $element  = $(element);
+                var $txt      = $element.find('.project-circle-text');
+                var $edit     = $txt.find('input');
+                var $todoList = $txt.find('.todo-list');
+                console.log('$todoList = ', $todoList);
+
+                var fontSize = $edit.css('font-size');
+
+                if ($edit.val() == undefined || $edit.val().trim().length == 0) {
+                    // remove object if you don't enter a value the first time
+                    if (!element.nameBefore || !element.nameBefore.length) {
+                        $element.animate({
+                            "left": ($element.position().left + ($element.width() / 2)).toString() + 'px',
+                            "top" : ($element.position().top  + ($element.width() / 2)).toString() + 'px',
+                            "width" : 0,
+                            "height": 0
+                        }, 200, 'linear', function() {
+                            // remove it after the animation
+                            $element.remove();
+                        });
+                    } else {
+                        // error, must enter a name for a project.
+                        // revert to previous text
+                        $edit.val(element.nameBefore);
+                    }
+                } else {
+                    var value = $edit.val();
+                    var isNewElement = (element.nameBefore == undefined) || (element.nameBefore.length == 0);
+                    element.nameBefore = value;
+
+                    // convert text element to div
+                    var $replacementDiv = $('<div>')
+                        .addClass('project-title-div')
+                        .css({
+                            "font-size": fontSize
+                        })
+                        .append(element.nameBefore);
+
+                    $replacementDiv.insertBefore($todoList);
+                    $edit.remove();
+
+                    // allow the action selector to be shown
+                    $element.find('.project-actions-menu').css('display', 'inline');
+
+                    // set property on the project 'name'.
+                    data.name = value;
+                    
+                    if (isNewElement) {
+                        if (callbacks.success != undefined) {
+                            callbacks.success(element, data);
+                        }
+                    } else {
+                        if (callbacks.update != undefined) {
+                            callbacks.update(element, data);
+                        }
+                    }
+                }
+            },
+
+            updateZoom: function($element, newWidth, newHeight) {
+                $element.find('.project-title-div').css({
+                    "font-size": roundTo(newWidth / 10, 1).toString() + 'px'
+                });
+                $element.find('.todo-list').css({
+                    "font-size": roundTo(newWidth / 12, 1).toString() + 'px'
+                });
+            }
+        },
     };
 
     return ProjectFunctions;

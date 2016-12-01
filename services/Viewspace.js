@@ -202,7 +202,6 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
             if (event.target == this) {
                 // add project item
                 var position = { x: event.pageX, y: event.pageY };
-                var projectToAdd = null;
 
                 var radialMenuItems = RadialMenu.getRadialMenuItems(Viewspace, page, position);
 
@@ -211,12 +210,6 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
                     var HALF_SELECTOR_SIZE = SELECTOR_SIZE / 2;
                     var NUM_SHAPES = radialMenuItems.length;
                     var DEG_STEP = 360 / NUM_SHAPES;
-
-                    var $blurredBackground = $('<div>')
-                        .addClass('blurred-background')
-                        .css({
-                            "opacity": 0
-                        });
 
                     var $radialMenu = $('<ul>')
                         .addClass('radial-menu')
@@ -227,13 +220,21 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
                             "top"    : (position.y - HALF_SELECTOR_SIZE).toString() + 'px',
                             "opacity": 0
                         })
-                        .focusout(function() {
+                        .append($('<h2>')
+                            .addClass('radial-menu-title')
+                            .append('Create'));
+                        
+                    var $blurredBackground = $('<div>')
+                        .addClass('blurred-background')
+                        .css({
+                            "opacity": 0
+                        })
+                        .click(function() {
                             // remove menu on lose focus (after fade out)
-                            var $this = $(this);
-                            $this.animate({
+                            $radialMenu.animate({
                                 "opacity": 0
                             }, 200, function() {
-                                $this.remove();
+                                $radialMenu.remove();
                             });
 
                             // remove blurred background
@@ -242,10 +243,8 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
                             }, 200, function() {
                                 $blurredBackground.remove();
                             });
-                        })
-                        .append($('<h2>')
-                            .addClass('radial-menu-title')
-                            .append('Create'));
+                        });
+
 
                     var degrees = 0;
 
@@ -700,6 +699,26 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
             Breadcrumbs.update(this);
         },
 
+        goToProjectUrl: function(current, next) {
+            var pathParts = (next !== undefined && next !== null) ? [next.key] : [];
+            var page = current;
+            while (page !== undefined && page !== null) {
+                if (page.pageProject !== undefined && page.pageProject !== null) {
+                    // add firebase key
+                    pathParts.push(page.pageProject.key);
+                }
+                page = page.parentPage;
+            }
+
+            var path = '/home';
+            for (var i = pathParts.length - 1; i >= 0; i--) {
+                path += '/' + pathParts[i].toString();
+            }
+            
+            $location.path(path);
+            $rootScope.$apply();
+        },
+
         createPage: function(project, parentPage) {
             var page = new Page(
                 project.data.name,
@@ -800,53 +819,13 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
                         viewspace.itemClickTimeoutId = window.setTimeout(function() {
                             viewspace.itemClickTimeoutEnabled = false;
 
-                            // TODO move this to project-functions.js
-                            if (project.data.type === 'group' || project.data.type === 'project' || project.data.type === 'event') {
-                                // now that I have dynamic routing I will just change the route.
-                                // the other way was probably more efficient, but this is how it has to be 
-                                // in order to change the url.
-                                var pathParts = [project.key];
-                                var page = viewspace.getCurrentPage();
-                                while (page !== undefined && page !== null) {
-                                    if (page.pageProject !== undefined && page.pageProject !== null) {
-                                        // add firebase key
-                                        pathParts.push(page.pageProject.key);
-                                    }
-                                    page = page.parentPage;
-                                }
+                            // now that I have dynamic routing I will just change the route.
+                            // the other way was probably more efficient, but this is how it has to be 
+                            // in order to change the url.
 
-                                console.log('pathParts = ', pathParts);
-                                var path = '/home';
-                                for (var i = pathParts.length - 1; i >= 0; i--) {
-                                    path += '/' + pathParts[i].toString();
-                                }
-                                
-                                $location.path(path);
-                                $rootScope.$apply();
+                            // Bring the user to the nested project element
+                            viewspace.goToProjectUrl(viewspace.getCurrentPage(), project);
 
-
-                               /* // open the clicked project page
-                                var pageBefore = viewspace.currentPage;
-                                pageBefore.unbindEvents();
-                                pageBefore.clearProjectElements();
-
-                                viewspace.currentPage = new Page(
-                                    project.data.name,
-                                    $('<div class="page">')
-                                        .append('<div class="video-wrapper">'),
-                                    project.data.theme,
-                                    project,
-                                    project.data.viewport);
-
-                                viewspace.currentPage.loadProjectsFromDatabase(true);
-                                viewspace.currentPage.parentPage = pageBefore;
-                                viewspace.currentPage.bindEvents();
-                                viewspace.currentPage.show();
-
-                                Breadcrumbs.update(viewspace);*/
-                            } else {
-                                console.log('Not implemented for type ' + project.data.type);
-                            }
                         }, viewspace.projectClickTimeout);
                     })(this);
                 }
@@ -898,7 +877,7 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
                     }
                 }
             }
-        }).on("dblclick", function() {
+        }).on('dblclick', function() {
             if (Viewspace.itemClickTimeoutEnabled) {
                 window.clearTimeout(Viewspace.itemClickTimeoutId);
                 Viewspace.itemClickTimeoutEnabled = false;

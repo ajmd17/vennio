@@ -20,7 +20,10 @@ app.factory('RadialMenu', function(Extensions, Event) {
     };
 
     var RadialMenu = {
-        getRadialMenuItems: function(viewspace, page, position) { 
+        getRadialMenuItems: function(viewspace, page, position) {
+            // project that will be added upon success
+            var projectToAdd = null;
+
             return [{
                     title: 'Event',
                     url  : 'img/shapes/calendar.png',
@@ -372,8 +375,67 @@ app.factory('RadialMenu', function(Extensions, Event) {
                     }
                 },
                 {
-                    title: 'Task',
-                    url  : 'img/shapes/todo.png'
+                    title: 'Todo',
+                    url  : 'img/shapes/todo.png',
+                    select: function() {
+                        var projectData = {
+                            name: null,
+                            type: 'todo',
+                            theme: Extensions.builtinThemes['poly_2'],
+                            todoInfo: {
+                                todos: ['Feed the damn cat']
+                            },
+                            viewport: {
+                                zoom: 1.0,
+                                zoomLevel: 0,
+                                left: 0,
+                                top : 0
+                            }
+                        };
+
+                        page.addCircle(position, projectData, {
+                            success: function(element, data) {
+                                projectToAdd = new Project(
+                                    page.eltSpaceToZoomSpace({
+                                        x: position.x / page.viewport.zoom,
+                                        y: position.y / page.viewport.zoom
+                                    }),
+                                    element,
+                                    data);
+                                
+                                page.addProject(projectToAdd);
+                            },
+                            update: function(element, data) {
+                                if (projectToAdd != null) {
+                                    // update project name in db
+                                    projectToAdd.ref.child('data').update({ 
+                                        name: data.name 
+                                    });
+                                    // TODO update tasks
+                                    projectToAdd.ref.child('data').update({
+                                        todoInfo: data.todoInfo
+                                    })
+                                }
+                            },
+                            click: function() {
+                                if (projectToAdd != null) {
+                                    viewspace.handleObjectClick(projectToAdd);
+                                }
+                            },
+                            finishedDragging: function() {
+                                if (projectToAdd != null) {
+                                    projectToAdd.position = page.eltSpaceToZoomSpace({
+                                        x: viewspace.mousePosition.x / page.viewport.zoom,
+                                        y: viewspace.mousePosition.y / page.viewport.zoom
+                                    });
+                                    projectToAdd.ref.update({
+                                        position: projectToAdd.position
+                                    });
+                                }
+                            },
+                            loseFocus: function() { viewspace.objectLoseFocus(); }
+                        });
+                    }
                 }]
         }
     };

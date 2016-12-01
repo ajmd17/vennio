@@ -1,8 +1,8 @@
 var app = angular.module('vennio', [
     'ngRoute',
     'firebase'
-])
-.config(function($routeProvider) {
+]).controller('MainController', function($scope) {
+}).config(function($routeProvider) {
     $routeProvider.when('/', {
         templateUrl: 'landing.html',
         controller: 'LandingPageController',
@@ -22,7 +22,4 @@ var app = angular.module('vennio', [
     }).otherwise({
         templateUrl: '404.html'
     });
-})
-.controller('MainController', function($scope) {
-
 });
