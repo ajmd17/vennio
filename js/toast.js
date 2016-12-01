@@ -31,6 +31,7 @@ function Toast(title, content, callbacks) {
 
 Toast.totalToastHeight = 0;
 Toast.toasts = [];
+Toast.animations = true;
 
 Toast.prototype.getElement = function() {
     return this.$toastElement;
@@ -55,7 +56,7 @@ Toast.prototype.show = function() {
 };
 
 Toast.prototype.hide = function() {
-    if (globalConfig.visuals.enableAnimations) {
+    if (Toast.animations) {
         // animate the toast so that it goes out of view
         this.$toastElement.animate({
             "right": (-1 * this.toastHeight).toString() + "px",
@@ -75,7 +76,7 @@ Toast.prototype.hide = function() {
             };
 
             for (var i = this.index; i < Toast.toasts.length; i++) {
-                if (globalConfig.visuals.enableAnimations) {
+                if (Toast.animations) {
                     Toast.toasts[i].$toastElement.animate(change, 200);
                 } else {
                     Toast.toasts[i].$toastElement.css(change);

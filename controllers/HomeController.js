@@ -28,8 +28,15 @@ app.controller('HomeController', function($scope, $location, $routeParams, Auth,
         });
     });
 
+    /** Load the preferences */
+    function loadPreferences() {
+        Toast.animations = Auth.getUser().preferences.enableAnimations.enabled;
+    }
+
     // main entry point for when login is verified
     function afterLogin() {
+        loadPreferences();
+
         $('#share-btn').click(function() {
             var pageStr = '';
 
@@ -106,6 +113,7 @@ app.controller('HomeController', function($scope, $location, $routeParams, Auth,
                 userRef.update({
                     "preferences": preferencesItems
                 });
+                loadPreferences();
             }
 
             var $preferencesContent = $('<div>')
@@ -149,6 +157,8 @@ app.controller('HomeController', function($scope, $location, $routeParams, Auth,
                     userRef.update({
                         "preferences": preferencesItems
                     });
+                    // reload prefs
+                    loadPreferences();
 
                     modal.hide();
                 }

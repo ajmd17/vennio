@@ -708,7 +708,7 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
             this.currentPage.show();
 
             // update breadcrumbs
-            Breadcrumbs.update(user.key, Viewspace);
+            Breadcrumbs.update(user.key, Viewspace, Auth.getUser().preferences.enableAnimations.enabled);
         },
 
         createProjectUrl: function(userKey, current, next) {
@@ -730,7 +730,7 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
         },
 
         goToProjectUrl: function(userKey, current, next) {
-            if (globalConfig.visuals.enableAnimations) {
+            if (Auth.getUser().preferences.enableAnimations.enabled) {
                 // remove items with animation
                 $('#top-breadcrums, .video-wrapper, .project-circle').animate({"opacity": 0}, 350, () => {
                     $location.path(this.createProjectUrl(userKey, current, next));
@@ -773,7 +773,7 @@ app.factory('Viewspace', function($rootScope, $location, Auth, ProjectFunctions,
             this.currentPage.show();
             this.currentPage.loadProjectElements();
 
-            Breadcrumbs.update(userKey, this);
+            Breadcrumbs.update(userKey, this, Auth.getUser().preferences.enableAnimations.enabled);
         },
 
         clearObjectFocus: function() {

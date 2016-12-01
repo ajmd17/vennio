@@ -2,7 +2,7 @@ app.factory('Breadcrumbs', function($rootScope, $location) {
     return {
         parts: [],
 
-        update: function(userKey, viewspace) {
+        update: function(userKey, viewspace, animate) {
             var $topBreadcrumbs = $('#top-breadcrums');
             $topBreadcrumbs.empty();
 
@@ -39,7 +39,7 @@ app.factory('Breadcrumbs', function($rootScope, $location) {
             }
 
             for (var i = elementsToAdd.length - 1; i >= 0; i--) {
-                if (globalConfig.visuals.enableAnimations) {
+                if (animate) {
                     // animate each item
                     $topBreadcrumbs.append(elementsToAdd[i]
                         .css('opacity', 0)
