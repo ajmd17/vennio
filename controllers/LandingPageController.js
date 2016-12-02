@@ -1,10 +1,10 @@
 app.controller('LandingPageController', function($scope, $location, Auth, LoggedUser) {
-    var $loginModalContent = $('#login-modal-content')
-        .css('display', 'block');
+    var $loginModalContent = $('#login-modal-content');
         
     var loginModal = new Modal('Log In', $loginModalContent, [], {
+        show: function() {
+        },
         hide: function() {
-            $loginModalContent.css('display', 'none');
         }
     });
 
