@@ -1,33 +1,30 @@
 app.controller('HomeController', function($scope, $location, $routeParams, Auth, AuthWaitForSignIn, Viewspace, Breadcrumbs, Extensions, Event) {
+    var afterLoginCalled = false;
+    
     // reset toast height
     Toast.totalToastHeight = 0;
     console.log('$routeParams = ', $routeParams);
     
-    if (Auth.getUser() === null) {
-        $scope.isSignedIn = false;
-        Auth.handleLogin(AuthWaitForSignIn, function() {
+    $(document).ready(function() {
+        if (Auth.getUser() === null) {
+            $scope.isSignedIn = false;
+            Auth.handleLogin(AuthWaitForSignIn, function() {
+                $scope.isSignedIn = true;
+                $scope.$apply();
+                afterLogin();
+            });
+        } else {
             $scope.isSignedIn = true;
             $scope.$apply();
             afterLogin();
-        });
-    } else {
-        $scope.isSignedIn = true;
-        $(document).ready(afterLogin);
-    }
+        }
+    });
 
     $scope.redirectToLoginPage = function() {
         $location.path('/');
     };
     
     /** app.js */
-
-    $(document).ready(function() {
-        $('#menu-btn').click(function() {
-            $(this).toggleClass('active');
-            Viewspace.toggleSidebar();
-        });
-    });
-
     /** Load the preferences */
     function loadPreferences() {
         var userRef = Auth.getDatabase().ref('users')
@@ -54,7 +51,18 @@ app.controller('HomeController', function($scope, $location, $routeParams, Auth,
 
     // main entry point for when login is verified
     function afterLogin() {
+        if (afterLoginCalled) {
+            return;
+        }
+        afterLoginCalled = true;
+
+        console.log('afterLogin()');
         loadPreferences();
+
+        $('#menu-btn').click(function() {
+            $(this).toggleClass('active');
+            Viewspace.toggleSidebar();
+        });
 
         $('#share-btn').click(function() {
             var pageStr = '';
@@ -92,7 +100,7 @@ app.controller('HomeController', function($scope, $location, $routeParams, Auth,
                 .append($('<li>')
                     .append($shareUrlInput));
 
-            var modal = new Modal('Share ' + pageStr, $shareContent,  [{
+            var modal = new Modal('Share ' + pageStr, $shareContent, [{
                 text: 'OK',
                 type: 'primary',
                 click: function() {
@@ -187,8 +195,6 @@ app.controller('HomeController', function($scope, $location, $routeParams, Auth,
                 alert(err.toString());
             })
         });
-
-        
 
         // scan for events that are in range
         Event.findEventsInRange(Event.EVENT_SEARCH_RANGE);

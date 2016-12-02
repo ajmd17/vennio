@@ -15,7 +15,7 @@ app.controller('LandingPageController', function($scope, $location, Auth, Logged
                 loginModal.hide();
 
                 // redirect to home page
-                $location.path('/home');
+                $location.path('/home/' + Auth.getUser().key);
                 $scope.isSignedIn = true;
                 $scope.$apply();
             });
@@ -27,11 +27,11 @@ app.controller('LandingPageController', function($scope, $location, Auth, Logged
             .then(function(res) {
                 Auth.handleLogin(res.user, function() {
                     // hide the login modal
-                    loginModal.hide();
+                   /* loginModal.hide();
 
                     // redirect to home
                     $scope.isSignedIn = true;
-                    $location.path('/home/' + Auth.getUser().key);
+                    $location.path('/home/' + Auth.getUser().key);*/
                 });
             }).catch(function(err) {
                 window.alert(err.toString());
@@ -43,11 +43,11 @@ app.controller('LandingPageController', function($scope, $location, Auth, Logged
             .then(function(res) {
                 Auth.handleLogin(res.user, function() {
                     // hide the login modal
-                    loginModal.hide();
+                   /* loginModal.hide();
 
                     // redirect to home
                     $scope.isSignedIn = true;
-                    $location.path('/home/' + Auth.getUser().key);
+                    $location.path('/home/' + Auth.getUser().key);*/
                 });
             }).catch(function(err) {
                 window.alert(err.toString());
